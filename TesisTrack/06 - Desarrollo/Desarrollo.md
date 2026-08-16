@@ -12,9 +12,13 @@ tags:
 > [!warning] Antes de construir algo nuevo, leer [[Auditoría de requisitos]]
 > Contrasta lo construido contra el enunciado del curso. Varias funcionalidades de [[Funcionalidades]] siguen sin interfaz mientras se construyeron cosas que el enunciado no pide.
 
-> [!important] Al 2026-08-16 nada de esto está commiteado
-> Todo el trabajo del Entregable 3 vive en el working tree. Antes de commitear, sincronizar el vault:
+> [!success] Commiteado el 2026-08-16 en la rama `entregable-3-espacios`
+> 88 archivos, en el commit *"Completa el Entregable 3: espacios del asesor y las dos cadenas de trazabilidad"*. **Todavía no está pusheado al remoto.**
+>
+> Antes de cada commit, sincronizar el vault:
 > `robocopy "E:\GENERAL\TesisTrack" "e:\CLAUDE\UTEC\TesisTrack" /MIR`
+>
+> `.claude/settings.local.json` quedó en el `.gitignore` (permisos personales); la skill del vault sí se versiona.
 
 ## Repositorio
 

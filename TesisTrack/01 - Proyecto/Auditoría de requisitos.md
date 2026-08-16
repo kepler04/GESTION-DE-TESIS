@@ -99,8 +99,8 @@ Para no leer esto como si nada funcionara:
 > [!warning] Riesgo 2 — Datos de prueba sucios
 > La base local tiene 16 usuarios, la mayoría basura de tests (`Ana Tester`, `Debug Uno`, `Taller privado 1786906649`). Para la demo hace falta un juego de datos limpio y creíble: un estudiante, un asesor, una tesis con hitos en distintos estados y un ciclo de corrección completo. **Conviene prepararlo antes, no la noche anterior.**
 
-> [!warning] Riesgo 3 — Nada está commiteado
-> Todo el Entregable 3 vive en el working tree. No hay respaldo en el remoto. Ver [[Desarrollo]].
+> [!success] Riesgo 3 — resuelto a medias el 2026-08-16
+> Los 88 archivos del Entregable 3 quedaron commiteados en la rama `entregable-3-espacios`. **Falta pushear**: mientras no se suba, el respaldo depende de un solo disco.
 
 > [!warning] Riesgo 4 — El menú del coordinador contradice la Decisión 8
 > `AppLayout` le esconde Entregas, Observaciones, Asesorías y Tareas, pero la [[Decisiones pendientes#Decisión 8 - Alcance del coordinador\|Decisión 8]] dice que puede consultarlas. Si el profesor prueba el rol coordinador, la aplicación contradice su propia documentación.
@@ -109,7 +109,7 @@ Para no leer esto como si nada funcionara:
 
 Ordenado por **nota por hora invertida**, no por lo que sea más entretenido de construir.
 
-1. **Commitear y pushear lo que ya anda.** Minutos. Elimina el riesgo de perder todo. ⬅ **lo único urgente que queda**
+1. **Pushear.** El commit ya está hecho (`entregable-3-espacios`); falta subirlo. ⬅ **lo único urgente que queda**
 2. ~~Asesorías + Acuerdos y Tareas~~ ✅ hechas el 2026-08-16.
 3. **Resolver el menú del coordinador.** Una línea. Elimina una contradicción visible.
 4. **Decidir la carga de archivos** — hacerla o recortarla explícitamente. No dejarla flotando.
