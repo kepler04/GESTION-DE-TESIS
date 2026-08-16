@@ -1,10 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { obtenerDashboard, listarHitos } from '../api/tesistrack'
+import { obtenerDashboard, listarAreas, listarHitos } from '../api/tesistrack'
 import useProyectoActivo from '../hooks/useProyectoActivo'
 import { useAuth } from '../auth/AuthContext'
 import EstadoBadge from '../components/EstadoBadge'
 import ProgressRing from '../components/ProgressRing'
+import UnirseConCodigo from '../components/UnirseConCodigo'
+import PrimerosPasos from '../components/PrimerosPasos'
+import PrimerosPasosAsesor from '../components/PrimerosPasosAsesor'
 import { Card, Cargando, ErrorMsg, PageHead, SelectorProyecto, SinProyecto, Vacio, fecha } from '../components/ui'
 
 function Tile({ valor, etiqueta, detalle, tono = 'neutro' }) {
@@ -19,11 +22,32 @@ function Tile({ valor, etiqueta, detalle, tono = 'neutro' }) {
 
 export default function DashboardPage() {
   const { user } = useAuth()
-  const { proyectos, activoId, seleccionar, cargando: cargandoProyectos } = useProyectoActivo()
+  const {
+    proyectos,
+    activoId,
+    seleccionar,
+    recargar: recargarProyectos,
+    cargando: cargandoProyectos,
+  } = useProyectoActivo()
   const [data, setData] = useState(null)
   const [hitos, setHitos] = useState([])
   const [error, setError] = useState(null)
   const [cargando, setCargando] = useState(false)
+  const [mostrarUnirse, setMostrarUnirse] = useState(false)
+  const [recarga, setRecarga] = useState(0)
+  const [areas, setAreas] = useState(null)
+
+  const esAsesor = user?.role === 'ASESOR'
+
+  // El asesor sin asesorados necesita su código antes que cualquier resumen.
+  const recargarAreas = useCallback(
+    () => (esAsesor ? listarAreas().then(setAreas).catch(() => setAreas([])) : Promise.resolve()),
+    [esAsesor],
+  )
+
+  useEffect(() => {
+    recargarAreas()
+  }, [recargarAreas])
 
   useEffect(() => {
     if (!activoId) return
@@ -41,12 +65,25 @@ export default function DashboardPage() {
     return () => {
       cancelado = true
     }
-  }, [activoId])
+  }, [activoId, recarga])
 
   if (cargandoProyectos) return <Cargando />
-  if (!activoId) return <SinProyecto esEstudiante={user?.role === 'ESTUDIANTE'} />
+  // El estudiante sin tesis no ve un panel vacío: ve cómo empezar.
+  if (!activoId && user?.role === 'ESTUDIANTE') {
+    return <PrimerosPasos onListo={recargarProyectos} />
+  }
+  // El asesor sin asesorados tampoco: ve cómo crear su espacio y conseguir el
+  // código, que es lo único que destraba todo lo demás.
+  if (!activoId && esAsesor) {
+    if (areas === null) return <Cargando />
+    return <PrimerosPasosAsesor areas={areas} onCreada={recargarAreas} />
+  }
+  if (!activoId) return <SinProyecto rol={user?.role} />
 
   const completados = hitos.filter((h) => h.estado === 'COMPLETADO').length
+  // Una tesis sin asesor no avanza: no hay quien cargue hitos ni revise entregas.
+  // Es lo primero que el estudiante tiene que resolver, así que va arriba de todo.
+  const huerfano = user?.role === 'ESTUDIANTE' && data && !data.proyecto?.asesor
 
   return (
     <>
@@ -56,6 +93,34 @@ export default function DashboardPage() {
 
       {error && <ErrorMsg>{error}</ErrorMsg>}
       {cargando && <Cargando />}
+
+      {huerfano &&
+        (mostrarUnirse ? (
+          <UnirseConCodigo
+            proyectoId={activoId}
+            onCerrar={() => setMostrarUnirse(false)}
+            onUnido={async () => {
+              setMostrarUnirse(false)
+              setRecarga((n) => n + 1)
+            }}
+          />
+        ) : (
+          <Card titulo="Tu tesis todavía no tiene asesor">
+            <Vacio
+              cta={
+                <button
+                  type="button"
+                  className="btn btn--primario"
+                  onClick={() => setMostrarUnirse(true)}
+                >
+                  Unirme con un código
+                </button>
+              }
+            >
+              Si tu asesor te pasó un código de carpeta, pegalo acá y tu tesis se suma a su espacio.
+            </Vacio>
+          </Card>
+        ))}
 
       {data && (
         <>

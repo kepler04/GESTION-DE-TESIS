@@ -1,0 +1,130 @@
+/* Telón de bienvenida al panel. Misma paleta que el hero del login: azul
+   profundo con el oro del sello académico. */
+.bienvenida {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  /* No captura clics: si algo saliera mal, la app sigue usable debajo. */
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* ---- las dos hojas del telón ---- */
+/* Las dos hojas tienen que leerse como una sola superficie mientras el telón
+   está cerrado. Si cada una pintara su propio degradado, el de abajo arrancaría
+   de cero y quedaría una juntura marcada en el medio de la pantalla.
+   Solución: un degradado del alto del contenedor (198,02% = 100 / 50,5) del que
+   cada hoja muestra su mitad — la de arriba anclada arriba, la de abajo abajo. */
+.bienvenida__hoja {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 50.5%; /* medio punto de más para que no quede una rendija */
+  background-image: linear-gradient(165deg, #132441 0%, #0d1a2e 45%, #070d18 100%);
+  background-size: 100% 198.02%;
+  background-repeat: no-repeat;
+  transition: transform 0.7s cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.bienvenida__hoja--arriba {
+  top: 0;
+  background-position: 0 0;
+}
+
+.bienvenida__hoja--abajo {
+  bottom: 0;
+  background-position: 0 100%;
+}
+
+.bienvenida--abriendo .bienvenida__hoja--arriba {
+  transform: translateY(-100%);
+}
+
+.bienvenida--abriendo .bienvenida__hoja--abajo {
+  transform: translateY(100%);
+}
+
+/* ---- contenido centrado ---- */
+.bienvenida__centro {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  transition: opacity 0.35s ease;
+}
+
+.bienvenida--abriendo .bienvenida__centro {
+  opacity: 0;
+}
+
+/* La línea se abre desde el centro y da pie al saludo. */
+.bienvenida__linea {
+  width: min(280px, 60vw);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #d8b05c 50%, transparent);
+  transform: scaleX(0);
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.bienvenida--saludando .bienvenida__linea,
+.bienvenida--abriendo .bienvenida__linea {
+  transform: scaleX(1);
+}
+
+.bienvenida__saludo {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+  padding: 0 24px;
+}
+
+.bienvenida__hola,
+.bienvenida__nombre {
+  opacity: 0;
+  transform: translateY(10px);
+  transition:
+    opacity 0.55s ease,
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.bienvenida__hola {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #d8b05c;
+}
+
+.bienvenida__nombre {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(34px, 6vw, 58px);
+  font-weight: 500;
+  line-height: 1.05;
+  letter-spacing: -0.5px;
+  color: #fff;
+  /* El nombre entra apenas después del rótulo: se lee en orden. */
+  transition-delay: 0.1s;
+}
+
+.bienvenida--saludando .bienvenida__hola,
+.bienvenida--saludando .bienvenida__nombre,
+.bienvenida--abriendo .bienvenida__hola,
+.bienvenida--abriendo .bienvenida__nombre {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Red de seguridad: el componente ni se monta con movimiento reducido, pero si
+   alguien cambia la preferencia con el telón en pantalla, que no quede trabado. */
+@media (prefers-reduced-motion: reduce) {
+  .bienvenida {
+    display: none;
+  }
+}

@@ -8,6 +8,9 @@ desktop.ini
 .vscode/
 *.swp
 
+# Claude Code: la skill del vault se versiona, los permisos locales no
+.claude/settings.local.json
+
 # Cada subproyecto tiene además su propio .gitignore:
 #   tesistrack-app/.gitignore  -> target/, wrapper jar, etc.
 #   tesistrack-web/.gitignore  -> node_modules/, dist/, .env

@@ -30,6 +30,10 @@ erDiagram
     USERS ||--o{ ENTREGA : "sube"
     USERS ||--o{ OBSERVACION : "registra"
     USERS ||--o{ ASESORIA : "registra"
+    USERS ||--o{ AREA : "es dueño de"
+    AREA ||--o{ PROYECTO : "agrupa"
+    AREA ||--o{ ACTIVIDAD : "propone"
+    ACTIVIDAD ||--o{ HITO : "se reparte como"
 
     USERS {
         bigint id PK
@@ -37,6 +41,19 @@ erDiagram
         varchar email UK
         varchar password_hash
         varchar role
+        varchar telefono
+        varchar ubicacion
+        varchar carrera
+        varchar organizacion
+        varchar politica_version
+        timestamp politica_aceptada_at
+        timestamp created_at
+    }
+    AREA {
+        bigint id PK
+        varchar nombre
+        bigint propietario_id FK
+        varchar codigo UK
         timestamp created_at
     }
     PROYECTO {
@@ -46,6 +63,7 @@ erDiagram
         varchar estado
         bigint estudiante_id FK
         bigint asesor_id FK
+        bigint area_id FK
         timestamp created_at
     }
     HITO {
@@ -144,11 +162,29 @@ Ambas cuelgan de `proyecto`, que es lo que permite reconstruir el historial comp
 CREATE TABLE users (
     id            BIGSERIAL    PRIMARY KEY,
     name          VARCHAR(255) NOT NULL,
-    email         VARCHAR(255) NOT NULL UNIQUE,
+    email         VARCHAR(255) NOT NULL UNIQUE,   -- siempre en minúsculas
     password_hash VARCHAR(255) NOT NULL,
     role          VARCHAR(20)  NOT NULL
                   CHECK (role IN ('ESTUDIANTE', 'ASESOR', 'COORDINADOR')),
+    -- Perfil del paso 2 del registro. Todas nullables: se agregaron sobre filas
+    -- existentes y ddl-auto=update no puede poner NOT NULL ahí.
+    telefono             VARCHAR(30),
+    ubicacion            VARCHAR(120),
+    carrera              VARCHAR(120),
+    organizacion         VARCHAR(160),
+    politica_version     VARCHAR(20),
+    politica_aceptada_at TIMESTAMP,
     created_at    TIMESTAMP    NOT NULL DEFAULT now()
+);
+
+-- Carpetas del asesor: agrupan sus tesis y dan el código de invitación.
+CREATE TABLE area (
+    id             BIGSERIAL   PRIMARY KEY,
+    nombre         VARCHAR(80) NOT NULL,
+    propietario_id BIGINT      NOT NULL REFERENCES users (id),
+    codigo         VARCHAR(12) NOT NULL UNIQUE,
+    created_at     TIMESTAMP   NOT NULL DEFAULT now(),
+    UNIQUE (propietario_id, nombre)
 );
 
 CREATE TABLE proyecto (
@@ -159,12 +195,26 @@ CREATE TABLE proyecto (
                   CHECK (estado IN ('EN_CURSO', 'FINALIZADO', 'SUSPENDIDO')),
     estudiante_id BIGINT       NOT NULL REFERENCES users (id),
     asesor_id     BIGINT       REFERENCES users (id),
+    area_id       BIGINT       REFERENCES area (id),  -- nullable: la tesis existe sin carpeta
     created_at    TIMESTAMP    NOT NULL DEFAULT now()
+);
+
+-- Consigna que el asesor reparte a todo un área de una vez.
+CREATE TABLE actividad (
+    id           BIGSERIAL    PRIMARY KEY,
+    area_id      BIGINT       NOT NULL REFERENCES area (id),
+    nombre       VARCHAR(255) NOT NULL,
+    descripcion  TEXT,
+    fecha_limite DATE,
+    orden        INTEGER      NOT NULL DEFAULT 0,
+    created_at   TIMESTAMP    NOT NULL DEFAULT now()
 );
 
 CREATE TABLE hito (
     id           BIGSERIAL    PRIMARY KEY,
     proyecto_id  BIGINT       NOT NULL REFERENCES proyecto (id) ON DELETE CASCADE,
+    -- Nullable: los hitos cargados a mano no vienen de ninguna actividad.
+    actividad_id BIGINT       REFERENCES actividad (id),
     nombre       VARCHAR(255) NOT NULL,
     descripcion  TEXT,
     fecha_limite DATE,
@@ -227,8 +277,12 @@ CREATE TABLE tarea (
 );
 
 -- Índices para las consultas del dashboard
+CREATE INDEX idx_area_propietario    ON area (propietario_id);
+CREATE INDEX idx_actividad_area      ON actividad (area_id);
+CREATE INDEX idx_hito_actividad      ON hito (actividad_id);
 CREATE INDEX idx_proyecto_estudiante ON proyecto (estudiante_id);
 CREATE INDEX idx_proyecto_asesor     ON proyecto (asesor_id);
+CREATE INDEX idx_proyecto_area       ON proyecto (area_id);
 CREATE INDEX idx_hito_proyecto       ON hito (proyecto_id);
 CREATE INDEX idx_entrega_hito        ON entrega (hito_id);
 CREATE INDEX idx_observacion_entrega ON observacion (entrega_id);
@@ -237,6 +291,21 @@ CREATE INDEX idx_acuerdo_asesoria    ON acuerdo (asesoria_id);
 CREATE INDEX idx_tarea_proyecto      ON tarea (proyecto_id);
 CREATE INDEX idx_tarea_responsable   ON tarea (responsable_id);
 ```
+
+## Cambios posteriores al Entregable 1
+
+El esquema de arriba ya los incluye. Se listan aparte porque **`ddl-auto=update` no pudo aplicarlos solo** y hay que repetir las migraciones a mano en producción — el detalle con el SQL está en [[Desarrollo]].
+
+| Cambio | Fecha | Por qué no lo pudo hacer Hibernate |
+|---|---|---|
+| `area` + `proyecto.area_id` | 2026-08-16 | La tabla sí; ver la fila siguiente por la columna `codigo` |
+| `area.codigo NOT NULL UNIQUE` | 2026-08-16 | Ya había áreas creadas: hubo que agregar la columna nullable, rellenarla con códigos únicos y recién ahí poner la restricción |
+| Perfil en `users` (6 columnas) | 2026-08-16 | Se agregaron **nullables** a propósito: sobre filas existentes no se puede poner `NOT NULL` sin default |
+| `actividad` + `hito.actividad_id` | 2026-08-16 | **Ninguna migración manual**: tabla nueva y columna nullable, `ddl-auto=update` las crea solo |
+| `users.email` a minúsculas | 2026-08-16 | Normalización de datos ya cargados, no un cambio de esquema. Se corrió dentro de una transacción que aborta si dos cuentas colapsan en el mismo email |
+
+> [!warning] El email en minúsculas era un bug latente
+> Antes se guardaba y comparaba tal cual se escribía: `Ana@utec.pe` y `ana@utec.pe` podían convivir como dos cuentas, y quien se registraba con mayúsculas **no podía entrar** escribiéndolo en minúsculas. La normalización vive en `User#setEmail` —en la entidad, no en el service— para que ningún camino de escritura deje una fila sin normalizar.
 
 ## Decisiones que este esquema todavía no resuelve
 

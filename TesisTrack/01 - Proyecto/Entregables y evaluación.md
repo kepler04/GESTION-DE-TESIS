@@ -33,12 +33,15 @@ Total de alumnos del curso: 21 (organizados en grupos).
 
 | # | Nombre | Descripción | Peso | Estado |
 |---|--------|-------------|------|--------|
-| 0 | Conceptualización | Documento inicial: nombre, contexto, objetivos, justificación y funcionalidades clave | No calificado (solo feedback) | 📝 contenido listo, falta el documento formal |
+| 0 | Conceptualización | Documento inicial: nombre, contexto, objetivos, justificación y funcionalidades clave | No calificado (solo feedback) | ✅ [[Entregable 0 - Conceptualización\|redactado]] el 2026-08-16 |
 | 1 | Modelo de Datos | Diagrama Entidad-Relación (ER) y esquema SQL implementado | 15% | ✅ [[#Entregable 1 — Modelo de Datos (15%)\|terminado]] |
 | 2 | Backend | API backend conectada a la base de datos, con documentación básica de endpoints | 20% | ✅ [[#Entregable 2 — Backend (20%)\|terminado]] |
 | 3 | Aplicación Web Full-Stack | Integración de frontend y backend utilizando Java Spring Boot | 20% | 🔨 en curso — ver [[Desarrollo#Avance]] |
 | 4 | CI/CD y Despliegue | Pipeline de CI/CD y despliegue funcional en AWS (u otro proveedor cloud) | 15% | ⬜ sin empezar |
 | Final | Competencia Final de Desarrollo Web | Presentación final, demostración funcional, evaluación técnica y pitch del producto | 30% | ⬜ sin empezar |
+
+> [!warning] Ver [[Auditoría de requisitos]] antes de decidir qué construir
+> La tabla de arriba dice el estado; la auditoría del 2026-08-16 dice **qué falta exactamente contra [[Funcionalidades]]**, qué se construyó de más y en qué orden conviene seguir. Resumen: 35% asegurado, 20% en curso, **45% sin empezar**.
 
 > [!important] Evaluación
 > - Cada entregable (excepto el 0) se califica de 0 a 20.
@@ -56,8 +59,10 @@ No calificado, pero define la base del proyecto y recibe feedback personalizado 
 4. **Justificación** — por qué el problema es relevante → cubierto en [[Problema]]
 5. **Funcionalidades clave** — qué hará la aplicación → [[Funcionalidades]]
 
-> [!success] Estado del Entregable 0
-> Los contenidos ya están redactados en las notas de [[TesisTrack]] (01 - Proyecto y 02 - Requisitos). Falta consolidarlos en el documento formal a entregar y esperar la retroalimentación del profesor — ver [[Feedback profesor]].
+> [!success] Estado del Entregable 0 — documento redactado el 2026-08-16
+> Está consolidado en [[Entregable 0 - Conceptualización]]. Falta **entregarlo** y esperar la retroalimentación del profesor — ver [[Feedback profesor]].
+>
+> Esa nota cierra con una tabla de **diferencias entre el documento y lo implementado** (tesis grupales, estado de la entrega, carga de archivos). Conviene resolverlas antes de presentarlo, para no contradecirse en la defensa.
 
 ## Entregable 1 — Modelo de Datos (15%)
 

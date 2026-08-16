@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { listarProyectos } from '../api/tesistrack'
 
 const CLAVE = 'proyectoActivo'
@@ -17,23 +17,26 @@ export default function useProyectoActivo() {
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState(null)
 
-  useEffect(() => {
-    let cancelado = false
-    listarProyectos()
-      .then((lista) => {
-        if (cancelado) return
-        setProyectos(lista)
-        setActivoId((actual) => {
-          const sigueExistiendo = lista.some((p) => p.id === actual)
-          return sigueExistiendo ? actual : (lista[0]?.id ?? null)
+  // Expuesto para quien crea un proyecto desde una pantalla que usa este hook
+  // (los primeros pasos del estudiante): sin esto habría que recargar a mano.
+  const recargar = useCallback(
+    () =>
+      listarProyectos()
+        .then((lista) => {
+          setProyectos(lista)
+          setActivoId((actual) => {
+            const sigueExistiendo = lista.some((p) => p.id === actual)
+            return sigueExistiendo ? actual : (lista[0]?.id ?? null)
+          })
         })
-      })
-      .catch((e) => !cancelado && setError(e.message))
-      .finally(() => !cancelado && setCargando(false))
-    return () => {
-      cancelado = true
-    }
-  }, [])
+        .catch((e) => setError(e.message))
+        .finally(() => setCargando(false)),
+    [],
+  )
+
+  useEffect(() => {
+    recargar()
+  }, [recargar])
 
   function seleccionar(id) {
     setActivoId(id)
@@ -45,6 +48,7 @@ export default function useProyectoActivo() {
     activoId,
     activo: proyectos.find((p) => p.id === activoId) ?? null,
     seleccionar,
+    recargar,
     cargando,
     error,
   }

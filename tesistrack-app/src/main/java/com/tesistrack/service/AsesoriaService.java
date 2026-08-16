@@ -6,6 +6,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.tesistrack.config.ForbiddenException;
 import com.tesistrack.config.NotFoundException;
 import com.tesistrack.dto.AcuerdoDto;
 import com.tesistrack.dto.AsesoriaDto;
@@ -14,6 +15,7 @@ import com.tesistrack.dto.CrearAsesoriaRequest;
 import com.tesistrack.model.Acuerdo;
 import com.tesistrack.model.Asesoria;
 import com.tesistrack.model.Proyecto;
+import com.tesistrack.model.Role;
 import com.tesistrack.model.User;
 import com.tesistrack.repository.AcuerdoRepository;
 import com.tesistrack.repository.AsesoriaRepository;
@@ -39,10 +41,24 @@ public class AsesoriaService {
         this.acceso = acceso;
     }
 
+    /**
+     * Abre una asesoría. La puede abrir <b>cualquiera de los dos</b>: el asesor para
+     * dejar constancia de una reunión, el estudiante para plantear una consulta o
+     * pedir una revisión (Decisión 13).
+     *
+     * <p>La asimetría con {@link #crearAcuerdo} es deliberada: se abre la puerta de
+     * entrada, no la de salida. Solo el asesor decide qué de la conversación se
+     * convierte en un acuerdo, y de ahí en tarea.
+     */
     public AsesoriaDto crear(Long proyectoId, CrearAsesoriaRequest request, Authentication authentication) {
         User usuario = acceso.usuarioActual(authentication);
         Proyecto proyecto = proyectoService.buscar(proyectoId);
-        acceso.verificarAsesorDelProyecto(proyecto, usuario);
+        // Lectura, no "asesor del proyecto": verificarLectura le niega el paso al
+        // coordinador igual, que sigue sin escribir nada (Decisión 8).
+        acceso.verificarLectura(proyecto, usuario);
+        if (usuario.getRole() == Role.COORDINADOR) {
+            throw new ForbiddenException("El coordinador consulta, no registra asesorías");
+        }
 
         Asesoria asesoria = new Asesoria();
         asesoria.setProyecto(proyecto);

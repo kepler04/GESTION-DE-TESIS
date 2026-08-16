@@ -11,4 +11,6 @@ public interface ProyectoRepository extends JpaRepository<Proyecto, Long> {
     List<Proyecto> findByEstudianteId(Long estudianteId);
 
     List<Proyecto> findByAsesorId(Long asesorId);
+
+    List<Proyecto> findByAreaId(Long areaId);
 }

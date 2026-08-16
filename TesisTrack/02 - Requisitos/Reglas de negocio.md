@@ -6,8 +6,8 @@ tags:
 
 # Reglas de negocio
 
-> [!warning] En construcción
-> Estas reglas todavía no están cerradas — dependen de las [[Decisiones pendientes]].
+> [!success] Cerradas el 2026-08-16
+> Estas reglas dependían de las [[Decisiones pendientes]], que ya están todas resueltas. El aviso de "en construcción" quedó desfasado y se corrigió el 2026-08-16, al construir la pantalla de Observaciones.
 
 ## Relación entre elementos
 
@@ -58,10 +58,22 @@ graph LR
 
 Esto permite que un estudiante o asesor consulte qué ocurrió durante el desarrollo de la tesis.
 
-## Reglas pendientes de definir
-- ¿Cómo se relaciona un hito con las entregas? → [[Decisiones pendientes#Decisión 5 - Relación hito-entrega]]
-- ¿Cómo se relacionan las observaciones con las versiones de una entrega? → [[Decisiones pendientes#Decisión 6 - Observaciones y versiones]]
-- ¿Los hitos pueden modificarse después de crear el proyecto? → [[Decisiones pendientes#Decisión 4 - Modificación de hitos]]
+## Reglas ya definidas
+
+| Pregunta | Respuesta | Decisión |
+|---|---|---|
+| ¿Cómo se relaciona un hito con las entregas? | Cada entrega es una **versión nueva** del hito (v1, v2…); el número lo calcula el backend | [[Decisiones pendientes#Decisión 5 - Relación hito-entrega\|5]] |
+| ¿Cómo se relacionan las observaciones con las versiones? | Cuelgan de la **entrega** que las originó, no del hito: lo observado sobre la v1 sigue siendo de la v1 | [[Decisiones pendientes#Decisión 6 - Observaciones y versiones\|6]] |
+| ¿Los hitos pueden modificarse después? | Sí, los edita el asesor; solo se borran si no tienen entregas | [[Decisiones pendientes#Decisión 4 - Modificación de hitos\|4]] |
+
+### El ciclo de corrección, en estados
+
+Las dos transiciones automáticas que implementa el backend:
+
+- Subir una entrega deja el hito en `ENTREGADO`, **aunque viniera `OBSERVADO`** — es la reentrega corregida.
+- Registrar una observación devuelve el hito a `OBSERVADO`: hay algo que corregir.
+
+Resolver una observación **no** cambia el estado del hito; el asesor lo cierra a mano cuando corresponde.
 
 ## Ver también
 - [[Hitos]]

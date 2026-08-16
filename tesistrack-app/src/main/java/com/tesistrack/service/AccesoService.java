@@ -30,7 +30,9 @@ public class AccesoService {
 
     /** Usuario detrás del JWT de la request actual. */
     public User usuarioActual(Authentication authentication) {
-        String email = authentication.getName();
+        // Normalizado por si el token se emitió antes de que el email se guardara
+        // siempre en minúsculas (ver User#setEmail).
+        String email = User.normalizarEmail(authentication.getName());
         return userRepository.findByEmail(email)
             .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
     }

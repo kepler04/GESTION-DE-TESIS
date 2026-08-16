@@ -60,9 +60,15 @@ No puede: crear proyectos, hitos, asesorías, tareas ni observaciones; tampoco a
 | Subir entrega | ✅ | ❌ | ❌ |
 | Registrar observación | ❌ | ✅ | ❌ |
 | Resolver observación | ❌ | ✅ | ❌ |
-| Registrar asesoría / acuerdo | ❌ | ✅ | ❌ |
+| Abrir asesoría / consulta | ✅ | ✅ | ❌ |
+| Registrar acuerdo | ❌ | ✅ | ❌ |
+| Crear actividad de un espacio | ❌ | ✅ dueño del área | ❌ |
+| Ver el tablero de un espacio | ❌ | ✅ dueño del área | ❌ |
 | Crear tarea | ❌ | ✅ | ❌ |
 | Completar tarea | ✅ si es responsable | ✅ | ❌ |
+
+> [!note] El estudiante abre la asesoría, no el acuerdo
+> Es la [[Decisiones pendientes#Decisión 13 - Quién puede abrir una asesoría|Decisión 13]]: cualquiera de los dos deja constancia de una conversación, pero **solo el asesor decide qué de eso se vuelve un acuerdo** —y de ahí, una tarea—.
 
 ## Ver también
 - [[Funcionalidades]]

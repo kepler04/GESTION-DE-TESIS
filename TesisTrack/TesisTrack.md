@@ -24,6 +24,8 @@ aliases:
 - [[Objetivos]]
 - [[Alcance]]
 - [[Entregables y evaluación]]
+- [[Entregable 0 - Conceptualización]] — el documento formal a entregar
+- [[Auditoría de requisitos]] — qué falta contra el enunciado, y en qué orden conviene hacerlo
 
 ### 02 - Requisitos
 - [[Funcionalidades]]
@@ -48,13 +50,18 @@ aliases:
 
 ## Estado actual
 
-> [!success] Al 2026-08-16 — Entregables 1 y 2 hechos
-> - **Las 8 decisiones pendientes están cerradas.** Las 4 preguntas que había dejado el profesor quedaron respondidas: hitos configurables por proyecto y creados por el asesor, plataforma general.
-> - **Entregable 1 (Modelo de datos)** — ER y esquema en [[Base de datos]], 8 tablas verificadas contra PostgreSQL.
+> [!success] Al 2026-08-16 — Entregables 1 y 2 hechos, el 3 en curso
+> - **Las 8 decisiones de alcance están cerradas**, más la 9, 10 y 11 que salieron durante el desarrollo. Las 4 preguntas que había dejado el profesor quedaron respondidas: hitos configurables por proyecto y creados por el asesor, plataforma general.
+> - **Entregable 1 (Modelo de datos)** — ER y esquema en [[Base de datos]], verificado contra PostgreSQL.
 > - **Entregable 2 (Backend)** — API REST documentada en [[API]], 31 pruebas end-to-end pasando.
-> - **Login** implementado y con diseño propio en el frontend.
+> - **Entregable 3 (Full-stack)** 🔨 — andan landing, registro en dos pasos con política de privacidad, Dashboard, Proyectos, Hitos, Entregas, Observaciones, carpetas con código de invitación y Mis asesorados.
 
-Lo que sigue: **Entregable 3 — Aplicación full-stack**, conectando el frontend React a la API ya construida.
+> [!warning] Auditoría del 2026-08-16 — el 45% de la nota está sin empezar
+> Se contrastó lo construido contra el enunciado: los Entregables 1 y 2 están sólidos, pero el **4 (15%)** y la **Competencia Final (30%)** no tienen nada, y al 3 le faltan **Asesorías** y **Tareas**, que son funcionalidades listadas en [[Funcionalidades]].
+>
+> Además, varias cosas construidas últimamente **no las pide el enunciado**. El detalle, el veredicto de cada una y el orden sugerido están en [[Auditoría de requisitos]].
+
+**Lo que sigue**, por nota por hora invertida: commitear lo que ya anda → **Asesorías + Tareas** (cierra el Entregable 3) → **Entregable 4** (CI/CD y despliegue) → preparar la **Competencia Final**.
 
 ## Enfoque de trabajo
 

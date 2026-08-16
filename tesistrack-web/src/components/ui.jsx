@@ -63,22 +63,45 @@ export function SelectorProyecto({ proyectos, activoId, onChange }) {
   )
 }
 
-export function SinProyecto({ esEstudiante }) {
-  return (
-    <Vacio
-      cta={
-        esEstudiante ? (
-          <Link className="btn btn--primario" to="/proyectos">
-            Crear mi proyecto
+/**
+ * Estado vacío de las pantallas que necesitan un proyecto seleccionado.
+ *
+ * Toda variante lleva una salida: sin botón, seis pantallas le decían al asesor
+ * recién llegado que pasara "el código de tu carpeta" —una carpeta que todavía no
+ * existía— y lo dejaban ahí.
+ */
+export function SinProyecto({ rol }) {
+  if (rol === 'ESTUDIANTE') {
+    return (
+      <Vacio
+        cta={
+          <Link className="btn btn--primario" to="/panel">
+            Empezar
           </Link>
-        ) : null
-      }
-    >
-      {esEstudiante
-        ? 'Todavía no tenés un proyecto de tesis. Creá uno para empezar a cargar hitos y entregas.'
-        : 'Todavía no tenés proyectos asignados. El estudiante te elige como asesor al crear su proyecto.'}
-    </Vacio>
-  )
+        }
+      >
+        Todavía no tenés un proyecto de tesis. Al crearlo podés pegar el código que te pasó tu
+        asesor y sumarte a su carpeta.
+      </Vacio>
+    )
+  }
+
+  if (rol === 'ASESOR') {
+    return (
+      <Vacio
+        cta={
+          <Link className="btn btn--primario" to="/proyectos">
+            Ir a mis espacios
+          </Link>
+        }
+      >
+        Todavía no tenés asesorados. Tu código de invitación está en Mis espacios: pasáselo a tus
+        estudiantes y sus tesis aparecen acá.
+      </Vacio>
+    )
+  }
+
+  return <Vacio>Todavía no hay proyectos para consultar.</Vacio>
 }
 
 export function fecha(valor) {
@@ -87,5 +110,17 @@ export function fecha(valor) {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
+  })
+}
+
+/** Para eventos donde dos registros del mismo día se distinguen por la hora (v1 y v2, asesorías). */
+export function fechaHora(valor) {
+  if (!valor) return '—'
+  return new Date(valor).toLocaleString('es', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
   })
 }

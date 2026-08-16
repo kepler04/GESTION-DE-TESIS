@@ -31,6 +31,18 @@ public class Hito {
     @JoinColumn(name = "proyecto_id", nullable = false)
     private Proyecto proyecto;
 
+    /**
+     * La actividad del área que originó este hito, si vino de un reparto.
+     *
+     * <p>Nullable a propósito: los hitos que el asesor carga a mano en una tesis
+     * puntual no pertenecen a ninguna actividad y siguen funcionando igual. Sirve
+     * para dos cosas concretas: no repartir dos veces la misma actividad al mismo
+     * proyecto, y agrupar por columna en el tablero del espacio.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "actividad_id")
+    private Actividad actividad;
+
     @Column(nullable = false)
     private String nombre;
 
@@ -61,6 +73,14 @@ public class Hito {
 
     public void setProyecto(Proyecto proyecto) {
         this.proyecto = proyecto;
+    }
+
+    public Actividad getActividad() {
+        return actividad;
+    }
+
+    public void setActividad(Actividad actividad) {
+        this.actividad = actividad;
     }
 
     public String getNombre() {

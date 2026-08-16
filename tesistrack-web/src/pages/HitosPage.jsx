@@ -68,7 +68,7 @@ export default function HitosPage() {
   }
 
   if (cargandoProyectos) return <Cargando />
-  if (!activoId) return <SinProyecto esEstudiante={user?.role === 'ESTUDIANTE'} />
+  if (!activoId) return <SinProyecto rol={user?.role} />
 
   return (
     <>

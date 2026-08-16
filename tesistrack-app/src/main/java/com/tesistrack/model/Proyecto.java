@@ -46,6 +46,14 @@ public class Proyecto {
     @JoinColumn(name = "asesor_id")
     private User asesor;
 
+    /**
+     * Etiqueta con la que el asesor agrupa sus tesis. Opcional y siempre suya:
+     * si el proyecto cambia de asesor, el área deja de tener sentido y se limpia.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "area_id")
+    private Area area;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt = Instant.now();
 
@@ -91,6 +99,14 @@ public class Proyecto {
 
     public void setAsesor(User asesor) {
         this.asesor = asesor;
+    }
+
+    public Area getArea() {
+        return area;
+    }
+
+    public void setArea(Area area) {
+        this.area = area;
     }
 
     public Instant getCreatedAt() {

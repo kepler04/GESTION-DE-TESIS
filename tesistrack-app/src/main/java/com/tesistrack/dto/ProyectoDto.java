@@ -12,6 +12,8 @@ public record ProyectoDto(
     EstadoProyecto estado,
     UserDto estudiante,
     UserDto asesor,
+    /** Etiqueta del asesor para agrupar sus tesis; null si no le puso ninguna. */
+    AreaDto area,
     Instant createdAt
 ) {
 
@@ -23,6 +25,8 @@ public record ProyectoDto(
             proyecto.getEstado(),
             UserDto.from(proyecto.getEstudiante()),
             proyecto.getAsesor() == null ? null : UserDto.from(proyecto.getAsesor()),
+            // Sin código: este DTO también lo recibe el estudiante.
+            AreaDto.sinCodigo(proyecto.getArea()),
             proyecto.getCreatedAt());
     }
 }

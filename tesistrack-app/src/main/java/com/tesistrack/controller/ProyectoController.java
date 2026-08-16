@@ -13,10 +13,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.tesistrack.dto.AsignarAreaRequest;
 import com.tesistrack.dto.AsignarAsesorRequest;
 import com.tesistrack.dto.CrearProyectoRequest;
 import com.tesistrack.dto.DashboardDto;
 import com.tesistrack.dto.ProyectoDto;
+import com.tesistrack.dto.UnirseRequest;
 import com.tesistrack.service.DashboardService;
 import com.tesistrack.service.ProyectoService;
 
@@ -57,6 +59,23 @@ public class ProyectoController {
             @Valid @RequestBody AsignarAsesorRequest request,
             Authentication authentication) {
         return proyectoService.asignarAsesor(id, request, authentication);
+    }
+
+    /** El estudiante suma su proyecto al espacio de un asesor con su código. */
+    @PatchMapping("/{id}/unirse")
+    public ProyectoDto unirse(
+            @PathVariable Long id,
+            @Valid @RequestBody UnirseRequest request,
+            Authentication authentication) {
+        return proyectoService.unirseConCodigo(id, request, authentication);
+    }
+
+    @PatchMapping("/{id}/area")
+    public ProyectoDto asignarArea(
+            @PathVariable Long id,
+            @RequestBody AsignarAreaRequest request,
+            Authentication authentication) {
+        return proyectoService.asignarArea(id, request, authentication);
     }
 
     @GetMapping("/{id}/dashboard")

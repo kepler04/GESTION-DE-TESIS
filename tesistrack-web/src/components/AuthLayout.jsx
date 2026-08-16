@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import BrandLogo from './BrandLogo'
 import EstadoBadge from './EstadoBadge'
 import HeroConstelacion from './HeroConstelacion'
@@ -85,15 +86,26 @@ export default function AuthLayout({ title, subtitle, children }) {
       </aside>
 
       <main className="auth-panel">
-        <div className="auth-card">
-          <div className="brand-logo">
-            <BrandLogo variant="stacked" />
+        <div className="auth-panel__inner">
+          {/* Salida sin compromiso: quien todavía está decidiendo puede volver a
+              leer la portada sin tener que usar el botón atrás del navegador. */}
+          <Link className="auth-volver" to="/">
+            <span className="auth-volver__flecha" aria-hidden="true">
+              ←
+            </span>
+            Volver al inicio
+          </Link>
+
+          <div className="auth-card">
+            <Link className="brand-logo" to="/" aria-label="TesisTrack — ir al inicio">
+              <BrandLogo variant="stacked" />
+            </Link>
+
+            <h2>{title}</h2>
+            {subtitle && <div className="auth-subtitle">{subtitle}</div>}
+
+            {children}
           </div>
-
-          <h2>{title}</h2>
-          {subtitle && <div className="auth-subtitle">{subtitle}</div>}
-
-          {children}
         </div>
       </main>
     </div>

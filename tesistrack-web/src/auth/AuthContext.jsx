@@ -22,6 +22,9 @@ export function AuthProvider({ children }) {
   const logout = useCallback(() => {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
+    // El telón de bienvenida se muestra una vez por sesión: al salir se limpia
+    // la marca para que vuelva a saludar en el próximo ingreso.
+    sessionStorage.removeItem('bienvenidaVista')
     setSession(null)
   }, [])
 

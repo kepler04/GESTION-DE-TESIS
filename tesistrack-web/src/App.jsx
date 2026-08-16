@@ -1,10 +1,16 @@
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { AuthProvider, useAuth } from './auth/AuthContext'
 import AppLayout from './layouts/AppLayout'
+import AsesoradosPage from './pages/AsesoradosPage'
+import EspacioPage from './pages/EspacioPage'
+import AsesoriasPage from './pages/AsesoriasPage'
+import TareasPage from './pages/TareasPage'
 import DashboardPage from './pages/DashboardPage'
+import EntregasPage from './pages/EntregasPage'
 import HitosPage from './pages/HitosPage'
 import LandingPage from './pages/LandingPage'
-import PendientePage from './pages/PendientePage'
+import ObservacionesPage from './pages/ObservacionesPage'
+import PrivacidadPage from './pages/PrivacidadPage'
 import ProyectosPage from './pages/ProyectosPage'
 import { LoginPage, RegisterPage } from './pages/LoginPage'
 
@@ -39,6 +45,10 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Portada />} />
 
+          {/* Fuera de RutaPublica a propósito: la política tiene que poder
+              leerse con sesión abierta y sin ella. */}
+          <Route path="/privacidad" element={<PrivacidadPage />} />
+
           <Route element={<RutaPublica />}>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/registro" element={<RegisterPage />} />
@@ -48,59 +58,13 @@ export default function App() {
             <Route element={<AppLayout />}>
               <Route path="/panel" element={<DashboardPage />} />
               <Route path="/proyectos" element={<ProyectosPage />} />
+              <Route path="/asesorados" element={<AsesoradosPage />} />
+              <Route path="/espacios/:areaId" element={<EspacioPage />} />
               <Route path="/hitos" element={<HitosPage />} />
-              <Route
-                path="/entregas"
-                element={
-                  <PendientePage
-                    titulo="Entregas"
-                    descripcion="Las versiones que subís contra cada hito."
-                    endpoints={['POST /api/hitos/{id}/entregas', 'GET /api/hitos/{id}/entregas']}
-                  />
-                }
-              />
-              <Route
-                path="/observaciones"
-                element={
-                  <PendientePage
-                    titulo="Observaciones"
-                    descripcion="Lo que el asesor marcó sobre cada versión entregada."
-                    endpoints={[
-                      'POST /api/entregas/{id}/observaciones',
-                      'GET /api/entregas/{id}/observaciones',
-                      'PATCH /api/observaciones/{id}/estado',
-                    ]}
-                  />
-                }
-              />
-              <Route
-                path="/asesorias"
-                element={
-                  <PendientePage
-                    titulo="Asesorías"
-                    descripcion="Reuniones registradas y los acuerdos que salieron de cada una."
-                    endpoints={[
-                      'POST /api/proyectos/{id}/asesorias',
-                      'GET /api/proyectos/{id}/asesorias',
-                      'POST /api/asesorias/{id}/acuerdos',
-                    ]}
-                  />
-                }
-              />
-              <Route
-                path="/tareas"
-                element={
-                  <PendientePage
-                    titulo="Tareas"
-                    descripcion="Lo que quedó por hacer, con responsable y fecha límite."
-                    endpoints={[
-                      'POST /api/proyectos/{id}/tareas',
-                      'GET /api/proyectos/{id}/tareas?completada=false',
-                      'PATCH /api/tareas/{id}/completar',
-                    ]}
-                  />
-                }
-              />
+              <Route path="/entregas" element={<EntregasPage />} />
+              <Route path="/observaciones" element={<ObservacionesPage />} />
+              <Route path="/asesorias" element={<AsesoriasPage />} />
+              <Route path="/tareas" element={<TareasPage />} />
             </Route>
           </Route>
 

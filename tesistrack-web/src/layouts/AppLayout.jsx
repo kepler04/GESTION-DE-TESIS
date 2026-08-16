@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
+import BienvenidaPanel from '../components/BienvenidaPanel'
 import BrandLogo from '../components/BrandLogo'
 import { useAuth } from '../auth/AuthContext'
 import '../styles/app.css'
@@ -11,6 +12,8 @@ import '../styles/app.css'
 function menuPara(rol) {
   const comun = [
     { to: '/panel', label: 'Dashboard', icono: '▦', end: true },
+    // Solo el asesor tiene asesorados; para los demás la entrada no existe.
+    ...(rol === 'ASESOR' ? [{ to: '/asesorados', label: 'Mis asesorados', icono: '☺' }] : []),
     { to: '/proyectos', label: rol === 'ESTUDIANTE' ? 'Mi proyecto' : 'Proyectos', icono: '◈' },
     { to: '/hitos', label: 'Hitos', icono: '◎' },
     { to: '/entregas', label: 'Entregas', icono: '↑' },
@@ -43,6 +46,10 @@ export default function AppLayout() {
 
   return (
     <div className={`shell ${abierto ? 'shell--menu-abierto' : ''}`}>
+      {/* Va en el layout y no en el Dashboard: el telón saluda al entrar al
+          panel, sea cual sea la pantalla en la que se caiga. */}
+      <BienvenidaPanel nombre={user?.name} />
+
       <aside className="sidebar">
         <div className="sidebar__marca">
           <BrandLogo variant="inline" />
