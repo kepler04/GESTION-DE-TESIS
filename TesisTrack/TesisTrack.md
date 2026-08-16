@@ -44,7 +44,7 @@ aliases:
 - [[Decisiones pendientes]]
 
 ### 06 - Desarrollo
-- (pendiente de iniciar — ver [[Enfoque de trabajo]])
+- [[Desarrollo]] — estado por entregable, cómo levantar el proyecto, usuarios de prueba
 
 ## Estado actual
 
