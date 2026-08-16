@@ -1,60 +1,53 @@
 import { useState } from 'react'
+import '../styles/brand.css'
 
 /**
- * Marca de TesisTrack: birrete sobre una S serif.
+ * Marca de TesisTrack.
  *
- * Se usa como respaldo dibujado en SVG. Si colocás el archivo real en
- * `public/logo.png` (o .svg), este componente lo toma automáticamente y
- * descarta el dibujo — no hace falta tocar código.
+ * Toma `public/logo.png` si existe. Como el logo real ya trae el texto
+ * "TESIS TRACK" integrado, cuando se carga la imagen no se dibuja el wordmark
+ * aparte. Si el archivo no está, cae a una marca provisional en SVG.
+ *
+ * variant: 'stacked' (tarjeta de login) | 'inline' (barra lateral)
  */
-function BrandMark({ className }) {
+function MarcaProvisional({ variant }) {
   return (
-    <svg className={className} viewBox="0 0 200 250" role="img" aria-label="TesisTrack">
-      <text
-        x="100"
-        y="228"
-        textAnchor="middle"
-        fontFamily="'Playfair Display', Georgia, 'Times New Roman', serif"
-        fontSize="215"
-        fontWeight="600"
-        fill="currentColor"
-      >
-        S
-      </text>
-
-      {/* cuerpo del birrete (queda detrás del tablero) */}
-      <path d="M66 72 L66 106 C66 120 134 120 134 106 L134 72 Z" fill="currentColor" />
-
-      {/* tablero */}
-      <path d="M100 16 L196 56 L100 96 L4 56 Z" fill="currentColor" />
-
-      {/* cordón y borla */}
-      <circle cx="100" cy="58" r="7" fill="currentColor" />
-      <path
-        d="M100 58 C70 66 42 60 34 68 L34 104"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="7"
-        strokeLinecap="round"
-      />
-      <path d="M27 102 L41 102 L37 140 L31 140 Z" fill="currentColor" />
-    </svg>
+    <span className={`brand-fallback brand-fallback--${variant}`}>
+      <svg viewBox="0 0 120 96" aria-hidden="true">
+        {/* birrete */}
+        <path d="M60 6 L116 28 L60 50 L4 28 Z" fill="currentColor" />
+        <path d="M40 38 L40 58 C40 70 80 70 80 58 L80 38 Z" fill="currentColor" />
+        <path d="M108 33 L108 62" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+        <circle cx="108" cy="66" r="5" fill="currentColor" />
+        {/* monograma */}
+        <text
+          x="60"
+          y="94"
+          textAnchor="middle"
+          fontFamily="'Playfair Display', Georgia, serif"
+          fontSize="34"
+          fontWeight="700"
+          fill="currentColor"
+        >
+          TK
+        </text>
+      </svg>
+      <span className="brand-fallback__word">Tesis Track</span>
+    </span>
   )
 }
 
-export default function BrandLogo() {
-  const [useFallback, setUseFallback] = useState(false)
+export default function BrandLogo({ variant = 'stacked' }) {
+  const [sinImagen, setSinImagen] = useState(false)
 
-  if (useFallback) {
-    return <BrandMark className="brand-logo__mark" />
-  }
+  if (sinImagen) return <MarcaProvisional variant={variant} />
 
   return (
     <img
-      className="brand-logo__img"
+      className={`brand-logo brand-logo--${variant}`}
       src="/logo.png"
       alt="TesisTrack"
-      onError={() => setUseFallback(true)}
+      onError={() => setSinImagen(true)}
     />
   )
 }

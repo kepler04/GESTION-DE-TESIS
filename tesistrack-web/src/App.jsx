@@ -1,85 +1,101 @@
-import { useState } from 'react'
-import AuthLayout from './components/AuthLayout'
-import LoginForm from './components/LoginForm'
-import RegisterForm from './components/RegisterForm'
+import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom'
+import { AuthProvider, useAuth } from './auth/AuthContext'
+import AppLayout from './layouts/AppLayout'
+import DashboardPage from './pages/DashboardPage'
+import HitosPage from './pages/HitosPage'
+import PendientePage from './pages/PendientePage'
+import ProyectosPage from './pages/ProyectosPage'
+import { LoginPage, RegisterPage } from './pages/LoginPage'
 
-function loadSession() {
-  const token = localStorage.getItem('token')
-  const userRaw = localStorage.getItem('user')
-  if (!token || !userRaw) return null
-  try {
-    return { token, user: JSON.parse(userRaw) }
-  } catch {
-    return null
-  }
+/** Solo deja pasar con sesión válida; espera a que se revalide el token guardado. */
+function RutaPrivada() {
+  const { session, verificando } = useAuth()
+  if (verificando) return <div className="arranque">Cargando…</div>
+  if (!session) return <Navigate to="/login" replace />
+  return <Outlet />
 }
 
-function App() {
-  const [session, setSession] = useState(loadSession)
-  const [view, setView] = useState('login')
+/** Si ya hay sesión, login y registro redirigen al dashboard. */
+function RutaPublica() {
+  const { session, verificando } = useAuth()
+  if (verificando) return <div className="arranque">Cargando…</div>
+  if (session) return <Navigate to="/" replace />
+  return <Outlet />
+}
 
-  function handleAuthSuccess({ token, user }) {
-    localStorage.setItem('token', token)
-    localStorage.setItem('user', JSON.stringify(user))
-    setSession({ token, user })
-  }
-
-  function handleLogout() {
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
-    setSession(null)
-    setView('login')
-  }
-
-  if (session) {
-    return (
-      <main>
-        <h1>TesisTrack</h1>
-        <p>
-          Sesión iniciada como <strong>{session.user.name}</strong> ({session.user.email}) — rol{' '}
-          {session.user.role}
-        </p>
-        <button type="button" onClick={handleLogout}>
-          Cerrar sesión
-        </button>
-      </main>
-    )
-  }
-
-  if (view === 'login') {
-    return (
-      <AuthLayout
-        title="Welcome Back!"
-        subtitle={
-          <>
-            ¿No tenés cuenta?{' '}
-            <button type="button" className="link" onClick={() => setView('register')}>
-              Creá una nueva
-            </button>{' '}
-            ahora, es gratis y toma menos de un minuto.
-          </>
-        }
-      >
-        <LoginForm onSuccess={handleAuthSuccess} />
-      </AuthLayout>
-    )
-  }
-
+export default function App() {
   return (
-    <AuthLayout
-      title="Crear cuenta"
-      subtitle={
-        <>
-          ¿Ya tenés cuenta?{' '}
-          <button type="button" className="link" onClick={() => setView('login')}>
-            Iniciá sesión
-          </button>
-        </>
-      }
-    >
-      <RegisterForm onSuccess={handleAuthSuccess} />
-    </AuthLayout>
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          <Route element={<RutaPublica />}>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/registro" element={<RegisterPage />} />
+          </Route>
+
+          <Route element={<RutaPrivada />}>
+            <Route element={<AppLayout />}>
+              <Route index element={<DashboardPage />} />
+              <Route path="/proyectos" element={<ProyectosPage />} />
+              <Route path="/hitos" element={<HitosPage />} />
+              <Route
+                path="/entregas"
+                element={
+                  <PendientePage
+                    titulo="Entregas"
+                    descripcion="Las versiones que subís contra cada hito."
+                    endpoints={['POST /api/hitos/{id}/entregas', 'GET /api/hitos/{id}/entregas']}
+                  />
+                }
+              />
+              <Route
+                path="/observaciones"
+                element={
+                  <PendientePage
+                    titulo="Observaciones"
+                    descripcion="Lo que el asesor marcó sobre cada versión entregada."
+                    endpoints={[
+                      'POST /api/entregas/{id}/observaciones',
+                      'GET /api/entregas/{id}/observaciones',
+                      'PATCH /api/observaciones/{id}/estado',
+                    ]}
+                  />
+                }
+              />
+              <Route
+                path="/asesorias"
+                element={
+                  <PendientePage
+                    titulo="Asesorías"
+                    descripcion="Reuniones registradas y los acuerdos que salieron de cada una."
+                    endpoints={[
+                      'POST /api/proyectos/{id}/asesorias',
+                      'GET /api/proyectos/{id}/asesorias',
+                      'POST /api/asesorias/{id}/acuerdos',
+                    ]}
+                  />
+                }
+              />
+              <Route
+                path="/tareas"
+                element={
+                  <PendientePage
+                    titulo="Tareas"
+                    descripcion="Lo que quedó por hacer, con responsable y fecha límite."
+                    endpoints={[
+                      'POST /api/proyectos/{id}/tareas',
+                      'GET /api/proyectos/{id}/tareas?completada=false',
+                      'PATCH /api/tareas/{id}/completar',
+                    ]}
+                  />
+                }
+              />
+            </Route>
+          </Route>
+
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
   )
 }
-
-export default App

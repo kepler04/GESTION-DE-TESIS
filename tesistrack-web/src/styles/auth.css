@@ -153,30 +153,11 @@
   z-index: 1;
 }
 
-/* ---- logo ---- */
+/* ---- logo (estilos propios en styles/brand.css) ---- */
 .brand-logo {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
+  justify-content: center;
   margin-bottom: 22px;
-}
-
-.brand-logo__img,
-.brand-logo__mark {
-  height: 96px;
-  width: auto;
-  max-width: 100%;
-  color: #0a0a0c;
-}
-
-.brand-logo__word {
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.42em;
-  text-indent: 0.42em;
-  text-transform: uppercase;
-  color: #26272b;
 }
 
 /* ---- encabezado ---- */

@@ -38,9 +38,31 @@ Dentro de una misma versión mayor (18.x) los cambios son compatibles hacia atr�
 
 Era la propuesta original (ver historial más abajo) pero quedó descartada apenas se confirmó que el profesor pide React específicamente — Thymeleaf no es compatible con ese requisito, ya que renderiza HTML en el servidor en vez de usar un framework de frontend en el cliente.
 
+## Estructura del frontend
+
+> [!success] Definida el 2026-08-16
+
+```
+src/
+  api/        client.js (fetch + JWT + corte de sesión en 401) y tesistrack.js (endpoints)
+  auth/       AuthContext.jsx — sesión, revalidación del token contra /auth/me
+  components/ BrandLogo, EstadoBadge, ProgressRing, ui.jsx (Card, PageHead, Vacio…)
+  hooks/      useProyectoActivo — proyecto seleccionado, recordado entre pantallas
+  layouts/    AppLayout.jsx — barra lateral + topbar, menú según rol
+  pages/      Dashboard, Proyectos, Hitos, Login, Pendiente
+  styles/     auth.css (login), app.css (panel), brand.css (logo, compartido)
+```
+
+- **React Router 6** (versión exacta, igual que React). Rutas privadas detrás de `RutaPrivada`, que espera a que se revalide el token guardado antes de decidir.
+- El **menú se arma según el rol**: el coordinador solo ve lo que puede consultar.
+- El **logo** sale de `public/logo.png`; si el archivo no está, cae a una marca provisional en SVG.
+
+### Color de los estados
+
+Los badges de estado llevan **siempre ícono + texto**; el color es refuerzo, nunca el único canal. No es decorativo: `OBSERVADO` (rojo) y `COMPLETADO` (verde) quedan a ΔE 4.1 en deuteranopía — sin la etiqueta, un asesor daltónico no distinguiría "aprobado" de "hay que corregir". La paleta se validó con el validador de contraste antes de fijarla.
+
 ## Por definir
 - Login con Google (Google Identity Services + verificación de token en backend) — pendiente hasta tener el OAuth Client ID
-- Estructura de carpetas del frontend React más allá de auth (rutas, estado global) a medida que crezca la app
 - Almacenamiento de documentos (entregas y versiones) — ¿S3 o filesystem local en la instancia?
 - Detalle del pipeline CI/CD (qué corre en cada paso, para backend y frontend por separado)
 - Servicio AWS exacto de compute para el backend: EC2 simple vs Elastic Beanstalk

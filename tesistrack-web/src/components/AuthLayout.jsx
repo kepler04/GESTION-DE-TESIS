@@ -98,8 +98,7 @@ export default function AuthLayout({ title, subtitle, children }) {
       <main className="auth-panel">
         <div className="auth-card">
           <div className="brand-logo">
-            <BrandLogo />
-            <span className="brand-logo__word">Tesis Track</span>
+            <BrandLogo variant="stacked" />
           </div>
 
           <h2>{title}</h2>

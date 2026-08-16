@@ -1,0 +1,680 @@
+/* ==================================================================
+   Panel de gestión de TesisTrack
+
+   Colores de estado: el badge lleva SIEMPRE ícono + texto. El color es
+   refuerzo, nunca el único canal — OBSERVADO (rojo) y COMPLETADO (verde)
+   quedan a ΔE 4.1 en deuteranopía, así que sin etiqueta un asesor
+   daltónico no distinguiría "aprobado" de "hay que corregir".
+   ================================================================== */
+
+.shell {
+  --sidebar-bg: linear-gradient(180deg, #132441 0%, #0d1a2e 60%, #0a1526 100%);
+  --sidebar-tinta: #a8b4cc;
+  --sidebar-activo: #ffffff;
+
+  --plano: #f4f5f8;
+  --superficie: #ffffff;
+  --borde: #e5e7ee;
+  --tinta: #14161d;
+  --tinta-2: #565c6b;
+  --tinta-3: #878d9c;
+
+  --acento: #2a78d6;
+  --ok: #0ca30c;
+  --aviso: #b26a00;
+  --alerta: #d03b3b;
+  --violeta: #4a3aa7;
+
+  --ui: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
+
+  display: flex;
+  min-height: 100svh;
+  background: var(--plano);
+  font-family: var(--ui);
+  color: var(--tinta);
+  font-size: 15px;
+  line-height: 1.5;
+  letter-spacing: normal;
+}
+
+/* ---------------- barra lateral ---------------- */
+.sidebar {
+  width: 248px;
+  flex: 0 0 248px;
+  background: var(--sidebar-bg);
+  color: var(--sidebar-tinta);
+  display: flex;
+  flex-direction: column;
+  padding: 20px 0 16px;
+}
+
+.sidebar__marca {
+  padding: 0 20px 22px;
+  display: flex;
+  justify-content: center;
+}
+
+.sidebar__seccion {
+  padding: 0 20px 8px;
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #6b7998;
+}
+
+.sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 10px;
+}
+
+.sidebar__link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: var(--sidebar-tinta);
+  text-decoration: none;
+  font-size: 14px;
+  border-left: 3px solid transparent;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.sidebar__link:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #dbe2ee;
+}
+
+.sidebar__link.is-active {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--sidebar-activo);
+  border-left-color: var(--acento);
+  font-weight: 500;
+}
+
+.sidebar__icono {
+  width: 18px;
+  text-align: center;
+  opacity: 0.85;
+}
+
+.sidebar__pie {
+  margin-top: auto;
+  padding: 14px 20px 0;
+  font-size: 11.5px;
+  color: #5d6a86;
+}
+
+/* ---------------- contenido ---------------- */
+.contenido {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  height: 62px;
+  flex: 0 0 62px;
+  background: var(--superficie);
+  border-bottom: 1px solid var(--borde);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+}
+
+.topbar__hamburguesa {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: var(--tinta);
+}
+
+.topbar__usuario {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.topbar__datos {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.25;
+}
+
+.topbar__datos strong {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.topbar__datos span {
+  font-size: 11.5px;
+  color: var(--tinta-3);
+}
+
+.topbar__avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #132441;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.pagina {
+  padding: 26px 24px 40px;
+  flex: 1;
+}
+
+/* ---------------- encabezado de página ---------------- */
+.page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.page-head h1 {
+  font-family: var(--ui);
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  margin: 0;
+  color: var(--tinta);
+}
+
+.page-head p {
+  margin: 4px 0 0;
+  color: var(--tinta-2);
+  font-size: 13.5px;
+}
+
+.page-head__acciones {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ---------------- tarjetas ---------------- */
+.card {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  margin-bottom: 18px;
+  overflow: hidden;
+}
+
+.card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 15px 18px;
+  border-bottom: 1px solid var(--borde);
+}
+
+.card__head h2 {
+  font-family: var(--ui);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--tinta-2);
+  margin: 0;
+}
+
+.card__body {
+  padding: 18px;
+}
+
+.grid-2 {
+  display: grid;
+  /* el mínimo alto fuerza 2 columnas en escritorio: con 3 quedaba una
+     tarjeta huérfana en la última fila */
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+
+.grid-2 .card {
+  margin-bottom: 0;
+}
+
+/* ---------------- resumen y tiles ---------------- */
+.resumen {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  flex-wrap: wrap;
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 14px;
+  flex: 1;
+  min-width: 260px;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #f8f9fb;
+  border: 1px solid var(--borde);
+  border-left: 3px solid var(--tinta-3);
+}
+
+.tile--ok {
+  border-left-color: var(--ok);
+}
+.tile--aviso {
+  border-left-color: var(--aviso);
+}
+.tile--alerta {
+  border-left-color: var(--alerta);
+}
+
+.tile__valor {
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--tinta);
+}
+
+.tile__etiqueta {
+  font-size: 12.5px;
+  color: var(--tinta-2);
+}
+
+.tile__detalle {
+  font-size: 11.5px;
+  color: var(--tinta-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* anillo de avance: una sola serie, sin leyenda, valor escrito al centro */
+.ring {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.ring svg {
+  width: 104px;
+  height: 104px;
+}
+
+.ring__pista {
+  fill: none;
+  stroke: #e8eaf0;
+  stroke-width: 9;
+}
+
+.ring__valor {
+  fill: none;
+  stroke: var(--acento);
+  stroke-width: 9;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.4s ease;
+}
+
+.ring__texto {
+  font-family: var(--ui);
+  font-size: 19px;
+  font-weight: 600;
+  fill: var(--tinta);
+}
+
+.ring__pie {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.3;
+}
+
+.ring__pie strong {
+  font-size: 14px;
+}
+
+.ring__pie span {
+  font-size: 11.5px;
+  color: var(--tinta-3);
+}
+
+/* ---------------- badges de estado ---------------- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px 3px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  /* tinta oscura sobre fondo teñido: el texto nunca depende del color del estado */
+  color: var(--tinta);
+  background: #eef0f4;
+  border: 1px solid #dfe2ea;
+}
+
+.badge__icono {
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.badge--neutro .badge__icono {
+  color: var(--tinta-3);
+}
+.badge--proceso {
+  background: #eaf2fd;
+  border-color: #cfe0f8;
+}
+.badge--proceso .badge__icono {
+  color: var(--acento);
+}
+.badge--entregado {
+  background: #eeecf8;
+  border-color: #d8d4ef;
+}
+.badge--entregado .badge__icono {
+  color: var(--violeta);
+}
+.badge--observado {
+  background: #fceded;
+  border-color: #f5d3d3;
+}
+.badge--observado .badge__icono {
+  color: var(--alerta);
+}
+.badge--completado {
+  background: #e8f6e8;
+  border-color: #cfe9cf;
+}
+.badge--completado .badge__icono {
+  color: var(--ok);
+}
+
+/* ---------------- listas y tablas ---------------- */
+.lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.lista li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid #f0f1f5;
+}
+
+.lista li:last-child {
+  border-bottom: none;
+}
+
+.lista li strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.lista__meta {
+  display: block;
+  font-size: 12px;
+  color: var(--tinta-3);
+  margin-top: 2px;
+}
+
+.tabla-scroll {
+  overflow-x: auto;
+}
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.tabla th {
+  text-align: left;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tinta-3);
+  font-weight: 600;
+  padding: 0 12px 10px 0;
+  border-bottom: 1px solid var(--borde);
+  white-space: nowrap;
+}
+
+.tabla td {
+  padding: 12px 12px 12px 0;
+  border-bottom: 1px solid #f0f1f5;
+  vertical-align: middle;
+}
+
+.tabla tr:last-child td {
+  border-bottom: none;
+}
+
+.tenue {
+  color: var(--tinta-3);
+}
+
+/* ---------------- formularios y botones ---------------- */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 460px;
+}
+
+.form label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 13px;
+  color: var(--tinta-2);
+}
+
+.form input,
+.form textarea,
+.form select,
+.selector-proyecto select,
+.tabla select {
+  padding: 9px 11px;
+  border: 1px solid #d6d9e2;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--tinta);
+  background: #fff;
+}
+
+.form input:focus,
+.form textarea:focus,
+.form select:focus,
+.tabla select:focus {
+  outline: none;
+  border-color: var(--acento);
+  box-shadow: 0 0 0 3px rgba(42, 120, 214, 0.15);
+}
+
+.form__acciones {
+  display: flex;
+  gap: 10px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 15px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+  text-decoration: none;
+}
+
+.btn--primario {
+  background: #132441;
+  color: #fff;
+}
+
+.btn--primario:hover:not(:disabled) {
+  background: #1d3560;
+}
+
+.btn--primario:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.btn--sutil {
+  background: #fff;
+  border-color: #d6d9e2;
+  color: var(--tinta-2);
+}
+
+.btn--sutil:hover {
+  background: #f6f7fa;
+}
+
+.selector-proyecto {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--tinta-2);
+}
+
+/* ---------------- estados auxiliares ---------------- */
+.vacio {
+  padding: 18px 0;
+  text-align: center;
+  color: var(--tinta-2);
+  font-size: 13.5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.estado-carga {
+  color: var(--tinta-3);
+  font-size: 13.5px;
+  padding: 10px 0;
+}
+
+.alerta {
+  padding: 11px 14px;
+  border-radius: 8px;
+  background: #fceded;
+  border: 1px solid #f0cccc;
+  color: #8f1d1d;
+  font-size: 13.5px;
+  margin-bottom: 16px;
+}
+
+.arranque {
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  color: #878d9c;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.pendiente {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
+  color: var(--tinta-2);
+  font-size: 13.5px;
+}
+
+.pendiente__marca {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #fff5e6;
+  border: 1px solid #f0dcbc;
+  color: #7a4d00;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.pendiente__endpoints {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.pendiente__endpoints code {
+  background: #f2f3f7;
+  border-radius: 5px;
+  padding: 2px 7px;
+  font-size: 12.5px;
+  color: var(--tinta);
+}
+
+/* ---------------- responsive ---------------- */
+.shell__velo {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 30;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+  }
+
+  .shell--menu-abierto .sidebar {
+    transform: translateX(0);
+  }
+
+  .topbar__hamburguesa {
+    display: block;
+  }
+
+  .shell--menu-abierto .shell__velo {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    border: none;
+    background: rgba(10, 21, 38, 0.45);
+  }
+
+  .pagina {
+    padding: 20px 16px 32px;
+  }
+}
