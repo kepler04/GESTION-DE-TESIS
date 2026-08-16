@@ -10,7 +10,7 @@ import '../styles/app.css'
  */
 function menuPara(rol) {
   const comun = [
-    { to: '/', label: 'Dashboard', icono: '▦', end: true },
+    { to: '/panel', label: 'Dashboard', icono: '▦', end: true },
     { to: '/proyectos', label: rol === 'ESTUDIANTE' ? 'Mi proyecto' : 'Proyectos', icono: '◈' },
     { to: '/hitos', label: 'Hitos', icono: '◎' },
     { to: '/entregas', label: 'Entregas', icono: '↑' },
@@ -19,7 +19,7 @@ function menuPara(rol) {
     { to: '/tareas', label: 'Tareas', icono: '✓' },
   ]
   if (rol === 'COORDINADOR') {
-    return comun.filter((i) => ['/', '/proyectos', '/hitos'].includes(i.to))
+    return comun.filter((i) => ['/panel', '/proyectos', '/hitos'].includes(i.to))
   }
   return comun
 }

@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './auth/AuthContext'
 import AppLayout from './layouts/AppLayout'
 import DashboardPage from './pages/DashboardPage'
 import HitosPage from './pages/HitosPage'
+import LandingPage from './pages/LandingPage'
 import PendientePage from './pages/PendientePage'
 import ProyectosPage from './pages/ProyectosPage'
 import { LoginPage, RegisterPage } from './pages/LoginPage'
@@ -15,12 +16,20 @@ function RutaPrivada() {
   return <Outlet />
 }
 
-/** Si ya hay sesión, login y registro redirigen al dashboard. */
+/** Si ya hay sesión, login y registro redirigen al panel. */
 function RutaPublica() {
   const { session, verificando } = useAuth()
   if (verificando) return <div className="arranque">Cargando…</div>
-  if (session) return <Navigate to="/" replace />
+  if (session) return <Navigate to="/panel" replace />
   return <Outlet />
+}
+
+/** La landing es para quien todavía no entró: con sesión abierta va derecho al panel. */
+function Portada() {
+  const { session, verificando } = useAuth()
+  if (verificando) return <div className="arranque">Cargando…</div>
+  if (session) return <Navigate to="/panel" replace />
+  return <LandingPage />
 }
 
 export default function App() {
@@ -28,6 +37,8 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
+          <Route path="/" element={<Portada />} />
+
           <Route element={<RutaPublica />}>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/registro" element={<RegisterPage />} />
@@ -35,7 +46,7 @@ export default function App() {
 
           <Route element={<RutaPrivada />}>
             <Route element={<AppLayout />}>
-              <Route index element={<DashboardPage />} />
+              <Route path="/panel" element={<DashboardPage />} />
               <Route path="/proyectos" element={<ProyectosPage />} />
               <Route path="/hitos" element={<HitosPage />} />
               <Route

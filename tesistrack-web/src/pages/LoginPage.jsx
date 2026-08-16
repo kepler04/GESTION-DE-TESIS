@@ -24,7 +24,7 @@ export function LoginPage() {
       <LoginForm
         onSuccess={(data) => {
           login(data)
-          navigate('/', { replace: true })
+          navigate('/panel', { replace: true })
         }}
       />
     </AuthLayout>
@@ -50,7 +50,7 @@ export function RegisterPage() {
       <RegisterForm
         onSuccess={(data) => {
           login(data)
-          navigate('/', { replace: true })
+          navigate('/panel', { replace: true })
         }}
       />
     </AuthLayout>

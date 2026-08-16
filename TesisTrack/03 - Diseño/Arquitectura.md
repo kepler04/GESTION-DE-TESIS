@@ -57,6 +57,27 @@ src/
 - El **menú se arma según el rol**: el coordinador solo ve lo que puede consultar.
 - El **logo** sale de `public/logo.png`; si el archivo no está, cae a una marca provisional en SVG.
 
+### La landing
+
+> [!success] Decidido el 2026-08-16 — va dentro del mismo React, no aparte
+
+Se evaluó hacerla como un sitio estático separado con su propio despliegue. Se descartó: obligaría a duplicar logo, tipografía, paleta y CSS de marca en dos proyectos que se desincronizan solos, sumaría un segundo dominio, y convertiría el "entrar" en un salto entre orígenes. El único argumento a favor era rendimiento y SEO, que en un proyecto de curso sin tráfico no compensa.
+
+Rutas resultantes:
+
+| Ruta | Qué es |
+|---|---|
+| `/` | Landing pública. Con sesión abierta redirige a `/panel` |
+| `/login`, `/registro` | Públicas. Con sesión abierta redirigen a `/panel` |
+| `/panel` y el resto | Detrás de sesión |
+
+**El argumento de la landing es el diagnóstico del [[Contexto]]**: la información de una tesis no falta, está dispersa entre WhatsApp, correo y la carpeta de descargas. La primera pantalla lo muestra literalmente — fragmentos desparramados que se ordenan en una sola columna — antes de explicarlo con palabras.
+
+Las secciones que siguen salen todas del vault: la cadena de [[Reglas de negocio]], las preguntas por rol del [[Alcance]], y una sección con **lo que TesisTrack no es**, tomada de [[Alcance#TesisTrack NO pretende ser]]. Esa última es deliberada: decir qué queda afuera explica el producto mejor que otra lista de features.
+
+> [!warning] Cuidado con los títulos en secciones oscuras
+> `index.css` trae una regla global `h1, h2 { color: var(--text-h) }` que gana por especificidad. Pintó el titular de una sección casi negro sobre fondo navy (contraste 1.2:1) hasta que se puso `color: inherit` en los títulos de la landing. Si se agregan secciones oscuras, verificar el contraste real, no confiar en que hereda.
+
 ### La pantalla de bienvenida
 
 El panel izquierdo del login no es decoración: muestra de qué se trata el producto.
