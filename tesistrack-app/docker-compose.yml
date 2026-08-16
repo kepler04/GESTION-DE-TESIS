@@ -1,0 +1,14 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: tesistrack
+      POSTGRES_USER: tesistrack
+      POSTGRES_PASSWORD: tesistrack
+    ports:
+      - "5432:5432"
+    volumes:
+      - tesistrack-db-data:/var/lib/postgresql/data
+
+volumes:
+  tesistrack-db-data:
