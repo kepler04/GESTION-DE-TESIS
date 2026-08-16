@@ -223,18 +223,18 @@ De esta manera, TesisTrack proporcionará un mecanismo centralizado para mejorar
 
 ---
 
-## Diferencias entre este documento y lo implementado
+## El sistema se ajustó a este documento
 
-> [!warning] Revisar antes de entregar
-> El documento describe el **proyecto propuesto**; el código ya tomó decisiones más finas en algunos puntos. Ninguna es un error del documento, pero conviene decidir si se ajusta el texto o se asume la diferencia, para que no aparezca una contradicción en la defensa.
+> [!success] Resuelto el 2026-08-16 — el documento mandó
+> Al redactarlo aparecieron cinco diferencias con lo construido. En vez de ablandar el texto, **se cambió el sistema**. Ya no hay contradicciones que puedan aparecer en la defensa.
 
-| Punto del documento | Lo implementado | Qué conviene hacer |
-|---|---|---|
-| 6.2 — *"Estudiante **o estudiantes** asociados"* | **Un solo estudiante por proyecto.** No hay tesis grupales ni co-asesores; es el supuesto 1 de [[Base de datos#Supuestos tomados al diseñar (no venían de una decisión)]] | Ajustar a singular, o abrir la discusión en grupo — cambia el modelo de datos |
-| 6.2 — *"Fecha de inicio"* | Existe como `created_at` del proyecto | Sin cambio real; es lo mismo con otro nombre |
-| 6.3 — *"El asesor **o usuario autorizado**"* | **Solo el asesor del proyecto** ([[Decisiones pendientes#Decisión 2 - Quién crea los hitos\|Decisión 2]]) | Precisar "el asesor del proyecto" |
-| 6.5 — *"Archivo entregado"* | **Todavía no hay carga real de archivos.** Se guarda el nombre y, opcionalmente, un enlace | Es la funcionalidad pendiente más visible — ver [[Auditoría de requisitos#A3. "Subir documento" — funcionalidad listada, no implementada\|A3]] |
-| 6.5 — *"Estado de la entrega"* | La entrega **no tiene estado propio**: el estado vive en el hito, y la versión más reciente es la vigente ([[Decisiones pendientes#Decisión 5 - Relación hito-entrega\|Decisión 5]]) | Reformular como "estado del hito asociado" |
+| Punto del documento | Qué se hizo |
+|---|---|
+| 6.2 — *"Estudiante **o estudiantes** asociados"* | **Se implementaron las tesis grupales.** Revierte el supuesto 1 de [[Base de datos]], que estaba marcado para revisar — ver [[Decisiones pendientes#Decisión 15 - Tesis grupales\|Decisión 15]] |
+| 6.2 — *"Fecha de inicio"* | Columna propia `fecha_inicio`, separada de `created_at`: una tesis puede haber arrancado antes de registrarse en la plataforma |
+| 6.3 — *"El asesor o usuario autorizado"* | Sin cambio: el asesor del proyecto **es** el usuario autorizado ([[Decisiones pendientes#Decisión 2 - Quién crea los hitos\|Decisión 2]]) |
+| 6.5 — *"Archivo entregado"* | **Carga real de archivos**, guardados en PostgreSQL, con descarga — ver [[Decisiones pendientes#Decisión 16 - Dónde se guardan los archivos de las entregas\|Decisión 16]] |
+| 6.5 — *"Estado de la entrega"* | `EstadoEntrega` propio de cada versión: `En revisión`, `Observada`, `Aprobada` |
 
 > [!note] Lo que el documento no menciona y sí existe
 > Durante el desarrollo aparecieron los **espacios de trabajo del asesor** con código de invitación y actividades repartidas a todo el grupo ([[Decisiones pendientes#Decisión 10 - Áreas del asesor\|D10]], [[Decisiones pendientes#Decisión 11 - Cómo entran los asesorados de un asesor privado\|D11]] y [[Decisiones pendientes#Decisión 12 - Cómo se reparte una actividad a todo un espacio\|D12]]). Resuelven cómo se vinculan estudiante y asesor —el objetivo específico 1— y conviene mencionarlos si el documento se vuelve a presentar.

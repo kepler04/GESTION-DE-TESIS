@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react'
-import { crearEntrega, listarEntregas, listarHitos } from '../api/tesistrack'
+import {
+  cambiarEstadoEntrega,
+  crearEntrega,
+  descargarArchivoEntrega,
+  listarEntregas,
+  listarHitos,
+  subirArchivoEntrega,
+} from '../api/tesistrack'
 import useProyectoActivo from '../hooks/useProyectoActivo'
 import { useAuth } from '../auth/AuthContext'
 import EstadoBadge from '../components/EstadoBadge'
@@ -26,9 +33,12 @@ export default function EntregasPage() {
   const { user } = useAuth()
   const { proyectos, activoId, activo, seleccionar, cargando: cargandoProyectos } = useProyectoActivo()
 
-  // Solo el estudiante del proyecto sube entregas (verificarEstudianteDelProyecto).
-  // El asesor y el coordinador leen, pero no entregan.
-  const puedeEntregar = user?.role === 'ESTUDIANTE' && activo?.estudiante?.id === user?.id
+  // Solo los estudiantes del proyecto suben entregas (verificarEstudianteDelProyecto).
+  // La tesis puede ser grupal: cualquiera del grupo entrega. El asesor y el
+  // coordinador leen, pero no entregan.
+  const puedeEntregar =
+    user?.role === 'ESTUDIANTE' && (activo?.estudiantes ?? []).some((e) => e.id === user?.id)
+  const esAsesor = user?.role === 'ASESOR'
 
   const [hitos, setHitos] = useState([])
   const [hitoId, setHitoId] = useState(null)
@@ -38,10 +48,11 @@ export default function EntregasPage() {
   const [error, setError] = useState(null)
 
   const [mostrarForm, setMostrarForm] = useState(false)
-  const [archivoNombre, setArchivoNombre] = useState('')
+  const [archivo, setArchivo] = useState(null)
   const [archivoUrl, setArchivoUrl] = useState('')
   const [comentario, setComentario] = useState('')
   const [guardando, setGuardando] = useState(false)
+  const [bajando, setBajando] = useState(null)
 
   const hito = hitos.find((h) => h.id === hitoId) ?? null
 
@@ -99,12 +110,17 @@ export default function EntregasPage() {
     setError(null)
     setGuardando(true)
     try {
-      await crearEntrega(hitoId, {
-        archivoNombre,
+      // Dos pasos: primero la versión, después el binario. El alta es JSON y la
+      // subida multipart, así que mezclarlas obligaría a armar el JSON como Blob.
+      const entrega = await crearEntrega(hitoId, {
+        archivoNombre: archivo?.name ?? null,
         archivoUrl: archivoUrl || null,
         comentario: comentario || null,
       })
-      setArchivoNombre('')
+      if (archivo) {
+        await subirArchivoEntrega(entrega.id, archivo)
+      }
+      setArchivo(null)
       setArchivoUrl('')
       setComentario('')
       setMostrarForm(false)
@@ -116,6 +132,28 @@ export default function EntregasPage() {
       setError(err.message)
     } finally {
       setGuardando(false)
+    }
+  }
+
+  async function handleDescargar(entrega) {
+    setError(null)
+    setBajando(entrega.id)
+    try {
+      await descargarArchivoEntrega(entrega.id, entrega.archivoNombre)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setBajando(null)
+    }
+  }
+
+  async function handleEstado(entregaId, estado) {
+    setError(null)
+    try {
+      await cambiarEstadoEntrega(entregaId, estado)
+      recargarEntregas()
+    } catch (err) {
+      setError(err.message)
     }
   }
 
@@ -180,22 +218,22 @@ export default function EntregasPage() {
           {mostrarForm && (
             <Card titulo={`Nueva versión${ultimaVersion ? ` — sería la v${ultimaVersion + 1}` : ''}`}>
               <form className="form" onSubmit={handleCrear}>
-                <p className="nota-subida">
-                  La subida real de archivos todavía no está definida (falta decidir S3 o
-                  filesystem). Por ahora se registra el nombre del archivo y, si lo tenés, el enlace
-                  donde está.
-                </p>
                 <label>
-                  Nombre del archivo
+                  Documento
                   <input
-                    value={archivoNombre}
-                    onChange={(e) => setArchivoNombre(e.target.value)}
-                    placeholder="Marco_teorico_v2.pdf"
-                    required
+                    type="file"
+                    onChange={(e) => setArchivo(e.target.files?.[0] ?? null)}
+                    accept=".pdf,.doc,.docx,.odt,.zip"
                   />
                 </label>
+                {archivo && (
+                  <p className="lista__meta">
+                    {archivo.name} · {(archivo.size / 1024 / 1024).toFixed(2)} MB
+                  </p>
+                )}
+                <p className="tenue">Hasta 15 MB. Queda guardado en la plataforma.</p>
                 <label>
-                  Enlace al archivo <span className="tenue">(opcional)</span>
+                  Enlace al archivo <span className="tenue">(opcional, si trabajás en Drive)</span>
                   <input
                     type="url"
                     value={archivoUrl}
@@ -217,8 +255,13 @@ export default function EntregasPage() {
                   asesor.
                 </p>
                 <div className="form__acciones">
-                  <button type="submit" className="btn btn--primario" disabled={guardando}>
-                    {guardando ? 'Registrando…' : 'Registrar entrega'}
+                  <button
+                    type="submit"
+                    className="btn btn--primario"
+                    // Sin documento ni enlace no hay nada que entregar.
+                    disabled={guardando || (!archivo && !archivoUrl.trim())}
+                  >
+                    {guardando ? 'Subiendo…' : 'Registrar entrega'}
                   </button>
                   <button
                     type="button"
@@ -258,21 +301,58 @@ export default function EntregasPage() {
                       )}
                     </div>
                     <div className="versiones__cuerpo">
-                      <strong>{e.archivoNombre}</strong>
+                      <div className="versiones__titulo">
+                        <strong>{e.archivoNombre ?? 'Sin documento'}</strong>
+                        <EstadoBadge estado={e.estado} tipo="entrega" />
+                      </div>
                       {e.comentario && <p className="versiones__comentario">{e.comentario}</p>}
                       <span className="lista__meta">
                         {e.entregadaPor?.name} · {fechaHora(e.createdAt)}
+                        {e.archivoTamano != null &&
+                          ` · ${(e.archivoTamano / 1024 / 1024).toFixed(2)} MB`}
                       </span>
-                      {e.archivoUrl && (
-                        <a
-                          className="versiones__enlace"
-                          href={e.archivoUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          Abrir archivo ↗
-                        </a>
-                      )}
+
+                      <div className="versiones__acciones">
+                        {e.tieneArchivo && (
+                          <button
+                            type="button"
+                            className="btn btn--sutil"
+                            onClick={() => handleDescargar(e)}
+                            disabled={bajando === e.id}
+                          >
+                            {bajando === e.id ? 'Descargando…' : '↓ Descargar'}
+                          </button>
+                        )}
+                        {e.archivoUrl && (
+                          <a
+                            className="versiones__enlace"
+                            href={e.archivoUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            Abrir enlace ↗
+                          </a>
+                        )}
+                        {/* El veredicto del asesor sobre esta versión concreta. */}
+                        {esAsesor && e.estado !== 'APROBADA' && (
+                          <button
+                            type="button"
+                            className="btn btn--sutil"
+                            onClick={() => handleEstado(e.id, 'APROBADA')}
+                          >
+                            Aprobar versión
+                          </button>
+                        )}
+                        {esAsesor && e.estado === 'APROBADA' && (
+                          <button
+                            type="button"
+                            className="btn btn--sutil"
+                            onClick={() => handleEstado(e.id, 'EN_REVISION')}
+                          >
+                            Reabrir
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </li>
                 ))}

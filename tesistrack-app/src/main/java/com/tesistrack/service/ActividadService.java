@@ -173,7 +173,7 @@ public class ActividadService {
             .sorted(Comparator
                 .comparingInt(TableroDto.FilaDto::enFalta).reversed()
                 .thenComparing(Comparator.comparingInt(TableroDto.FilaDto::porRevisar).reversed())
-                .thenComparing(f -> f.estudiante().name()))
+                .thenComparing(f -> f.titulo() == null ? "" : f.titulo()))
             .toList();
 
         return new TableroDto(AreaDto.from(area), actividades.stream().map(ActividadDto::from).toList(), filas);
@@ -197,7 +197,7 @@ public class ActividadService {
         int porRevisar = (int) celdas.stream().filter(c -> c.semaforo() == Semaforo.POR_REVISAR).count();
 
         return new TableroDto.FilaDto(
-            UserDto.from(proyecto.getEstudiante()),
+            proyecto.getEstudiantesOrdenados().stream().map(UserDto::from).toList(),
             proyecto.getId(),
             proyecto.getTitulo(),
             celdas,

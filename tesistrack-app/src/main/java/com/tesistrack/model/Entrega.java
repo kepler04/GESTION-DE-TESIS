@@ -4,6 +4,8 @@ import java.time.Instant;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -39,8 +41,25 @@ public class Entrega {
     @Column(name = "archivo_nombre")
     private String archivoNombre;
 
+    /**
+     * Enlace externo al documento. Se mantiene junto a la carga real: hay quien
+     * trabaja en Drive y prefiere compartir el enlace vivo en vez de una copia
+     * congelada.
+     */
     @Column(name = "archivo_url", length = 500)
     private String archivoUrl;
+
+    /** Tipo MIME de lo subido, para devolverlo bien al descargar. */
+    @Column(name = "archivo_tipo", length = 120)
+    private String archivoTipo;
+
+    /** Tamaño en bytes. Metadato barato: evita cargar el archivo solo para mostrarlo. */
+    @Column(name = "archivo_tamano")
+    private Long archivoTamano;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private EstadoEntrega estado = EstadoEntrega.EN_REVISION;
 
     @Column(columnDefinition = "text")
     private String comentario;
@@ -86,6 +105,30 @@ public class Entrega {
 
     public void setArchivoUrl(String archivoUrl) {
         this.archivoUrl = archivoUrl;
+    }
+
+    public String getArchivoTipo() {
+        return archivoTipo;
+    }
+
+    public void setArchivoTipo(String archivoTipo) {
+        this.archivoTipo = archivoTipo;
+    }
+
+    public Long getArchivoTamano() {
+        return archivoTamano;
+    }
+
+    public void setArchivoTamano(Long archivoTamano) {
+        this.archivoTamano = archivoTamano;
+    }
+
+    public EstadoEntrega getEstado() {
+        return estado;
+    }
+
+    public void setEstado(EstadoEntrega estado) {
+        this.estado = estado;
     }
 
     public String getComentario() {

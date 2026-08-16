@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listarAsesorados } from '../api/tesistrack'
 import EstadoBadge from '../components/EstadoBadge'
-import { Card, Cargando, ErrorMsg, PageHead, Vacio } from '../components/ui'
+import { Card, Cargando, ErrorMsg, PageHead, Vacio, nombres } from '../components/ui'
 
 /**
  * Panel del asesor: todos sus asesorados y qué necesita atención de cada uno.
@@ -72,7 +72,7 @@ export default function AsesoradosPage() {
               >
                 <header className="asesorado__cabecera">
                   <div>
-                    <h2>{a.estudiante?.name}</h2>
+                    <h2>{nombres(a.estudiantes)}</h2>
                     <p className="asesorado__tesis">{a.titulo}</p>
                   </div>
                   {a.area && <span className="asesorado__area">{a.area.nombre}</span>}

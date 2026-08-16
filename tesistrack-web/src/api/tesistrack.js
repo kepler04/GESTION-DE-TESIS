@@ -1,4 +1,4 @@
-import { api } from './client'
+import { api, apiDescargarArchivo, apiSubirArchivo } from './client'
 
 // --- proyectos ---
 export const listarProyectos = () => api('/api/proyectos')
@@ -7,6 +7,12 @@ export const crearProyecto = (body) => api('/api/proyectos', { method: 'POST', b
 export const asignarAsesor = (id, asesorId) =>
   api(`/api/proyectos/${id}/asesor`, { method: 'PATCH', body: { asesorId } })
 export const obtenerDashboard = (id) => api(`/api/proyectos/${id}/dashboard`)
+
+// --- integrantes de una tesis grupal ---
+export const agregarEstudiante = (proyectoId, email) =>
+  api(`/api/proyectos/${proyectoId}/estudiantes`, { method: 'POST', body: { email } })
+export const quitarEstudiante = (proyectoId, estudianteId) =>
+  api(`/api/proyectos/${proyectoId}/estudiantes/${estudianteId}`, { method: 'DELETE' })
 
 // --- áreas (etiquetas privadas del asesor para agrupar sus tesis) ---
 export const listarAreas = () => api('/api/areas')
@@ -49,6 +55,14 @@ export const eliminarHito = (hitoId) => api(`/api/hitos/${hitoId}`, { method: 'D
 export const listarEntregas = (hitoId) => api(`/api/hitos/${hitoId}/entregas`)
 export const crearEntrega = (hitoId, body) =>
   api(`/api/hitos/${hitoId}/entregas`, { method: 'POST', body })
+/** El documento se guarda en la base; se sube aparte del alta de la entrega. */
+export const subirArchivoEntrega = (entregaId, archivo) =>
+  apiSubirArchivo(`/api/entregas/${entregaId}/archivo`, archivo)
+export const descargarArchivoEntrega = (entregaId, nombre) =>
+  apiDescargarArchivo(`/api/entregas/${entregaId}/archivo`, nombre)
+export const cambiarEstadoEntrega = (entregaId, estado) =>
+  api(`/api/entregas/${entregaId}/estado`, { method: 'PATCH', body: { estado } })
+
 export const listarObservaciones = (entregaId) => api(`/api/entregas/${entregaId}/observaciones`)
 export const crearObservacion = (entregaId, descripcion) =>
   api(`/api/entregas/${entregaId}/observaciones`, { method: 'POST', body: { descripcion } })

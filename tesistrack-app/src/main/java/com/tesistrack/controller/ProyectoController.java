@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,6 +18,7 @@ import com.tesistrack.dto.AsignarAreaRequest;
 import com.tesistrack.dto.AsignarAsesorRequest;
 import com.tesistrack.dto.CrearProyectoRequest;
 import com.tesistrack.dto.DashboardDto;
+import com.tesistrack.dto.EmailRequest;
 import com.tesistrack.dto.ProyectoDto;
 import com.tesistrack.dto.UnirseRequest;
 import com.tesistrack.service.DashboardService;
@@ -76,6 +78,23 @@ public class ProyectoController {
             @RequestBody AsignarAreaRequest request,
             Authentication authentication) {
         return proyectoService.asignarArea(id, request, authentication);
+    }
+
+    /** Tesis grupal: sumar un compañero por su correo. Lo hace el propio grupo. */
+    @PostMapping("/{id}/estudiantes")
+    public ProyectoDto agregarEstudiante(
+            @PathVariable Long id,
+            @Valid @RequestBody EmailRequest request,
+            Authentication authentication) {
+        return proyectoService.agregarEstudiante(id, request, authentication);
+    }
+
+    @DeleteMapping("/{id}/estudiantes/{estudianteId}")
+    public ProyectoDto quitarEstudiante(
+            @PathVariable Long id,
+            @PathVariable Long estudianteId,
+            Authentication authentication) {
+        return proyectoService.quitarEstudiante(id, estudianteId, authentication);
     }
 
     @GetMapping("/{id}/dashboard")

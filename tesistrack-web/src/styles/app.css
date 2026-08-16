@@ -772,6 +772,47 @@
   color: var(--tinta-2);
 }
 
+/* ---------------- integrantes de una tesis grupal ---------------- */
+.integrantes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.integrantes li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--borde);
+}
+
+.integrantes li:last-child {
+  border-bottom: 0;
+}
+
+.integrantes strong {
+  display: block;
+}
+
+/* ---------------- entregas: archivo y veredicto ---------------- */
+.versiones__titulo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.versiones__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
 /* ---------------- asesorías y acuerdos ---------------- */
 .asesorias {
   margin: 0;

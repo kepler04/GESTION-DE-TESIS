@@ -96,8 +96,8 @@ export default function TareasPage() {
 
   const hoy = new Date().toISOString().slice(0, 10)
   const vencidas = tareas.filter((t) => !t.completada && t.fechaLimite && t.fechaLimite < hoy).length
-  // Solo el asesor y el estudiante del proyecto pueden ser responsables.
-  const candidatos = [proyecto?.estudiante, proyecto?.asesor].filter(Boolean)
+  // Responsables posibles: cualquier integrante de la tesis, más el asesor.
+  const candidatos = [...(proyecto?.estudiantes ?? []), proyecto?.asesor].filter(Boolean)
 
   return (
     <>

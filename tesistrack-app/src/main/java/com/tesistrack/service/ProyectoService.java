@@ -11,6 +11,7 @@ import com.tesistrack.config.NotFoundException;
 import com.tesistrack.dto.AsignarAreaRequest;
 import com.tesistrack.dto.AsignarAsesorRequest;
 import com.tesistrack.dto.CrearProyectoRequest;
+import com.tesistrack.dto.EmailRequest;
 import com.tesistrack.dto.ProyectoDto;
 import com.tesistrack.dto.UnirseRequest;
 import com.tesistrack.model.Area;
@@ -53,7 +54,11 @@ public class ProyectoService {
         Proyecto proyecto = new Proyecto();
         proyecto.setTitulo(request.titulo());
         proyecto.setDescripcion(request.descripcion());
-        proyecto.setEstudiante(usuario);
+        // Quien la crea es el primer integrante; después puede sumar compañeros.
+        proyecto.agregarEstudiante(usuario);
+        if (request.fechaInicio() != null) {
+            proyecto.setFechaInicio(request.fechaInicio());
+        }
 
         // El código manda sobre el selector: si el estudiante pegó uno, quiso
         // entrar al espacio de ese asesor, no al que hubiera quedado en la lista.
@@ -102,6 +107,49 @@ public class ProyectoService {
         actividadService.repartirPendientes(proyecto, area);
     }
 
+    /**
+     * Suma un compañero a una tesis grupal, buscándolo por su correo.
+     *
+     * <p>Lo hace un integrante del grupo, no el asesor: la tesis es de ellos. Se pide
+     * el correo y no un id porque nadie sabe de memoria el id de otro usuario, y
+     * listar todos los estudiantes de la plataforma para elegir sería exponer el
+     * padrón entero.
+     */
+    public ProyectoDto agregarEstudiante(Long id, EmailRequest request, Authentication authentication) {
+        User usuario = acceso.usuarioActual(authentication);
+        Proyecto proyecto = buscar(id);
+        acceso.verificarEstudianteDelProyecto(proyecto, usuario);
+
+        User companero = userRepository.findByEmail(User.normalizarEmail(request.email()))
+            .orElseThrow(() -> new NotFoundException("No hay ninguna cuenta con ese correo"));
+
+        if (companero.getRole() != Role.ESTUDIANTE) {
+            throw new IllegalArgumentException("Solo se puede sumar a alguien con rol estudiante");
+        }
+        if (proyecto.tieneEstudiante(companero.getId())) {
+            throw new IllegalArgumentException("Esa persona ya está en la tesis");
+        }
+
+        proyecto.agregarEstudiante(companero);
+        return ProyectoDto.from(proyecto);
+    }
+
+    /** Cualquiera del grupo puede sacar a otro —o irse—, menos dejarla sin nadie. */
+    public ProyectoDto quitarEstudiante(Long id, Long estudianteId, Authentication authentication) {
+        User usuario = acceso.usuarioActual(authentication);
+        Proyecto proyecto = buscar(id);
+        acceso.verificarEstudianteDelProyecto(proyecto, usuario);
+
+        if (!proyecto.tieneEstudiante(estudianteId)) {
+            throw new NotFoundException("Esa persona no está en la tesis");
+        }
+
+        proyecto.quitarEstudiante(
+            userRepository.findById(estudianteId)
+                .orElseThrow(() -> new NotFoundException("Usuario no encontrado")));
+        return ProyectoDto.from(proyecto);
+    }
+
     private static boolean tieneTexto(String valor) {
         return valor != null && !valor.isBlank();
     }
@@ -113,7 +161,7 @@ public class ProyectoService {
     public List<ProyectoDto> listar(Authentication authentication) {
         User usuario = acceso.usuarioActual(authentication);
         List<Proyecto> proyectos = switch (usuario.getRole()) {
-            case ESTUDIANTE -> proyectoRepository.findByEstudianteId(usuario.getId());
+            case ESTUDIANTE -> proyectoRepository.findByEstudiantesId(usuario.getId());
             case ASESOR -> proyectoRepository.findByAsesorId(usuario.getId());
             case COORDINADOR -> proyectoRepository.findAll();
         };

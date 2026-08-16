@@ -11,6 +11,7 @@ import com.tesistrack.dto.CambiarEstadoObservacionRequest;
 import com.tesistrack.dto.CrearObservacionRequest;
 import com.tesistrack.dto.ObservacionDto;
 import com.tesistrack.model.Entrega;
+import com.tesistrack.model.EstadoEntrega;
 import com.tesistrack.model.EstadoHito;
 import com.tesistrack.model.Observacion;
 import com.tesistrack.model.User;
@@ -49,6 +50,9 @@ public class ObservacionService {
 
         // Observar una entrega devuelve el hito al estado OBSERVADO: hay algo que corregir.
         entrega.getHito().setEstado(EstadoHito.OBSERVADO);
+        // Y deja marcada la versión concreta: el hito avanza, pero esta versión queda
+        // observada para siempre en el historial.
+        entrega.setEstado(EstadoEntrega.OBSERVADA);
 
         return ObservacionDto.from(observacionRepository.save(observacion));
     }

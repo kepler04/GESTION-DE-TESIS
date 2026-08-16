@@ -17,8 +17,9 @@ PostgreSQL 16 (ver [[Arquitectura]]). Las tablas las genera Hibernate a partir d
 
 ```mermaid
 erDiagram
-    USERS ||--o{ PROYECTO : "es estudiante de"
+    USERS }o--o{ PROYECTO : "es tesista de"
     USERS ||--o{ PROYECTO : "asesora"
+    ENTREGA ||--o| ARCHIVO_ENTREGA : "guarda"
     PROYECTO ||--o{ HITO : "tiene"
     PROYECTO ||--o{ ASESORIA : "registra"
     PROYECTO ||--o{ TAREA : "agrupa"
@@ -61,10 +62,15 @@ erDiagram
         varchar titulo
         text descripcion
         varchar estado
-        bigint estudiante_id FK
         bigint asesor_id FK
         bigint area_id FK
+        date fecha_inicio
         timestamp created_at
+    }
+    ARCHIVO_ENTREGA {
+        bigint id PK
+        bigint entrega_id FK
+        bytea contenido
     }
     HITO {
         bigint id PK
@@ -148,7 +154,7 @@ Ambas cuelgan de `proyecto`, que es lo que permite reconstruir el historial comp
 > [!warning] Revisar en grupo
 > Estos tres puntos no estaban definidos en ninguna nota. Se resolvieron de la forma más simple para poder avanzar; si alguno no convence, cambiarlo ahora es barato.
 
-1. **Un proyecto tiene un estudiante y un asesor.** `proyecto.estudiante_id` es obligatorio; `proyecto.asesor_id` es nullable (un proyecto puede existir antes de que le asignen asesor). No hay co-asesores ni tesis grupales — encaja con el [[Alcance]], que pide mantener el proyecto cerrado y realista.
+1. ~~**Un proyecto tiene un estudiante y un asesor.**~~ **Revertido el 2026-08-16** por la [[Decisiones pendientes#Decisión 15 - Tesis grupales|Decisión 15]]: una tesis puede tener **varios estudiantes** (tabla `proyecto_estudiante`), porque el [[Entregable 0 - Conceptualización|Entregable 0]] lo pide. Sigue sin haber co-asesores: `proyecto.asesor_id` es uno solo y nullable.
 2. **`tarea.acuerdo_id` es nullable.** [[Reglas de negocio]] deriva las tareas de un acuerdo, pero [[Funcionalidades]] lista "Crear tarea" como acción suelta. Nullable permite ambas cosas sin romper la cadena cuando sí viene de un acuerdo. `tarea.proyecto_id` sí es obligatorio, para poder listar pendientes de un proyecto sin encadenar tres joins.
 3. **`observacion.estado`** ∈ `PENDIENTE`, `RESUELTA`. No sale de D6, sino de [[Funcionalidades]], que pide "marcar estado" y "consultar observaciones pendientes".
 
@@ -193,10 +199,18 @@ CREATE TABLE proyecto (
     descripcion   TEXT,
     estado        VARCHAR(20)  NOT NULL DEFAULT 'EN_CURSO'
                   CHECK (estado IN ('EN_CURSO', 'FINALIZADO', 'SUSPENDIDO')),
-    estudiante_id BIGINT       NOT NULL REFERENCES users (id),
     asesor_id     BIGINT       REFERENCES users (id),
     area_id       BIGINT       REFERENCES area (id),  -- nullable: la tesis existe sin carpeta
+    fecha_inicio  DATE,
     created_at    TIMESTAMP    NOT NULL DEFAULT now()
+);
+
+-- Una tesis puede ser grupal (Decisión 15). Todos sus integrantes tienen los
+-- mismos permisos; la lista nunca queda vacía.
+CREATE TABLE proyecto_estudiante (
+    proyecto_id   BIGINT NOT NULL REFERENCES proyecto (id) ON DELETE CASCADE,
+    estudiante_id BIGINT NOT NULL REFERENCES users (id),
+    PRIMARY KEY (proyecto_id, estudiante_id)
 );
 
 -- Consigna que el asesor reparte a todo un área de una vez.
@@ -230,11 +244,23 @@ CREATE TABLE entrega (
     hito_id          BIGINT       NOT NULL REFERENCES hito (id) ON DELETE CASCADE,
     version          INTEGER      NOT NULL,
     archivo_nombre   VARCHAR(255),
-    archivo_url      VARCHAR(500),
+    archivo_url      VARCHAR(500),   -- enlace externo, opcional y complementario
+    archivo_tipo     VARCHAR(120),   -- MIME, para devolverlo bien al descargar
+    archivo_tamano   BIGINT,         -- también marca si hay documento cargado
+    estado           VARCHAR(20)  NOT NULL DEFAULT 'EN_REVISION'
+                     CHECK (estado IN ('EN_REVISION', 'OBSERVADA', 'APROBADA')),
     comentario       TEXT,
     entregada_por_id BIGINT       NOT NULL REFERENCES users (id),
     created_at       TIMESTAMP    NOT NULL DEFAULT now(),
     CONSTRAINT uk_entrega_hito_version UNIQUE (hito_id, version)
+);
+
+-- El binario va aparte para que listar versiones no traiga los PDF a memoria.
+-- bytea y no oid: con @Lob/oid, borrar la fila deja el objeto huérfano.
+CREATE TABLE archivo_entrega (
+    id         BIGSERIAL PRIMARY KEY,
+    entrega_id BIGINT    NOT NULL UNIQUE REFERENCES entrega (id),
+    contenido  BYTEA     NOT NULL
 );
 
 CREATE TABLE observacion (
@@ -302,6 +328,30 @@ El esquema de arriba ya los incluye. Se listan aparte porque **`ddl-auto=update`
 | `area.codigo NOT NULL UNIQUE` | 2026-08-16 | Ya había áreas creadas: hubo que agregar la columna nullable, rellenarla con códigos únicos y recién ahí poner la restricción |
 | Perfil en `users` (6 columnas) | 2026-08-16 | Se agregaron **nullables** a propósito: sobre filas existentes no se puede poner `NOT NULL` sin default |
 | `actividad` + `hito.actividad_id` | 2026-08-16 | **Ninguna migración manual**: tabla nueva y columna nullable, `ddl-auto=update` las crea solo |
+| `proyecto_estudiante` (tesis grupales) | 2026-08-16 | Hibernate crea la tabla de unión pero **no mueve los datos ni borra la columna vieja**. Hay que copiar `estudiante_id` y recién ahí soltarla: sigue siendo `NOT NULL`, así que mientras exista todo alta nueva falla |
+| `entrega.estado` | 2026-08-16 | `NOT NULL` sobre una tabla con filas — la misma trampa que `area.codigo` |
+| `archivo_entrega` | 2026-08-16 | Tabla nueva, la crea sola. **Ojo**: si llegó a crearse con `contenido oid` (por `@Lob`), hay que borrarla y dejar que se recree como `bytea` |
+
+```sql
+-- Tesis grupales: mover el estudiante único a la tabla de unión.
+BEGIN;
+INSERT INTO proyecto_estudiante (proyecto_id, estudiante_id)
+SELECT id, estudiante_id FROM proyecto WHERE estudiante_id IS NOT NULL
+ON CONFLICT DO NOTHING;
+-- (aborta si algún proyecto quedara sin integrantes)
+ALTER TABLE proyecto DROP COLUMN IF EXISTS estudiante_id;
+COMMIT;
+
+-- Estado de la entrega: se reconstruye el real, no se aplana todo a EN_REVISION.
+BEGIN;
+ALTER TABLE entrega ADD COLUMN IF NOT EXISTS estado varchar(20);
+UPDATE entrega e SET estado = CASE
+    WHEN EXISTS (SELECT 1 FROM observacion o WHERE o.entrega_id = e.id) THEN 'OBSERVADA'
+    ELSE 'EN_REVISION' END
+WHERE estado IS NULL;
+ALTER TABLE entrega ALTER COLUMN estado SET NOT NULL;
+COMMIT;
+```
 | `users.email` a minúsculas | 2026-08-16 | Normalización de datos ya cargados, no un cambio de esquema. Se corrió dentro de una transacción que aborta si dos cuentas colapsan en el mismo email |
 
 > [!warning] El email en minúsculas era un bug latente

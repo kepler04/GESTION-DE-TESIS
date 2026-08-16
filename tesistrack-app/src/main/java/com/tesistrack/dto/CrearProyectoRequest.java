@@ -1,5 +1,7 @@
 package com.tesistrack.dto;
 
+import java.time.LocalDate;
+
 import jakarta.validation.constraints.NotBlank;
 
 /**
@@ -13,6 +15,8 @@ public record CrearProyectoRequest(
     @NotBlank String titulo,
     String descripcion,
     Long asesorId,
-    String codigoInvitacion
+    String codigoInvitacion,
+    /** Opcional: si no viene, la tesis arranca hoy. */
+    LocalDate fechaInicio
 ) {
 }

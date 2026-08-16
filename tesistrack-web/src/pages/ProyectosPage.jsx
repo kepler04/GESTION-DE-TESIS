@@ -10,8 +10,9 @@ import { useAuth } from '../auth/AuthContext'
 import EstadoBadge from '../components/EstadoBadge'
 import CarpetasAsesor from '../components/CarpetasAsesor'
 import GestorAreas from '../components/GestorAreas'
+import Integrantes from '../components/Integrantes'
 import UnirseConCodigo from '../components/UnirseConCodigo'
-import { Card, Cargando, ErrorMsg, PageHead, Vacio, fecha } from '../components/ui'
+import { Card, Cargando, ErrorMsg, PageHead, Vacio, fecha, nombres } from '../components/ui'
 
 const SIN_AREA = 'sin-area'
 
@@ -125,6 +126,11 @@ export default function ProyectosPage() {
       </PageHead>
 
       {error && <ErrorMsg>{error}</ErrorMsg>}
+
+      {/* Una tesis puede ser grupal; el grupo lo arma el propio estudiante. */}
+      {esEstudiante && proyectos.length > 0 && (
+        <Integrantes proyecto={proyectos[0]} usuarioId={user?.id} onCambio={recargar} />
+      )}
 
       {esEstudiante && mostrarUnirse && proyectos.length > 0 && (
         <UnirseConCodigo
@@ -268,7 +274,7 @@ export default function ProyectosPage() {
                         <strong>{p.titulo}</strong>
                         {p.descripcion && <span className="lista__meta">{p.descripcion}</span>}
                       </td>
-                      <td>{p.estudiante?.name}</td>
+                      <td>{nombres(p.estudiantes)}</td>
                       <td>{p.asesor?.name ?? <em className="tenue">Sin asignar</em>}</td>
                       {esAsesor && (
                         <td>

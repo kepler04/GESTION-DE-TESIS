@@ -27,7 +27,14 @@ const PROYECTO = {
   SUSPENDIDO: { texto: 'Suspendido', icono: '‖', clase: 'neutro' },
 }
 
-const MAPAS = { hito: HITO, observacion: OBSERVACION, proyecto: PROYECTO }
+/** Veredicto sobre una versión concreta, distinto del estado del hito. */
+const ENTREGA = {
+  EN_REVISION: { texto: 'En revisión', icono: '◐', clase: 'proceso' },
+  OBSERVADA: { texto: 'Observada', icono: '!', clase: 'observado' },
+  APROBADA: { texto: 'Aprobada', icono: '✓', clase: 'completado' },
+}
+
+const MAPAS = { hito: HITO, observacion: OBSERVACION, proyecto: PROYECTO, entrega: ENTREGA }
 
 export default function EstadoBadge({ estado, tipo = 'hito' }) {
   const def = MAPAS[tipo]?.[estado] ?? { texto: estado, icono: '•', clase: 'neutro' }

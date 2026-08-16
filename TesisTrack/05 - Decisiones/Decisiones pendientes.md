@@ -12,7 +12,7 @@ tags:
 > [!success] Todas cerradas el 2026-08-16
 > **1, 3, 5 y 6** se cerraron para diseñar el modelo de datos del [[Entregables y evaluación|Entregable 1]] — eran las que afectaban al diagrama ER.
 > **2, 4, 7 y 8** se cerraron a continuación para poder escribir la API del [[Entregables y evaluación|Entregable 2]], porque definen qué rol puede llamar a cada endpoint.
-> De la **9** a la **14** surgieron durante el [[Entregables y evaluación|Entregable 3]]: al rediseñar el registro, al ordenar la carga de trabajo del asesor, al resolver cómo un asesor privado suma a sus asesorados, al repartir una consigna a todo un espacio, al abrir las asesorías como canal de consultas y al arreglar el primer minuto del asesor nuevo.
+> De la **9** a la **16** surgieron durante el [[Entregables y evaluación|Entregable 3]]: al rediseñar el registro, al ordenar la carga de trabajo del asesor, al resolver cómo un asesor privado suma a sus asesorados, al repartir una consigna a todo un espacio, al abrir las asesorías como canal de consultas y al arreglar el primer minuto del asesor nuevo.
 >
 > No quedan decisiones abiertas. Las que surjan de acá en adelante se agregan a esta nota con su fecha.
 
@@ -261,6 +261,57 @@ Dos estados, uno después del otro:
 **Las seis pantallas que quedaban mudas** (Hitos, Entregas, Observaciones, Asesorías, Tareas y el propio Dashboard) ahora usan un `SinProyecto` que sabe distinguir rol: al asesor sin asesorados lo manda a "Mis espacios" con un botón, en vez de solo describirle un código que no tiene.
 
 Ver [[Desarrollo#Primeros pasos del asesor nuevo]].
+
+## Decisión 15 - Tesis grupales
+
+El [[Entregable 0 - Conceptualización|Entregable 0]] dice "estudiante **o estudiantes** asociados", pero el modelo tenía un solo estudiante por proyecto. ¿Se ajusta el documento o el sistema?
+
+**Estado:** ✅ cerrada (2026-08-16) — **el sistema. Una tesis puede tener varios estudiantes, todos con los mismos permisos**
+
+Revierte el **supuesto 1** de [[Base de datos#Supuestos tomados al diseñar (no venían de una decisión)]], que se había tomado "de la forma más simple para poder avanzar" y estaba marcado para revisar. El documento del curso mandó.
+
+`proyecto.estudiante_id` pasó a la tabla de unión `proyecto_estudiante`.
+
+> [!important] No hay dueño ni jerarquía dentro del grupo
+> Cualquier integrante entrega, se une a un espacio, suma o saca compañeros. Se descartó un rol de "líder": una tesis de dos personas no necesita burocracia interna, y el que la creó no tiene por qué ser el único que pueda entregar cuando el otro esté trabajando.
+
+> [!note] Decisiones de detalle
+> - **La lista nunca queda vacía**: `quitarEstudiante` se niega a sacar al último. Un proyecto sin estudiantes no le pertenecería a nadie y quedaría inalcanzable desde la aplicación.
+> - **Se suma por correo, no eligiendo de una lista.** Listar a todos los estudiantes de la plataforma para elegir uno sería exponer el padrón entero; el correo lo sabe quien tiene que saberlo.
+> - **Solo se puede sumar a alguien con rol estudiante**, y que ya tenga cuenta.
+> - **La relación se carga `EAGER`**, al revés que el resto: `AccesoService` la necesita en cada request protegida, y sin eso serían consultas extra garantizadas más riesgo de `LazyInitializationException` al armar los DTO.
+> - **Una tesis grupal ocupa una sola fila** en "Mis asesorados" y en el tablero, con los nombres juntos: entregan una vez, así que su avance es uno solo.
+
+**Migración obligatoria** (Hibernate crea la tabla de unión pero no mueve datos ni borra columnas): copiar `estudiante_id` a `proyecto_estudiante` y recién ahí soltar la columna, que es `NOT NULL` y haría fallar todo alta nueva. En local: 11 proyectos, 11 vínculos, 0 huérfanos.
+
+## Decisión 16 - Dónde se guardan los archivos de las entregas
+
+Venía abierta desde el Entregable 1 y el documento promete "Archivo entregado". ¿S3, filesystem o base?
+
+**Estado:** ✅ cerrada (2026-08-16) — **en PostgreSQL, en una tabla aparte, con tope de 15 MB**
+
+| Alternativa | Por qué no |
+|---|---|
+| **Filesystem del servidor** | En AWS el disco no sobrevive a un redespliegue: los archivos se perderían al actualizar la app |
+| **S3** | Es lo correcto para producción real, pero necesita cuenta, bucket, credenciales y configurarlo en el pipeline — depende de accesos que el grupo todavía no tiene, y bloquearía el Entregable 3 |
+
+Una tesis en PDF pesa poco; para el alcance del curso la base alcanza de sobra y funciona igual en la máquina de cada uno y en AWS, sin configurar nada.
+
+> [!important] Los bytes van en su propia tabla, no en `entrega`
+> Un `byte[]` en la misma entidad se carga entero en cada consulta: listar diez versiones traería diez PDF a memoria para mostrar diez nombres. Marcarlo `LAZY` no alcanza —Hibernate solo lo respeta en atributos básicos con *bytecode enhancement*, que este proyecto no usa—, así que el contenido vive en `archivo_entrega` y solo la descarga lo toca. Los metadatos (nombre, tipo, tamaño) se quedan en `entrega` porque son baratos y se muestran siempre.
+
+> [!warning] `@Lob` sobre `byte[]` en PostgreSQL es una trampa
+> Hibernate lo mapea a `oid` (Large Object): guarda un puntero a `pg_largeobject`, hay que leerlo dentro de una transacción y **borrar la fila no borra el objeto**, así que se acumulan huérfanos. Se usa `columnDefinition = "bytea"` sin `@Lob`.
+
+El enlace externo (`archivo_url`) **se mantiene** junto a la carga real: hay quien trabaja en Drive y prefiere compartir el enlace vivo en vez de una copia congelada.
+
+### Estado de la entrega
+
+El documento también pide "estado de la entrega". Se agregó `EstadoEntrega` —`EN_REVISION`, `OBSERVADA`, `APROBADA`— que **no duplica** a `EstadoHito`: el hito dice en qué anda el trabajo hoy, y esto queda como el veredicto de cada versión. Permite responder *"¿cuál fue la versión que el asesor aprobó?"* sin reconstruirlo desde las observaciones.
+
+Registrar una observación marca la versión como `OBSERVADA` automáticamente; aprobar y reabrir los hace el asesor a mano.
+
+Ver [[Desarrollo#Tesis grupales y archivos reales]].
 
 ## Ver también
 - [[Feedback profesor]]

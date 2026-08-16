@@ -104,6 +104,16 @@ export function SinProyecto({ rol }) {
   return <Vacio>Todavía no hay proyectos para consultar.</Vacio>
 }
 
+/**
+ * Nombres de los integrantes de una tesis, separados por coma.
+ *
+ * Una tesis puede ser grupal, así que ninguna pantalla asume una sola persona.
+ */
+export function nombres(estudiantes) {
+  if (!estudiantes || estudiantes.length === 0) return '—'
+  return estudiantes.map((e) => e.name).join(', ')
+}
+
 export function fecha(valor) {
   if (!valor) return '—'
   return new Date(valor).toLocaleDateString('es', {

@@ -24,7 +24,7 @@ aliases:
 |---|---|---|
 | 1 — Modelo de Datos | 15% | ✅ terminado y verificado |
 | 2 — Backend | 20% | ✅ terminado, 31 pruebas |
-| 3 — Full-Stack | 20% | 🔨 **casi** — solo falta la subida real de archivos |
+| 3 — Full-Stack | 20% | ✅ **funcionalidades completas** — queda el menú del coordinador |
 | 4 — CI/CD y Despliegue | 15% | ⬜ **sin empezar** |
 | Final — Competencia | 30% | ⬜ **sin empezar** |
 
@@ -39,14 +39,11 @@ aliases:
 >
 > Ya no queda ninguna ruta en `PendientePage` — el componente se borró. La cadena `Asesoría → Acuerdo → Tarea` se puede recorrer entera desde la aplicación.
 
-### A3. "Subir documento" — funcionalidad listada, no implementada
+### A3. "Subir documento" ✅ resuelto el 2026-08-16
 
-[[Funcionalidades#Entregas]] lista **"Subir documento"** explícitamente. Hoy el formulario guarda el **nombre** del archivo y opcionalmente un **enlace**; no hay carga real.
+Los archivos se guardan **en PostgreSQL**, con descarga y tope de 15 MB ([[Decisiones pendientes#Decisión 16 - Dónde se guardan los archivos de las entregas|Decisión 16]]). Se descartó S3 —necesita accesos que el grupo todavía no tiene— y el filesystem, que en AWS no sobrevive a un redespliegue.
 
-Está documentado como decisión consciente (no improvisar un almacenamiento que después haya que migrar) y el aviso está a la vista en la interfaz. Pero **sigue siendo una funcionalidad clave del enunciado sin cumplir**, y la decisión S3 vs. filesystem lleva abierta desde el Entregable 1.
-
-> [!warning] Esta decisión ya bloquea
-> Con el backend en AWS, el filesystem local no sobrevive a un redespliegue. Si se va a hacer, hay que decidirlo antes del [[Entregables y evaluación#Entregable 4 — CI-CD y Despliegue (15%)|Entregable 4]], no después. Si **no** se va a hacer, conviene decidirlo explícitamente y anotarlo como alcance recortado, en vez de dejarlo como pendiente perpetuo.
+Con esto **[[Funcionalidades]] queda cubierta por completo**.
 
 ### A4. Entregable 4 — CI/CD y despliegue (15%)
 
@@ -112,7 +109,7 @@ Ordenado por **nota por hora invertida**, no por lo que sea más entretenido de 
 1. **Pushear.** El commit ya está hecho (`entregable-3-espacios`); falta subirlo. ⬅ **lo único urgente que queda**
 2. ~~Asesorías + Acuerdos y Tareas~~ ✅ hechas el 2026-08-16.
 3. **Resolver el menú del coordinador.** Una línea. Elimina una contradicción visible.
-4. **Decidir la carga de archivos** — hacerla o recortarla explícitamente. No dejarla flotando.
+4. ~~Decidir la carga de archivos~~ ✅ resuelta el 2026-08-16: van en PostgreSQL.
 5. **Entregable 4: CI/CD + despliegue** (15%). Es trabajo de configuración, poco código, y no depende de las pantallas que falten.
 6. **Preparar la Competencia Final** (30%): datos limpios, guion de demo, pitch.
 

@@ -93,11 +93,12 @@ Cargados a mano en la base local, no vienen con el repo.
 - [x] **Telón de bienvenida** al entrar al panel (2026-08-16)
 - [x] **Asesorías + Acuerdos** (2026-08-16) — también es el canal de consultas del estudiante
 - [x] **Tareas** (2026-08-16) — con responsable, vencimiento y el acuerdo del que salen
-- [ ] Subida real de archivos — falta decidir S3 vs. filesystem, ver [[Arquitectura#Por definir]]
+- [x] **Tesis grupales** (2026-08-16) — varios estudiantes por tesis, todos con los mismos permisos
+- [x] **Subida real de archivos** (2026-08-16) — el documento se guarda en PostgreSQL
 - [ ] Resolver el menú del coordinador, que contradice la [[Decisiones pendientes|Decisión 8]] (ver más abajo)
 
 > [!success] Las funcionalidades de [[Funcionalidades]] están completas
-> Con Asesorías y Tareas ya no queda ninguna pantalla en `PendientePage` —el componente se borró—. La única funcionalidad listada que falta es **"Subir documento"**, que espera la decisión de almacenamiento.
+> No queda ninguna pantalla en `PendientePage` —el componente se borró— y **"Subir documento" ya funciona**. El Entregable 3 está cerrado salvo el detalle del menú del coordinador.
 
 ### Pantalla de Entregas
 
@@ -189,6 +190,26 @@ El tablero ordena primero a quien está **en falta**, después a quien **espera 
 > Cada celda es un círculo de color **con su inicial adentro** (`L`, `R`, `O`, `!`, `·`) y el estado completo en el `title`. El color solo nunca alcanza — mismo criterio que `EstadoBadge`.
 
 Verificado end-to-end: dos alumnos dentro reciben las dos actividades; un tercero que entra después las recibe **sin que el asesor haga nada**; al entregar pasa a *Por revisar*, al observarla a *Con observaciones*, y al completarla a *Listo*; reentrar con el mismo código **no duplica**; otro asesor pidiendo el tablero ajeno recibe `403`; y el estudiante nunca ve un código en sus respuestas.
+
+### Tesis grupales y archivos reales
+
+Ver [[Decisiones pendientes#Decisión 15 - Tesis grupales]] y [[Decisiones pendientes#Decisión 16 - Dónde se guardan los archivos de las entregas]].
+
+> [!info] Vinieron del documento, no del código
+> Al redactar el [[Entregable 0 - Conceptualización]] aparecieron cinco diferencias entre lo prometido y lo construido. Se decidió **ajustar el sistema al documento**, no al revés. Estas dos eran las de fondo.
+
+**Tesis grupales.** En Proyectos, el estudiante ve una tarjeta *Tesistas* con el grupo y un botón **"Sumar compañero"** que pide el correo. Cualquiera del grupo entrega, se une a un espacio, suma o saca integrantes —y puede irse—, pero **nadie puede dejar la tesis sin nadie**: con un solo integrante la app ni siquiera ofrece el botón.
+
+Para el asesor no cambia nada: una tesis grupal ocupa **una sola ficha** en "Mis asesorados" y **una sola fila** en el tablero, con los nombres juntos. Entregan una vez, así que su avance es uno solo.
+
+**Archivos reales.** El formulario de entrega ahora tiene un selector de archivo; el documento se guarda en PostgreSQL y se descarga con un botón. El campo de enlace externo sigue estando, para quien trabaja en Drive.
+
+> [!note] La descarga va por `fetch`, no por un `<a href>`
+> El endpoint está protegido y un enlace directo no puede mandar el token en la cabecera. `client.js` la baja como `blob`, la entrega con un `<a download>` temporal y libera el object URL — si no, el archivo queda en memoria hasta recargar la página.
+
+**Estado de la entrega.** Cada versión tiene su propio veredicto (`En revisión` / `Observada` / `Aprobada`), distinto del estado del hito. Observar una versión la marca sola; aprobar y reabrir los hace el asesor.
+
+Verificado end-to-end: se suma un compañero por correo, el compañero ve la tesis como propia y **entrega él**; el asesor los ve en una sola ficha, descarga el PDF de verdad (`%PDF` intacto, `application/pdf`), lo aprueba y después lo observa; al irse un integrante la tesis queda con uno y desaparece la opción de quitar; y un estudiante ajeno pidiendo el archivo recibe `403`.
 
 ### Primeros pasos del asesor nuevo
 

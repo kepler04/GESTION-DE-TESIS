@@ -1,4 +1,4 @@
-import { Vacio } from './ui'
+import { Vacio, nombres } from './ui'
 
 /**
  * Grilla asesorados × actividades: quién entregó, quién debe y quién está en falta.
@@ -63,7 +63,9 @@ export default function TableroSemaforo({ tablero }) {
             {filas.map((f) => (
               <tr key={f.proyectoId}>
                 <td className="tablero__alumno">
-                  <strong>{f.estudiante?.name}</strong>
+                  {/* Una tesis grupal ocupa una fila con todos sus integrantes:
+                      entregan una sola vez, así que su avance es uno solo. */}
+                  <strong>{nombres(f.estudiantes)}</strong>
                   <span className="lista__meta">{f.titulo}</span>
                 </td>
                 {f.celdas.map((c) => {
@@ -72,7 +74,7 @@ export default function TableroSemaforo({ tablero }) {
                     <td key={c.actividadId} className="tablero__celda">
                       <span
                         className={`semaforo semaforo--${s.clase}`}
-                        title={`${f.estudiante?.name}: ${s.texto}`}
+                        title={`${nombres(f.estudiantes)}: ${s.texto}`}
                       >
                         <span aria-hidden="true">{s.letra}</span>
                         <span className="sr-only">{s.texto}</span>

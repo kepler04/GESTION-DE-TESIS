@@ -67,7 +67,7 @@ public class AsesoradoService {
             .sorted(
                 Comparator.comparing(AsesoradoDto::alDia)
                     .thenComparing(Comparator.comparingInt(AsesoradoService::pendientes).reversed())
-                    .thenComparing(a -> a.estudiante().name()))
+                    .thenComparing(AsesoradoDto::titulo))
             .toList();
     }
 
@@ -98,7 +98,7 @@ public class AsesoradoService {
             .count();
 
         return new AsesoradoDto(
-            UserDto.from(proyecto.getEstudiante()),
+            proyecto.getEstudiantesOrdenados().stream().map(UserDto::from).toList(),
             proyecto.getId(),
             proyecto.getTitulo(),
             AreaDto.sinCodigo(proyecto.getArea()),

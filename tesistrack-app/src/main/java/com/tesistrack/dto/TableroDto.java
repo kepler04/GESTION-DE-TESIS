@@ -16,9 +16,14 @@ public record TableroDto(
     List<ActividadDto> actividades,
     List<FilaDto> filas) {
 
-    /** Un estudiante del espacio y su estado en cada actividad. */
+    /**
+     * Una tesis del espacio y su estado en cada actividad.
+     *
+     * <p>La fila es del <b>proyecto</b>, no de la persona: una tesis grupal ocupa
+     * una sola fila con sus integrantes juntos, porque entregan una sola vez.
+     */
     public record FilaDto(
-        UserDto estudiante,
+        List<UserDto> estudiantes,
         Long proyectoId,
         String titulo,
         List<CeldaDto> celdas,

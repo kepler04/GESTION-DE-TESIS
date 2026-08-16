@@ -1,6 +1,12 @@
 package com.tesistrack.model;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.util.Comparator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -11,6 +17,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
@@ -38,13 +46,39 @@ public class Proyecto {
     @Column(nullable = false, length = 20)
     private EstadoProyecto estado = EstadoProyecto.EN_CURSO;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "estudiante_id", nullable = false)
-    private User estudiante;
+    /**
+     * Los estudiantes que hacen la tesis. Casi siempre uno, pero una tesis puede
+     * ser grupal: el Entregable 0 lo pide explícitamente ("estudiante o estudiantes
+     * asociados").
+     *
+     * <p>Se carga con {@code EAGER} a propósito, al revés que el resto de las
+     * relaciones: no hay pantalla que muestre un proyecto sin decir de quién es, y
+     * {@link com.tesistrack.service.AccesoService} necesita la lista en <b>cada</b>
+     * request protegida para resolver la pertenencia. Con {@code LAZY} sería una
+     * consulta extra garantizada más el riesgo de {@code LazyInitializationException}
+     * al armar los DTO fuera de la transacción.
+     *
+     * <p>Nunca queda vacía: quien crea el proyecto entra como primer estudiante y
+     * {@link #quitarEstudiante} se niega a sacar al último.
+     */
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "proyecto_estudiante",
+        joinColumns = @JoinColumn(name = "proyecto_id"),
+        inverseJoinColumns = @JoinColumn(name = "estudiante_id"))
+    private Set<User> estudiantes = new LinkedHashSet<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "asesor_id")
     private User asesor;
+
+    /**
+     * Cuándo arrancó la tesis. Puede ser anterior al alta en la plataforma —alguien
+     * que viene trabajando hace meses y recién ahora la registra—, así que no se
+     * deriva de {@link #createdAt}.
+     */
+    @Column(name = "fecha_inicio")
+    private LocalDate fechaInicio = LocalDate.now();
 
     /**
      * Etiqueta con la que el asesor agrupa sus tesis. Opcional y siempre suya:
@@ -85,12 +119,38 @@ public class Proyecto {
         this.estado = estado;
     }
 
-    public User getEstudiante() {
-        return estudiante;
+    public Set<User> getEstudiantes() {
+        return estudiantes;
     }
 
-    public void setEstudiante(User estudiante) {
-        this.estudiante = estudiante;
+    /** Ordenados por nombre, para que la lista no baile entre respuestas. */
+    public List<User> getEstudiantesOrdenados() {
+        return estudiantes.stream()
+            .sorted(Comparator.comparing(User::getName, Comparator.nullsLast(String::compareToIgnoreCase)))
+            .toList();
+    }
+
+    public void agregarEstudiante(User estudiante) {
+        estudiantes.add(estudiante);
+    }
+
+    /**
+     * Saca a un integrante del grupo.
+     *
+     * <p>Se niega a sacar al último: un proyecto sin estudiantes no le pertenecería
+     * a nadie y quedaría invisible para todos menos el coordinador, sin forma de
+     * recuperarlo desde la aplicación.
+     */
+    public void quitarEstudiante(User estudiante) {
+        if (estudiantes.size() <= 1) {
+            throw new IllegalArgumentException(
+                "Una tesis no puede quedarse sin ningún estudiante");
+        }
+        estudiantes.removeIf(e -> Objects.equals(e.getId(), estudiante.getId()));
+    }
+
+    public boolean tieneEstudiante(Long usuarioId) {
+        return estudiantes.stream().anyMatch(e -> Objects.equals(e.getId(), usuarioId));
     }
 
     public User getAsesor() {
@@ -107,6 +167,14 @@ public class Proyecto {
 
     public void setArea(Area area) {
         this.area = area;
+    }
+
+    public LocalDate getFechaInicio() {
+        return fechaInicio;
+    }
+
+    public void setFechaInicio(LocalDate fechaInicio) {
+        this.fechaInicio = fechaInicio;
     }
 
     public Instant getCreatedAt() {

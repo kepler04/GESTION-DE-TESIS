@@ -8,7 +8,8 @@ import com.tesistrack.model.Proyecto;
 
 public interface ProyectoRepository extends JpaRepository<Proyecto, Long> {
 
-    List<Proyecto> findByEstudianteId(Long estudianteId);
+    /** Proyectos donde el usuario figura entre los estudiantes (la tesis puede ser grupal). */
+    List<Proyecto> findByEstudiantesId(Long estudianteId);
 
     List<Proyecto> findByAsesorId(Long asesorId);
 

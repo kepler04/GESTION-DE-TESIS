@@ -58,13 +58,18 @@ public class AccesoService {
     /** Acciones del estudiante: crear el proyecto, elegir asesor, subir entregas. */
     public void verificarEstudianteDelProyecto(Proyecto proyecto, User usuario) {
         if (!esEstudianteDe(proyecto, usuario)) {
-            throw new ForbiddenException("Solo el estudiante del proyecto puede hacer esto");
+            throw new ForbiddenException("Solo un estudiante del proyecto puede hacer esto");
         }
     }
 
+    /**
+     * Una tesis puede ser grupal, así que alcanza con estar <b>entre</b> sus
+     * estudiantes. Cualquiera del grupo entrega y responde por el proyecto: no hay
+     * un "dueño" con más permisos que sus compañeros.
+     */
     public boolean esEstudianteDe(Proyecto proyecto, User usuario) {
         return usuario.getRole() == Role.ESTUDIANTE
-            && Objects.equals(proyecto.getEstudiante().getId(), usuario.getId());
+            && proyecto.tieneEstudiante(usuario.getId());
     }
 
     public boolean esAsesorDe(Proyecto proyecto, User usuario) {
