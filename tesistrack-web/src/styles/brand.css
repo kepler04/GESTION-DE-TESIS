@@ -8,10 +8,14 @@
 }
 
 .brand-logo--inline {
-  max-width: 168px;
-  max-height: 56px;
+  max-width: 188px;
+  max-height: 68px;
   width: auto;
-  /* el logo es negro sobre blanco: se invierte para la barra lateral oscura */
+}
+
+/* Solo cuando la barra lateral cae al logo negro por no existir
+   logo-blanco.png: lo invierte para que se lea sobre el azul oscuro. */
+.brand-logo--invertido {
   filter: invert(1) brightness(1.9);
 }
 
