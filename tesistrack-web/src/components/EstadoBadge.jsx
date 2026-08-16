@@ -1,3 +1,5 @@
+import '../styles/badge.css'
+
 /**
  * Badge de estado.
  *

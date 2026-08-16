@@ -57,6 +57,21 @@ src/
 - El **menú se arma según el rol**: el coordinador solo ve lo que puede consultar.
 - El **logo** sale de `public/logo.png`; si el archivo no está, cae a una marca provisional en SVG.
 
+### La pantalla de bienvenida
+
+El panel izquierdo del login no es decoración: muestra de qué se trata el producto.
+
+Sobre un `<canvas>` animado conviven dos capas. La de ambiente son partículas a la deriva que se enlazan con sus vecinas. La que importa es **la cadena de hitos**: un pulso dorado recorre `Planteamiento → Marco teórico → Metodología` y los va encendiendo, mientras `Resultados` y `Sustentación` quedan tenues. El oro marca lo recorrido y lo apagado, lo que falta — que es literalmente lo que promete el texto al lado ("sabés en qué vas y qué sigue") y lo que pide el [[Alcance]] para el estudiante.
+
+Debajo del texto, una línea de estado acompaña al pulso usando **los mismos badges que el panel**: quien entra ya ve el vocabulario que va a encontrar adentro.
+
+> [!note] Por qué el pulso no llega al final
+> Encender los cinco hitos diría "tesis terminada" y contradiría la etiqueta de estado. El recorrido corta en el hito en curso a propósito.
+
+El oro (`#d8b05c`) viene del mundo académico — sello, birrete — y no del azul tech genérico. Se usa solo en el pulso y en la regla del eyebrow.
+
+La entrada es **una sola secuencia escalonada** en orden de lectura, no efectos sueltos. Todo se desactiva con `prefers-reduced-motion`, que además deja el canvas en un estado fijo en vez de animarlo.
+
 ### Color de los estados
 
 Los badges de estado llevan **siempre ícono + texto**; el color es refuerzo, nunca el único canal. No es decorativo: `OBSERVADO` (rojo) y `COMPLETADO` (verde) quedan a ΔE 4.1 en deuteranopía — sin la etiqueta, un asesor daltónico no distinguiría "aprobado" de "hay que corregir". La paleta se validó con el validador de contraste antes de fijarla.

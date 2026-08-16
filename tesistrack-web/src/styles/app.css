@@ -359,59 +359,7 @@
   color: var(--tinta-3);
 }
 
-/* ---------------- badges de estado ---------------- */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 3px 10px 3px 8px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 500;
-  white-space: nowrap;
-  /* tinta oscura sobre fondo teñido: el texto nunca depende del color del estado */
-  color: var(--tinta);
-  background: #eef0f4;
-  border: 1px solid #dfe2ea;
-}
-
-.badge__icono {
-  font-size: 11px;
-  line-height: 1;
-  font-weight: 700;
-}
-
-.badge--neutro .badge__icono {
-  color: var(--tinta-3);
-}
-.badge--proceso {
-  background: #eaf2fd;
-  border-color: #cfe0f8;
-}
-.badge--proceso .badge__icono {
-  color: var(--acento);
-}
-.badge--entregado {
-  background: #eeecf8;
-  border-color: #d8d4ef;
-}
-.badge--entregado .badge__icono {
-  color: var(--violeta);
-}
-.badge--observado {
-  background: #fceded;
-  border-color: #f5d3d3;
-}
-.badge--observado .badge__icono {
-  color: var(--alerta);
-}
-.badge--completado {
-  background: #e8f6e8;
-  border-color: #cfe9cf;
-}
-.badge--completado .badge__icono {
-  color: var(--ok);
-}
+/* Los badges de estado están en styles/badge.css (los comparte el login). */
 
 /* ---------------- listas y tablas ---------------- */
 .lista {

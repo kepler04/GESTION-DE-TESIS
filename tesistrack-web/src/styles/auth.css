@@ -2,6 +2,9 @@
   --serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
   --ui: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
   --link: #9c5a2c;
+  /* oro de sello académico: el mismo del pulso que recorre los hitos */
+  --oro: #d8b05c;
+  --oro-suave: #e2c583;
 
   min-height: 100svh;
   display: flex;
@@ -42,58 +45,101 @@
   pointer-events: none;
 }
 
-.auth-hero__bg {
+/* lienzo animado: partículas a la deriva + el pulso que recorre los hitos */
+.hero-canvas {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  color: #fff;
-  opacity: 0.18;
-}
-
-.auth-hero__lines path {
-  opacity: 0.75;
+  display: block;
 }
 
 .auth-hero__content {
   position: relative;
   z-index: 1;
-  max-width: 460px;
+  max-width: 470px;
   margin-block: auto;
 }
 
-/* velo detrás del texto para que la red no compita con la lectura */
+/* Velo detrás del texto. Va fuerte y con una meseta antes de desvanecerse:
+   la animación pasa por atrás y el titular tiene que ganar siempre. */
 .auth-hero__content::before {
   content: '';
   position: absolute;
-  inset: -60px -80px;
-  background: radial-gradient(75% 60% at 30% 50%, rgba(7, 13, 24, 0.88) 0%, rgba(7, 13, 24, 0) 100%);
+  inset: -80px -140px -80px -110px;
+  background: radial-gradient(
+    76% 62% at 30% 50%,
+    rgba(6, 12, 22, 0.97) 0%,
+    rgba(6, 12, 22, 0.9) 45%,
+    rgba(6, 12, 22, 0) 100%
+  );
   z-index: -1;
   pointer-events: none;
 }
 
-.auth-hero__cap {
-  width: 132px;
+.hero__birrete {
+  width: 116px;
   height: auto;
   display: block;
-  margin-bottom: 24px;
-  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.45));
+  margin-bottom: 26px;
+  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.5));
+}
+
+.hero__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--oro-suave);
+  margin: 0 0 16px;
+}
+
+/* regla corta que ancla el eyebrow, del mismo oro que el pulso del fondo */
+.hero__eyebrow::before {
+  content: '';
+  width: 26px;
+  height: 1px;
+  background: var(--oro);
+  flex: none;
 }
 
 .auth-hero h1 {
   font-family: var(--serif);
   font-weight: 500;
   color: #fff;
-  font-size: clamp(40px, 4.6vw, 62px);
-  line-height: 106%;
-  letter-spacing: -0.5px;
-  margin: 0 0 26px;
+  font-size: clamp(38px, 4.2vw, 56px);
+  line-height: 104%;
+  letter-spacing: -1px;
+  margin: 0 0 22px;
 }
 
-.auth-hero__content p {
-  color: #a9b4ca;
-  font-size: 17px;
-  line-height: 158%;
+.hero__texto {
+  color: #a3afc6;
+  font-size: 16.5px;
+  line-height: 160%;
+  margin: 0;
+  max-width: 42ch;
+}
+
+/* línea de estado: acompaña al pulso del fondo y muestra el mismo
+   vocabulario de badges que se usa dentro del panel */
+.hero__estado {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(214, 226, 247, 0.14);
+  min-height: 30px;
+}
+
+.hero__estado-hito {
+  font-size: 14px;
+  color: #d5deee;
+  font-weight: 500;
 }
 
 .auth-hero__footer {
@@ -343,6 +389,79 @@
 @media (prefers-color-scheme: dark) {
   .auth-panel {
     background: #0f1117;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Entrada
+ *
+ * Una sola secuencia escalonada al cargar, no efectos sueltos por todos
+ * lados: el birrete, el texto y la tarjeta entran en orden de lectura.
+ * ------------------------------------------------------------------ */
+@keyframes hero-sube {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes card-entra {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.hero__birrete,
+.hero__eyebrow,
+.auth-hero h1,
+.hero__texto,
+.hero__estado {
+  animation: hero-sube 0.62s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+.hero__birrete {
+  animation-delay: 0.05s;
+}
+.hero__eyebrow {
+  animation-delay: 0.14s;
+}
+.auth-hero h1 {
+  animation-delay: 0.22s;
+}
+.hero__texto {
+  animation-delay: 0.32s;
+}
+.hero__estado {
+  animation-delay: 0.42s;
+}
+
+.auth-card {
+  animation: card-entra 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) 0.12s both;
+}
+
+/* el hito activo hace un fundido corto cada vez que el pulso avanza */
+.hero__estado-hito,
+.hero__estado .badge {
+  transition: opacity 0.3s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero__birrete,
+  .hero__eyebrow,
+  .auth-hero h1,
+  .hero__texto,
+  .hero__estado,
+  .auth-card {
+    animation: none;
   }
 }
 
