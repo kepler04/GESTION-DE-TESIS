@@ -15,10 +15,18 @@ import com.tesistrack.dto.EmailRequest;
 import com.tesistrack.dto.ProyectoDto;
 import com.tesistrack.dto.UnirseRequest;
 import com.tesistrack.model.Area;
+import com.tesistrack.model.Entrega;
 import com.tesistrack.model.Proyecto;
 import com.tesistrack.model.Role;
 import com.tesistrack.model.User;
+import com.tesistrack.repository.AcuerdoRepository;
+import com.tesistrack.repository.ArchivoEntregaRepository;
+import com.tesistrack.repository.AsesoriaRepository;
+import com.tesistrack.repository.EntregaRepository;
+import com.tesistrack.repository.HitoRepository;
+import com.tesistrack.repository.ObservacionRepository;
 import com.tesistrack.repository.ProyectoRepository;
+import com.tesistrack.repository.TareaRepository;
 import com.tesistrack.repository.UserRepository;
 
 @Service
@@ -30,18 +38,40 @@ public class ProyectoService {
     private final AccesoService acceso;
     private final AreaService areaService;
     private final ActividadService actividadService;
+    // Solo para el borrado en cascada: hay que vaciar las dos cadenas a mano.
+    private final HitoRepository hitoRepository;
+    private final EntregaRepository entregaRepository;
+    private final ArchivoEntregaRepository archivoEntregaRepository;
+    private final ObservacionRepository observacionRepository;
+    private final AsesoriaRepository asesoriaRepository;
+    private final AcuerdoRepository acuerdoRepository;
+    private final TareaRepository tareaRepository;
 
     public ProyectoService(
             ProyectoRepository proyectoRepository,
             UserRepository userRepository,
             AccesoService acceso,
             AreaService areaService,
-            ActividadService actividadService) {
+            ActividadService actividadService,
+            HitoRepository hitoRepository,
+            EntregaRepository entregaRepository,
+            ArchivoEntregaRepository archivoEntregaRepository,
+            ObservacionRepository observacionRepository,
+            AsesoriaRepository asesoriaRepository,
+            AcuerdoRepository acuerdoRepository,
+            TareaRepository tareaRepository) {
         this.proyectoRepository = proyectoRepository;
         this.userRepository = userRepository;
         this.acceso = acceso;
         this.areaService = areaService;
         this.actividadService = actividadService;
+        this.hitoRepository = hitoRepository;
+        this.entregaRepository = entregaRepository;
+        this.archivoEntregaRepository = archivoEntregaRepository;
+        this.observacionRepository = observacionRepository;
+        this.asesoriaRepository = asesoriaRepository;
+        this.acuerdoRepository = acuerdoRepository;
+        this.tareaRepository = tareaRepository;
     }
 
     /** Solo el estudiante crea su proyecto (ver Flujo del sistema). */
@@ -148,6 +178,69 @@ public class ProyectoService {
             userRepository.findById(estudianteId)
                 .orElseThrow(() -> new NotFoundException("Usuario no encontrado")));
         return ProyectoDto.from(proyecto);
+    }
+
+    /**
+     * El asesor se saca el proyecto de encima sin destruir nada.
+     *
+     * <p>Es la salida segura frente a {@link #eliminar}: la tesis sigue existiendo
+     * con todo su historial, simplemente deja de tener asesor. El estudiante puede
+     * volver a sumarse a otro espacio con un código. También lo puede usar el propio
+     * estudiante para soltar a su asesor.
+     */
+    public ProyectoDto desvincularAsesor(Long id, Authentication authentication) {
+        User usuario = acceso.usuarioActual(authentication);
+        Proyecto proyecto = buscar(id);
+
+        boolean esElAsesor = acceso.esAsesorDe(proyecto, usuario);
+        boolean esDelGrupo = acceso.esEstudianteDe(proyecto, usuario);
+        if (!esElAsesor && !esDelGrupo) {
+            throw new ForbiddenException("No tenés acceso a este proyecto");
+        }
+
+        proyecto.setAsesor(null);
+        // El área es del asesor: sin asesor no tiene sentido que quede etiquetada.
+        proyecto.setArea(null);
+        return ProyectoDto.from(proyecto);
+    }
+
+    /**
+     * Borra la tesis y todo lo que cuelga de ella.
+     *
+     * <p><b>Es irreversible y no hay papelera.</b> Se lleva las dos cadenas
+     * completas: hitos, entregas con sus archivos y observaciones; y asesorías,
+     * acuerdos y tareas. Por eso la interfaz pide confirmación escrita antes.
+     *
+     * <p>El borrado va explícito y en orden, de la hoja a la raíz, en vez de
+     * confiarse de un {@code ON DELETE CASCADE}: Hibernate no lo genera con
+     * {@code ddl-auto=update}, así que las claves foráneas reales de la base no lo
+     * tienen. Delegarlo habría fallado recién en producción.
+     */
+    public void eliminar(Long id, Authentication authentication) {
+        User usuario = acceso.usuarioActual(authentication);
+        Proyecto proyecto = buscar(id);
+
+        // Lo puede borrar el grupo —la tesis es suya— o su asesor.
+        if (!acceso.esEstudianteDe(proyecto, usuario) && !acceso.esAsesorDe(proyecto, usuario)) {
+            throw new ForbiddenException("Solo el grupo de la tesis o su asesor pueden borrarla");
+        }
+
+        // Cadena hito -> entrega -> observación, de la hoja hacia arriba.
+        observacionRepository.deleteAll(observacionRepository.findByEntregaHitoProyectoId(id));
+        for (Entrega entrega : entregaRepository.findByHitoProyectoId(id)) {
+            archivoEntregaRepository.deleteByEntregaId(entrega.getId());
+        }
+        entregaRepository.deleteAll(entregaRepository.findByHitoProyectoId(id));
+        hitoRepository.deleteAll(hitoRepository.findByProyectoIdOrderByOrdenAsc(id));
+
+        // Cadena asesoría -> acuerdo -> tarea. Las tareas primero: apuntan al acuerdo.
+        tareaRepository.deleteAll(tareaRepository.findByProyectoId(id));
+        acuerdoRepository.deleteAll(acuerdoRepository.findByAsesoriaProyectoId(id));
+        asesoriaRepository.deleteAll(asesoriaRepository.findByProyectoIdOrderByFechaDesc(id));
+
+        // Vacía la tabla de unión antes de soltar la raíz.
+        proyecto.getEstudiantes().clear();
+        proyectoRepository.delete(proyecto);
     }
 
     private static boolean tieneTexto(String valor) {

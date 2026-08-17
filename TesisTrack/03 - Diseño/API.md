@@ -113,6 +113,13 @@ El tablero devuelve `actividades` (las columnas) aparte de `filas`, porque un es
 | `PATCH` | `/proyectos/{id}/area` | asesor del proyecto | Etiqueta la tesis en una de **sus** carpetas. `areaId: null` la quita |
 | `POST` | `/proyectos/{id}/estudiantes` | estudiante del proyecto | Suma un compañero **por su correo** (tesis grupal) |
 | `DELETE` | `/proyectos/{id}/estudiantes/{uid}` | estudiante del proyecto | Lo saca, o se va uno mismo. 400 si dejaría la tesis sin nadie |
+| `DELETE` | `/proyectos/{id}/asesor` | asesor **o** estudiante del proyecto | Desvincula al asesor y limpia el área. **No borra nada** |
+| `DELETE` | `/proyectos/{id}` | grupo de la tesis **o** su asesor | Borra la tesis y las dos cadenas completas. **Irreversible** |
+
+> [!warning] Las dos formas de sacarse un proyecto de encima no son lo mismo
+> `DELETE /asesor` es reversible: la tesis queda entera y el estudiante puede sumarse a otro espacio con un código. `DELETE /proyectos/{id}` destruye hitos, entregas con archivos, observaciones, asesorías, acuerdos y tareas — ver [[Decisiones pendientes#Decisión 17 - Quién puede borrar una tesis, y cómo|D17]].
+>
+> El borrado se hace **explícito y en orden** dentro del service, no con `ON DELETE CASCADE`: `ddl-auto=update` no genera esas cascadas, así que las claves foráneas reales no las tienen.
 
 > [!important] `ProyectoDto` devuelve `estudiantes` (lista), no `estudiante`
 > Una tesis puede ser grupal ([[Decisiones pendientes#Decisión 15 - Tesis grupales|D15]]) y todos sus integrantes tienen los mismos permisos: cualquiera entrega, se une a un espacio y arma el grupo. La lista **nunca viene vacía**.

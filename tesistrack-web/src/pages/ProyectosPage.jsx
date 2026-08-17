@@ -2,12 +2,15 @@ import { useCallback, useEffect, useState } from 'react'
 import {
   asignarArea,
   crearProyecto,
+  desvincularAsesor,
+  eliminarProyecto,
   listarAreas,
   listarAsesores,
   listarProyectos,
 } from '../api/tesistrack'
 import { useAuth } from '../auth/AuthContext'
 import EstadoBadge from '../components/EstadoBadge'
+import BorrarProyecto from '../components/BorrarProyecto'
 import CarpetasAsesor from '../components/CarpetasAsesor'
 import GestorAreas from '../components/GestorAreas'
 import Integrantes from '../components/Integrantes'
@@ -36,6 +39,8 @@ export default function ProyectosPage() {
   const [asesorId, setAsesorId] = useState('')
   const [codigoInvitacion, setCodigoInvitacion] = useState('')
   const [guardando, setGuardando] = useState(false)
+  // Proyecto que espera confirmación de borrado; null si no hay ninguno.
+  const [borrando, setBorrando] = useState(null)
 
   const recargar = useCallback(() => {
     setCargando(true)
@@ -75,6 +80,23 @@ export default function ProyectosPage() {
     } finally {
       setGuardando(false)
     }
+  }
+
+  async function handleDesvincular(proyecto) {
+    setError(null)
+    try {
+      await desvincularAsesor(proyecto.id)
+      await recargar()
+      await recargarAreas()
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  async function handleBorrar() {
+    await eliminarProyecto(borrando.id)
+    setBorrando(null)
+    await recargar()
   }
 
   async function handleArea(proyectoId, valor) {
@@ -260,11 +282,12 @@ export default function ProyectosPage() {
                 <thead>
                   <tr>
                     <th>Título</th>
-                    <th>Estudiante</th>
+                    <th>{esAsesor ? 'Tesistas' : 'Estudiante'}</th>
                     <th>Asesor</th>
                     {esAsesor && <th>Área</th>}
                     <th>Estado</th>
                     <th>Creado</th>
+                    <th>Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -300,6 +323,30 @@ export default function ProyectosPage() {
                         <EstadoBadge estado={p.estado} tipo="proyecto" />
                       </td>
                       <td>{fecha(p.createdAt)}</td>
+                      <td>
+                        {/* Dos salidas distintas: quitarla de la lista no destruye
+                            nada y es reversible; borrarla se lleva el trabajo del
+                            estudiante y no tiene vuelta atrás. */}
+                        <div className="tabla__acciones">
+                          {esAsesor && p.asesor && (
+                            <button
+                              type="button"
+                              className="btn btn--sutil"
+                              onClick={() => handleDesvincular(p)}
+                              title="La tesis sigue existiendo; deja de estar a tu cargo"
+                            >
+                              Quitar de mi lista
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            className="btn btn--sutil tabla__borrar"
+                            onClick={() => setBorrando(p)}
+                          >
+                            Borrar
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -307,6 +354,14 @@ export default function ProyectosPage() {
             </div>
           )}
         </Card>
+      )}
+
+      {borrando && (
+        <BorrarProyecto
+          proyecto={borrando}
+          onCerrar={() => setBorrando(null)}
+          onBorrado={handleBorrar}
+        />
       )}
     </>
   )

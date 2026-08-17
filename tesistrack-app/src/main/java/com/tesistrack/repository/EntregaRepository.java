@@ -19,4 +19,7 @@ public interface EntregaRepository extends JpaRepository<Entrega, Long> {
 
     /** Última entrega de todo el proyecto, para el dashboard. */
     Optional<Entrega> findFirstByHitoProyectoIdOrderByCreatedAtDesc(Long proyectoId);
+
+    /** Todas las entregas de un proyecto, para poder borrarlo entero. */
+    List<Entrega> findByHitoProyectoId(Long proyectoId);
 }

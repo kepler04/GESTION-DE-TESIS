@@ -313,6 +313,30 @@ Registrar una observación marca la versión como `OBSERVADA` automáticamente; 
 
 Ver [[Desarrollo#Tesis grupales y archivos reales]].
 
+## Decisión 17 - Quién puede borrar una tesis, y cómo
+
+Hacía falta poder sacar proyectos de la lista —empezando por los de prueba—. ¿Quién borra, y qué se lleva puesto?
+
+**Estado:** ✅ cerrada (2026-08-16) — **dos acciones distintas: quitar de la lista (segura) y borrar (irreversible, con confirmación escrita)**
+
+> [!important] La acción segura existe porque la destructiva no se puede deshacer
+> Ofrecer solo "Borrar" habría convertido *"esta tesis ya no me corresponde"* en *"destruí el trabajo de otra persona"*. Son intenciones distintas y ahora tienen botones distintos.
+
+| Acción | Quién | Qué hace |
+|---|---|---|
+| **Quitar de mi lista** (`DELETE /proyectos/{id}/asesor`) | el asesor, o el grupo | Desvincula al asesor y limpia el área. **La tesis sigue entera**; el estudiante puede sumarse a otro espacio con un código |
+| **Borrar** (`DELETE /proyectos/{id}`) | el grupo de la tesis, o su asesor | Elimina la tesis y **las dos cadenas completas** |
+
+> [!warning] El borrado no tiene vuelta atrás
+> Se lleva hitos, entregas con sus archivos, observaciones, asesorías, acuerdos y tareas. No hay papelera. Por eso la interfaz **pide escribir el título** en vez de un "¿estás seguro?": un botón de confirmación se acepta de memoria, escribir el título obliga a mirar cuál se está por borrar. El diálogo enumera qué se destruye y nombra a los tesistas.
+
+> [!note] El borrado va explícito, no por `ON DELETE CASCADE`
+> El [[Base de datos#Esquema SQL|esquema]] declara las claves foráneas con cascada, pero **`ddl-auto=update` no las genera**: las FK reales de la base no la tienen. Confiarse habría fallado recién en producción, con una violación de integridad. `ProyectoService#eliminar` borra en orden, de la hoja a la raíz, dentro de una transacción.
+>
+> Verificado después de borrar: **0 hitos, entregas, observaciones, archivos y vínculos huérfanos**.
+
+Se evaluó dejar el borrado solo al estudiante —la tesis es suya— pero el asesor también necesita limpiar lo que él mismo generó probando. La confirmación escrita es la que hace segura esa apertura.
+
 ## Ver también
 - [[Feedback profesor]]
 - [[TesisTrack]]

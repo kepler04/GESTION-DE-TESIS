@@ -8,6 +8,13 @@ export const asignarAsesor = (id, asesorId) =>
   api(`/api/proyectos/${id}/asesor`, { method: 'PATCH', body: { asesorId } })
 export const obtenerDashboard = (id) => api(`/api/proyectos/${id}/dashboard`)
 
+/** Saca el proyecto de la lista del asesor sin borrar nada. */
+export const desvincularAsesor = (proyectoId) =>
+  api(`/api/proyectos/${proyectoId}/asesor`, { method: 'DELETE' })
+/** Irreversible: se lleva hitos, entregas, observaciones, asesorías y tareas. */
+export const eliminarProyecto = (proyectoId) =>
+  api(`/api/proyectos/${proyectoId}`, { method: 'DELETE' })
+
 // --- integrantes de una tesis grupal ---
 export const agregarEstudiante = (proyectoId, email) =>
   api(`/api/proyectos/${proyectoId}/estudiantes`, { method: 'POST', body: { email } })

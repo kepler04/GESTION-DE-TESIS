@@ -211,6 +211,20 @@ Para el asesor no cambia nada: una tesis grupal ocupa **una sola ficha** en "Mis
 
 Verificado end-to-end: se suma un compañero por correo, el compañero ve la tesis como propia y **entrega él**; el asesor los ve en una sola ficha, descarga el PDF de verdad (`%PDF` intacto, `application/pdf`), lo aprueba y después lo observa; al irse un integrante la tesis queda con uno y desaparece la opción de quitar; y un estudiante ajeno pidiendo el archivo recibe `403`.
 
+### Borrar proyectos
+
+Ver [[Decisiones pendientes#Decisión 17 - Quién puede borrar una tesis, y cómo]].
+
+La tabla de Proyectos tiene una columna **Acciones** con dos botones distintos, porque son dos intenciones distintas:
+
+- **Quitar de mi lista** — solo para el asesor. La tesis sigue entera, deja de estar a su cargo. Reversible: el estudiante se suma a otro espacio con un código.
+- **Borrar** — irreversible. Abre un diálogo que enumera qué se destruye, nombra a los tesistas y **pide escribir el título** para habilitar el botón.
+
+> [!important] El rojo aparece recién al pasar por encima
+> El botón de borrar es sutil en reposo y se pone rojo en `:hover`. Una tabla con un botón rojo por fila grita todo el tiempo y deja de comunicar; el color tiene que aparecer cuando la acción está por ocurrir.
+
+Verificado end-to-end: quitar de la lista deja la tesis del alumno intacta y sin asesor; borrar con el título equivocado **no habilita** el botón; con el correcto borra la tesis y su historial; un asesor ajeno recibe `403`; y después del borrado quedan **0 filas huérfanas** en hitos, entregas, observaciones, archivos y vínculos.
+
 ### Primeros pasos del asesor nuevo
 
 Ver [[Decisiones pendientes#Decisión 14 - Qué hace el sistema cuando un asesor entra por primera vez]] para el porqué.

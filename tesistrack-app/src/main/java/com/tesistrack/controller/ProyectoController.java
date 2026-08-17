@@ -97,6 +97,19 @@ public class ProyectoController {
         return proyectoService.quitarEstudiante(id, estudianteId, authentication);
     }
 
+    /** El asesor se saca el proyecto de encima sin destruirlo. La salida segura. */
+    @DeleteMapping("/{id}/asesor")
+    public ProyectoDto desvincularAsesor(@PathVariable Long id, Authentication authentication) {
+        return proyectoService.desvincularAsesor(id, authentication);
+    }
+
+    /** Borra la tesis y las dos cadenas completas. Irreversible. */
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void eliminar(@PathVariable Long id, Authentication authentication) {
+        proyectoService.eliminar(id, authentication);
+    }
+
     @GetMapping("/{id}/dashboard")
     public DashboardDto dashboard(@PathVariable Long id, Authentication authentication) {
         return dashboardService.resumen(id, authentication);
