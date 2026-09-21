@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import com.tesistrack.dto.AuthResponse;
 import com.tesistrack.dto.LoginRequest;
 import com.tesistrack.dto.RegisterRequest;
-import com.tesistrack.dto.UserDto;
+import com.tesistrack.mapper.UserMapper;
 import com.tesistrack.model.Role;
 import com.tesistrack.model.User;
 import com.tesistrack.repository.UserRepository;
@@ -21,16 +21,19 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final UserMapper userMapper;
     private final String politicaVersion;
 
     public AuthService(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
+            UserMapper userMapper,
             @Value("${app.politica.version}") String politicaVersion) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.userMapper = userMapper;
         this.politicaVersion = politicaVersion;
     }
 
@@ -64,7 +67,7 @@ public class AuthService {
         userRepository.save(user);
 
         String token = jwtService.generateToken(user);
-        return new AuthResponse(token, UserDto.from(user));
+        return new AuthResponse(token, userMapper.toDto(user));
     }
 
     /** Un campo opcional que llega vacío se guarda como null, no como "". */
@@ -98,6 +101,6 @@ public class AuthService {
         }
 
         String token = jwtService.generateToken(user);
-        return new AuthResponse(token, UserDto.from(user));
+        return new AuthResponse(token, userMapper.toDto(user));
     }
 }

@@ -12,6 +12,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Etiqueta con la que un asesor agrupa sus propias tesis ("Ingeniería de
@@ -30,6 +32,8 @@ import jakarta.persistence.UniqueConstraint;
 @Table(
     name = "area",
     uniqueConstraints = @UniqueConstraint(columnNames = {"propietario_id", "nombre"}))
+@Getter
+@Setter
 public class Area {
 
     @Id
@@ -57,36 +61,4 @@ public class Area {
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt = Instant.now();
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getNombre() {
-        return nombre;
-    }
-
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
-    }
-
-    public String getCodigo() {
-        return codigo;
-    }
-
-    public void setCodigo(String codigo) {
-        this.codigo = codigo;
-    }
-
-    public User getPropietario() {
-        return propietario;
-    }
-
-    public void setPropietario(User propietario) {
-        this.propietario = propietario;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
 }
