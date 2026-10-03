@@ -1,4 +1,5 @@
 services:
+
   db:
     image: postgres:16
     environment:
@@ -6,9 +7,30 @@ services:
       POSTGRES_USER: tesistrack
       POSTGRES_PASSWORD: tesistrack
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "5432:5432"
     volumes:
       - tesistrack-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tesistrack -d tesistrack"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: .
+    image: tesistrack-backend:latest
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: tesistrack
+      DB_USER: tesistrack
+      DB_PASSWORD: tesistrack
+      JWT_SECRET: tesistrack-clave-local-desarrollo-2026
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
   tesistrack-db-data:
