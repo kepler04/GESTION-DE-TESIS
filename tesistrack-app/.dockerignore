@@ -1,0 +1,11 @@
+# Lo que NO se manda a Docker al construir la imagen
+target/
+.git/
+.github/
+.idea/
+.vscode/
+*.log
+.env
+k8s/
+despliegue/
+docker-compose*.yml
