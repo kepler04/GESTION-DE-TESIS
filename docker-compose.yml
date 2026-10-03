@@ -1,0 +1,47 @@
+services:
+
+  frontend:
+    build:
+      context: ./tesistrack-web
+      args:
+        VITE_API_URL: ""
+    image: tesistrack-frontend:local
+    ports:
+      - "3000:80"
+    environment:
+      BACKEND_URL: http://backend:8080
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./tesistrack-app
+    image: tesistrack-backend:local
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: tesistrack
+      DB_USER: tesistrack
+      DB_PASSWORD: tesistrack
+      JWT_SECRET: tesistrack-clave-local-desarrollo-2026
+      CORS_ALLOWED_ORIGINS: http://localhost:3000
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: tesistrack
+      POSTGRES_USER: tesistrack
+      POSTGRES_PASSWORD: tesistrack
+    volumes:
+      - tesistrack-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tesistrack -d tesistrack"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  tesistrack-db-data:
