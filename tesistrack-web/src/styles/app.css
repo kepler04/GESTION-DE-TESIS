@@ -1594,3 +1594,227 @@
     padding: 20px 16px 32px;
   }
 }
+
+/* ==================================================================
+   El espacio como aula: materiales en carpetas, sesiones y reuniones
+   ================================================================== */
+
+/* Fila de botones de una acción cada uno: se acomoda sola en pantallas chicas. */
+.acciones-fila {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Etiqueta chica de tipo. Siempre lleva texto: el color es solo refuerzo. */
+.tag {
+  display: inline-block;
+  margin-right: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--borde);
+  background: #f4f5f8;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--tinta-2);
+  vertical-align: middle;
+}
+
+.tag--enlace {
+  background: #eaf2fd;
+  border-color: #cfe0f8;
+  color: #1d5fb3;
+}
+
+.tag--archivo {
+  background: #eeecf8;
+  border-color: #d8d4ef;
+  color: var(--violeta);
+}
+
+.tag--ahora {
+  margin: 0 0 0 8px;
+  background: #e8f6e8;
+  border-color: #cfe9cf;
+  color: #0a6b0a;
+}
+
+/* ---------------- materiales ---------------- */
+.materiales {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.carpeta-mat {
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  padding: 14px 16px 6px;
+  background: #fff;
+}
+
+.carpeta-mat--destacada {
+  border-color: var(--acento);
+  box-shadow: 0 0 0 3px rgba(42, 120, 214, 0.12);
+}
+
+.carpeta-mat__cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.carpeta-mat__nombre {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--tinta);
+}
+
+.carpeta-mat__cuenta {
+  margin-left: 10px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--tinta-3);
+}
+
+.carpeta-mat__vacia {
+  margin: 4px 0 12px;
+  font-size: 13px;
+}
+
+.material {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+}
+
+.materiales__lista li {
+  flex-wrap: wrap;
+}
+
+.materiales__alta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.materiales__alta input {
+  flex: 1;
+  min-width: 220px;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  padding: 9px 11px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--tinta);
+  background: #fff;
+}
+
+.materiales__alta input:focus {
+  outline: none;
+  border-color: var(--acento);
+}
+
+.materiales__form {
+  margin: 8px 0 14px;
+  padding: 14px;
+  border: 1px dashed var(--borde);
+  border-radius: 10px;
+  background: #fafbfc;
+}
+
+.materiales__tipo {
+  display: flex;
+  gap: 18px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 13.5px;
+}
+
+.materiales__tipo legend {
+  padding: 0;
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: var(--tinta-2);
+}
+
+.materiales__tipo label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.materiales__edicion {
+  width: 100%;
+  margin: 0;
+}
+
+/* ---------------- sesiones y reuniones ---------------- */
+.sesion__form {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--borde);
+}
+
+.sesiones__pasadas {
+  margin-top: 14px;
+  font-size: 13.5px;
+}
+
+.sesiones__pasadas summary {
+  cursor: pointer;
+  color: var(--tinta-2);
+  padding: 4px 0;
+}
+
+.reunion-destacada {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 16px;
+  margin-bottom: 6px;
+  border: 1px solid #cfe0f8;
+  border-left: 4px solid var(--acento);
+  border-radius: 10px;
+  background: #f5f9ff;
+}
+
+.reunion-destacada__titulo {
+  display: block;
+  margin-top: 4px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--tinta);
+}
+
+.asesoria__cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+}
+
+.asesoria__form {
+  margin: 12px 0;
+  padding: 14px;
+  border: 1px dashed var(--borde);
+  border-radius: 10px;
+  background: #fafbfc;
+}
+
+.dialogo__texto p {
+  margin: 0 0 10px;
+}

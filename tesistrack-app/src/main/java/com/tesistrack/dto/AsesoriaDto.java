@@ -3,6 +3,7 @@ package com.tesistrack.dto;
 import java.time.Instant;
 
 import com.tesistrack.model.Asesoria;
+import com.tesistrack.model.EstadoAsesoria;
 
 public record AsesoriaDto(
     Long id,
@@ -10,6 +11,8 @@ public record AsesoriaDto(
     Instant fecha,
     String tema,
     String resumen,
+    EstadoAsesoria estado,
+    String enlace,
     UserDto registradaPor,
     Instant createdAt
 ) {
@@ -21,6 +24,8 @@ public record AsesoriaDto(
             asesoria.getFecha(),
             asesoria.getTema(),
             asesoria.getResumen(),
+            asesoria.getEstado(),
+            asesoria.getEnlace(),
             UserDto.from(asesoria.getRegistradaPor()),
             asesoria.getCreatedAt());
     }

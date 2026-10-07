@@ -364,9 +364,78 @@ El borrado va en este orden, dentro de una transacción: **se sueltan los hitos 
 > [!note] Consecuencia — un 500 pelado no vuelve a llegar a la pantalla
 > - `ApiExceptionHandler` traduce `DataIntegrityViolationException` a **409** con un mensaje legible; el detalle técnico (restricción, SQL) va solo al log.
 > - `client.js` reemplaza cualquier 5xx por *"Algo falló de nuestro lado…"* en vez de mostrar el `Internal Server Error` que devuelve Spring.
-> - Cuando existan materiales y sesiones dentro del espacio, borrarlo también se los lleva y el diálogo tiene que listarlos.
+> - Desde la Fase 1, borrar el espacio también se lleva sus **materiales** (carpetas, enlaces y archivos subidos) y sus **sesiones**, y el diálogo los lista con números reales: `GET /areas/{id}/resumen`. Ver las decisiones [[#Decisión 19 - Cómo se organizan los materiales del espacio|19]] y [[#Decisión 20 - Reuniones con enlace - sesiones del espacio y asesorías programadas|20]].
 
 Ver [[Desarrollo#Fase 0 - Errores corregidos (2026-10-07)]].
+
+## Decisión 19 - Cómo se organizan los materiales del espacio
+
+El espacio tiene que servir como un aula: el asesor deja los temas de tesis, la rúbrica, las clases. ¿Dónde vive ese material, de qué es y quién lo ve?
+
+**Estado:** ✅ cerrada (2026-10-07) — **carpetas del espacio con materiales que son un enlace o un archivo; el dueño arma y edita, los miembros solo ven y descargan**
+
+Modelo: `carpeta_material` → `material` → `archivo_material`. Un material es **un enlace o un archivo, nunca ambos ni ninguno**: lo garantiza un `CHECK` en la base, no solo el service.
+
+> [!important] Los enlaces tienen que ser `https://`
+> Un enlace que llega a otras personas y se abre con un clic no puede ser un `javascript:` ni un `http://` sin cifrar. Se valida en el service **y** se repite como `CHECK` en la base, así que ni una escritura que se salte la aplicación guarda otra cosa. El esquema se normaliza a minúsculas (`HTTPS://` → `https://`).
+
+Los **archivos** siguen la [[#Decisión 16 - Dónde se guardan los archivos de las entregas|Decisión 16]] sin cambios: `bytea` en una tabla aparte (nunca `@Lob`, para que listar una carpeta no arrastre los PDF a memoria), tope de 15 MB. Se suben **en un solo paso** (multipart con el título), a diferencia de las entregas, que van en dos: un material no existe sin su contenido, así que no hay un estado "creado pero vacío" que cuidar. Se sirven como `attachment` —el archivo lo subió una persona, y abrirlo en línea dentro del origen de la aplicación sería ejecutar contenido ajeno— y el nombre se recorta al último tramo de la ruta, porque algunos navegadores mandan `C:\Users\…\tesis.pdf`.
+
+**Carpetas sugeridas:** todo espacio nuevo nace con *Temas de tesis*, *Rúbrica* y *Clases*, editables y borrables como cualquier otra. La migración `V2` se las dio a los espacios que ya existían.
+
+**Quién ve qué** — la regla de siempre, pertenencia: el **dueño** crea, renombra y borra; los **estudiantes con una tesis en ese espacio** ven y descargan, y no ven las carpetas vacías (una carpeta sin nada no les dice nada); el **coordinador** puede leer, por la [[#Decisión 8 - Alcance del coordinador|Decisión 8]]. Un estudiante ajeno al espacio y otro asesor reciben 403.
+
+| Alternativa | Por qué no |
+|---|---|
+| Material colgando de cada tesis | El material es del aula, no de cada tesis. Subirlo veinte veces es el trámite que la [[#Decisión 12 - Cómo se reparte una actividad a todo un espacio\|D12]] ya había eliminado para las actividades |
+| Material adjunto a la actividad | La actividad es una consigna que se reparte como hito; la rúbrica o una clase grabada sirven fuera de cualquier consigna |
+| Solo enlaces (Drive) | Hay quien prefiere subir el PDF; y la D16 ya resolvió dónde viven los archivos |
+| Carpetas anidadas | Complejidad sin valor para el volumen de un espacio: un nivel alcanza |
+| Que el estudiante también suba | Rompe la regla "el asesor arma, el estudiante ve"; lo suyo ya tiene su lugar en las entregas |
+
+> [!note] Consecuencia
+> Borrar una carpeta o un material **se lleva los archivos subidos y no se recupera**: la interfaz pide confirmar y cuenta cuántos son. El tope de 15 MB devuelve **413** con *"El archivo supera los 15 MB"* (antes era el "Payload Too Large" genérico de Spring).
+
+Ver [[Desarrollo#Fase 1 - El espacio como aula (2026-10-07)]] y [[Base de datos#Migración V2 - materiales y reuniones]].
+
+## Decisión 20 - Reuniones con enlace - sesiones del espacio y asesorías programadas
+
+Una reunión virtual necesita un enlace, una hora y que los dos lados lo tengan a mano. ¿Se integra Zoom o Meet, y qué se agrega a lo que ya había?
+
+**Estado:** ✅ cerrada (2026-10-07) — **el enlace se pega a mano (sin integrar ninguna API); la sesión es del espacio, la asesoría es de la tesis, y la asesoría gana un ciclo de estado**
+
+> [!important] No se integra Zoom ni Meet
+> Integrarlos es un entregable en sí mismo (credenciales y OAuth por asesor, cuotas, renovación de tokens) y el valor —que el estudiante tenga el enlace y un botón para entrar— se obtiene igual pegándolo. El asesor crea la reunión donde prefiera. El enlace se valida como `https://` (service y `CHECK`), igual que en la [[#Decisión 19 - Cómo se organizan los materiales del espacio|Decisión 19]].
+
+**Dos alcances distintos:**
+- **Sesión del espacio** (`sesion_espacio`): una clase para todos los miembros, con título, fecha y hora y enlace. La crea, edita y borra el dueño; la ven todos con un botón **Unirse**.
+- **Asesoría de una tesis** (`asesoria`): hasta ahora solo registraba una reunión que ya pasó. Gana `estado` y `enlace`.
+
+**El ciclo de la asesoría** — `PROGRAMADA → REALIZADA | CANCELADA`:
+
+| Quién | Puede |
+|---|---|
+| Asesor **o** el estudiante que la programó | Programarla, reprogramarla (mientras esté `PROGRAMADA`) y cancelarla |
+| Solo el **asesor** | Marcarla `REALIZADA` y completar el resumen |
+| Nadie | Cambiar una `REALIZADA` o `CANCELADA`: son historia |
+
+Las asesorías que ya existían eran reuniones registradas después de ocurrir, así que la migración las dejó `REALIZADA`. Sin `estado` en la petición se sigue registrando como `REALIZADA`, que es lo que siempre hizo; agendar es optar por `PROGRAMADA`. Una asesoría **no puede nacer cancelada**. El enlace es opcional: la reunión puede ser presencial.
+
+> [!important] Solo una asesoría realizada admite acuerdos
+> No se puede acordar nada en una reunión que no se hizo: registrar un acuerdo sobre una `PROGRAMADA` o `CANCELADA` da 400. La cadena `Asesoría → Acuerdo → Tarea` queda intacta; lo único que cambia es que ahora arranca recién cuando la reunión se marca realizada.
+
+Esto **conserva la asimetría de la [[#Decisión 13 - Quién puede abrir una asesoría|Decisión 13]]**: el estudiante puede *proponer* una reunión y cancelar la que él abrió, pero marcarla realizada y decidir los acuerdos sigue siendo del asesor. Un compañero de una tesis grupal que no la abrió no la reprograma ni la cancela.
+
+**Próximas reuniones** (`GET /reuniones/proximas`): las sesiones del espacio y las asesorías programadas del usuario, en una sola lista, las cinco más cercanas. Las muestran **los dos Dashboards**, con la primera destacada y su botón Unirse. Una reunión que empezó hace menos de una hora **sigue apareciendo**: quien llega tarde a una clase en curso todavía necesita el botón. El coordinador no tiene reuniones propias. El bloque *Últimas asesorías* del Dashboard pasó a mostrar solo las realizadas; las programadas viven en *Próximas reuniones*.
+
+| Alternativa | Por qué no |
+|---|---|
+| Integrar la API de Zoom o Meet | Ver el cuadro de arriba: costo de un entregable para ganar un enlace que se pega en diez segundos |
+| Solo sesiones del espacio, sin programar asesorías | Las tesis tienen reuniones individuales, y la cadena asesoría → acuerdo → tarea necesita que la reunión exista **antes** de que ocurra |
+| Una entidad `Reunion` unificada | Duplicaría la cadena de trazabilidad: la misma razón por la que la D13 descartó una entidad `Duda` |
+| Que solo el asesor programe | El estudiante necesita poder proponer una reunión; es la apertura de la D13 |
+
+Ver [[Desarrollo#Fase 1 - El espacio como aula (2026-10-07)]] y [[API#Sesiones del espacio]].
 
 ## Ver también
 - [[Feedback profesor]]

@@ -9,6 +9,7 @@ import DashboardPage from './pages/DashboardPage'
 import EntregasPage from './pages/EntregasPage'
 import HitosPage from './pages/HitosPage'
 import LandingPage from './pages/LandingPage'
+import MiEspacioPage from './pages/MiEspacioPage'
 import ObservacionesPage from './pages/ObservacionesPage'
 import PrivacidadPage from './pages/PrivacidadPage'
 import ProyectosPage from './pages/ProyectosPage'
@@ -59,6 +60,7 @@ export default function App() {
               <Route path="/panel" element={<DashboardPage />} />
               <Route path="/proyectos" element={<ProyectosPage />} />
               <Route path="/asesorados" element={<AsesoradosPage />} />
+              <Route path="/espacio" element={<MiEspacioPage />} />
               <Route path="/espacios/:areaId" element={<EspacioPage />} />
               <Route path="/hitos" element={<HitosPage />} />
               <Route path="/entregas" element={<EntregasPage />} />

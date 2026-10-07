@@ -7,7 +7,7 @@ tags:
 # Desarrollo
 
 > [!success] Estado al 2026-10-07 — Entregables 1, 2 y 3 hechos en funcionalidad; el 4 empezado
-> Modelo de datos, API y panel cubren todo lo de [[Funcionalidades]]. Desde agosto entraron el **Taller 2** (Flyway, MapStruct, Lombok — 2026-09-20) y la parte de Docker del **Entregable 4** (2026-10-03). Se está en la tanda de **cierre**: la Fase 0 de errores ([[#Fase 0 - Errores corregidos (2026-10-07)]]), después el espacio del asesor como aula (materiales y reuniones con enlace) y el primer ingreso del estudiante en grupo.
+> Modelo de datos, API y panel cubren todo lo de [[Funcionalidades]]. Desde agosto entraron el **Taller 2** (Flyway, MapStruct, Lombok — 2026-09-20) y la parte de Docker del **Entregable 4** (2026-10-03). Se está en la tanda de **cierre**: la Fase 0 de errores ([[#Fase 0 - Errores corregidos (2026-10-07)]]) y la Fase 1, el espacio del asesor como aula ([[#Fase 1 - El espacio como aula (2026-10-07)]]); falta el primer ingreso del estudiante en grupo.
 
 > [!warning] La [[Auditoría de requisitos]] es del 2026-08-16
 > Su recuento de nota ("45% sin empezar") está desfasado: el Entregable 4 ya tiene imágenes Docker y un pipeline que las publica (ver más abajo). Lo que sigue valiendo es su regla: **antes de construir, verificar si está en [[Funcionalidades]]**.
@@ -406,6 +406,28 @@ Primera tanda del cierre del proyecto (rama `fix/fase-0-borrar-espacio-y-estilos
 > No bastaba con mirar los dos títulos del pedido: se midió el contraste de **todo el texto** de cada pantalla en claro y en oscuro. Los fallos exclusivos del modo oscuro pasaron de **2 a 0**; el segundo era el **nombre del estudiante en las tarjetas de "Mis asesorados"**. Queda un resto menor que falla también en claro: el ícono "○" del badge *Pendiente* (2,91:1), que siempre va acompañado de texto.
 
 **0.3 — Puerto de desarrollo.** `vite.config.js` fija `port: 5173` + `strictPort` y un proxy `/api` → `http://localhost:8080`; `.env.development` trae `VITE_API_URL=` vacío. **El `.gitignore` del frontend ignoraba `.env.*`**, así que hubo que exceptuar `.env.development` (no lleva secretos) o no se habría commiteado. Verificado: un segundo `npm run dev` falla con *"Port 5173 is already in use"* en vez de abrir el 5174, y todas las llamadas del navegador salen a `:5173` sin CORS.
+
+### Fase 1 - El espacio como aula (2026-10-07)
+
+Segunda tanda del cierre, en la rama `feat/fase-1-espacio-aula`, **apilada sobre la de la Fase 0** (su PR depende del de la Fase 0). El espacio del asesor deja de ser solo un panel de gestión y pasa a servir como aula, tipo Google Classroom. Las decisiones están en la [[Decisiones pendientes#Decisión 19 - Cómo se organizan los materiales del espacio|19]] y la [[Decisiones pendientes#Decisión 20 - Reuniones con enlace - sesiones del espacio y asesorías programadas|20]]; el esquema, en [[Base de datos#Migración V2 - materiales y reuniones]]; los endpoints, en [[API#Materiales del espacio]].
+
+**1.1 Materiales en carpetas.** Cada espacio nace con *Temas de tesis*, *Rúbrica* y *Clases* (editables y borrables); cada material es un **enlace `https://`** o un **archivo** (`bytea` en tabla aparte, tope de 15 MB, como la Decisión 16). El dueño arma y edita; los estudiantes del espacio solo ven y descargan, y no ven las carpetas vacías. Quitar una carpeta o un material pide confirmar y cuenta cuántos archivos subidos se pierden.
+
+**1.2 Reuniones con enlace.**
+- **Sesiones del espacio**: título, fecha y hora, y el enlace que pega el asesor; todos los miembros ven un botón **Unirse**.
+- **Asesorías programables**: ganan `estado` (`PROGRAMADA → REALIZADA | CANCELADA`) y `enlace`. El asesor marca realizada y completa el resumen; solo entonces admite acuerdos. El estudiante puede proponer una reunión y cancelar la que abrió.
+- **Dashboards** del estudiante y del asesor: tarjeta *Próximas reuniones* con la más cercana destacada y su botón Unirse. Una reunión que empezó hace menos de una hora sigue visible.
+
+**1.3 La vista del espacio.** `EspacioPage` queda con *Código para invitar · Próximas sesiones · Materiales · Tablero · Actividades*. El estudiante entra por **Mi espacio** (nueva entrada del menú) y ve solo sesiones y materiales: ni el código ni el tablero.
+
+**El borrado de espacio se lleva todo lo nuevo.** `AreaService#eliminar` borra también carpetas, materiales, archivos y sesiones, y el diálogo los **lista con números reales** (`GET /areas/{id}/resumen`): *"3 carpetas con 2 materiales, de los cuales 1 archivo subido (no se pueden recuperar)"*, *"2 sesiones con su enlace"*.
+
+**Contraste.** Se corrigió el ícono "○" del badge *Pendiente* (2,91:1 → ≥ 4,5:1) y, de paso, el "✓" de *Completado/Realizada* (3,00:1), que el nuevo badge de asesoría reutilizaba. El barrido de todas las pantallas en claro y oscuro quedó en **0 textos bajo 3:1**.
+
+> [!success] Verificado el 2026-10-07
+> - **Migración** por los tres caminos: base vacía, base sin historial de Flyway con el esquema de `V1`, y base con `V1` en su historial (la que levanta `docker compose`), esta última con datos reales preservados.
+> - **API**: 135 comprobaciones nuevas (permisos de cada rol, validaciones, descarga con bytes idénticos, tope de 15 MB, ciclo de la asesoría, próximas reuniones, borrado con 0 filas huérfanas) y las 130 de las fases anteriores, sin regresiones.
+> - **Navegador** con 1 asesor y 3 estudiantes (uno solo y dos en grupo): 62 comprobaciones — subir y bajar un archivo, enlaces que abren en pestaña nueva, el compañero de un grupo que ve pero no cancela lo que no abrió, el ciclo completo de una asesoría y el borrado del espacio.
 
 **Entregable 4 — CI/CD y despliegue** 🔨 (empezado el 2026-10-03 por Alonso, PRs #2 a #5)
 - [x] Dockerfile del backend (multi-stage, Java 17, usuario sin privilegios) y del frontend (Node 22 → nginx con proxy `/api`)

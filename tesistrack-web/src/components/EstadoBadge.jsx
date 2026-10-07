@@ -34,7 +34,20 @@ const ENTREGA = {
   APROBADA: { texto: 'Aprobada', icono: '✓', clase: 'completado' },
 }
 
-const MAPAS = { hito: HITO, observacion: OBSERVACION, proyecto: PROYECTO, entrega: ENTREGA }
+/** Ciclo de una asesoría: se programa, se hace o se cancela. */
+const ASESORIA = {
+  PROGRAMADA: { texto: 'Programada', icono: '◷', clase: 'proceso' },
+  REALIZADA: { texto: 'Realizada', icono: '✓', clase: 'completado' },
+  CANCELADA: { texto: 'Cancelada', icono: '✕', clase: 'neutro' },
+}
+
+const MAPAS = {
+  hito: HITO,
+  observacion: OBSERVACION,
+  proyecto: PROYECTO,
+  entrega: ENTREGA,
+  asesoria: ASESORIA,
+}
 
 export default function EstadoBadge({ estado, tipo = 'hito' }) {
   const def = MAPAS[tipo]?.[estado] ?? { texto: estado, icono: '•', clase: 'neutro' }

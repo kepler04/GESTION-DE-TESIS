@@ -1,17 +1,26 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { crearActividad, eliminarActividad, verTablero } from '../api/tesistrack'
+import { crearActividad, eliminarActividad, verEspacio, verTablero } from '../api/tesistrack'
+import MaterialesEspacio from '../components/MaterialesEspacio'
+import SesionesEspacio from '../components/SesionesEspacio'
 import TableroSemaforo from '../components/TableroSemaforo'
 import { Card, Cargando, ErrorMsg, PageHead } from '../components/ui'
 
 /**
- * Un espacio de trabajo del asesor: sus actividades y el tablero de quién va cómo.
+ * Un espacio de trabajo, visto como aula.
+ *
+ * **El asesor dueño** ve todo y lo edita: el código para invitar, las próximas
+ * sesiones, los materiales en carpetas, el tablero de quién va cómo y las
+ * actividades. **El estudiante** que tiene una tesis en el espacio ve solo las
+ * sesiones y los materiales —y los descarga—; nunca el código (es la llave del
+ * espacio), ni el tablero (compara a los asesorados entre sí).
  *
  * La actividad se deja una vez y le llega a todos los asesorados del espacio —y a
  * los que entren después—. Antes había que crear el mismo hito tesis por tesis.
  */
 export default function EspacioPage() {
   const { areaId } = useParams()
+  const [espacio, setEspacio] = useState(null)
   const [tablero, setTablero] = useState(null)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState(null)
@@ -23,12 +32,19 @@ export default function EspacioPage() {
   const [fechaLimite, setFechaLimite] = useState('')
   const [guardando, setGuardando] = useState(false)
 
-  const recargar = useCallback(() => {
+  const recargar = useCallback(async () => {
     setCargando(true)
-    return verTablero(areaId)
-      .then(setTablero)
-      .catch((e) => setError(e.message))
-      .finally(() => setCargando(false))
+    setError(null)
+    try {
+      const info = await verEspacio(areaId)
+      setEspacio(info)
+      // El tablero es solo del dueño: a un estudiante la API le respondería 403.
+      setTablero(info.propietario ? await verTablero(areaId) : null)
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setCargando(false)
+    }
   }, [areaId])
 
   useEffect(() => {
@@ -67,10 +83,31 @@ export default function EspacioPage() {
     }
   }
 
-  if (cargando && !tablero) return <Cargando />
-  if (!tablero) return <ErrorMsg>{error ?? 'No se pudo cargar el espacio.'}</ErrorMsg>
+  if (cargando && !espacio) return <Cargando />
+  if (!espacio) return <ErrorMsg>{error ?? 'No se pudo cargar el espacio.'}</ErrorMsg>
 
-  const { area, actividades, filas } = tablero
+  const { area, asesor, propietario } = espacio
+
+  // Vista del estudiante (o del coordinador): solo lectura.
+  if (!propietario) {
+    return (
+      <>
+        <PageHead titulo={area.nombre} descripcion={`Espacio de ${asesor.name}`}>
+          <Link className="btn btn--sutil" to="/panel">
+            ← Dashboard
+          </Link>
+        </PageHead>
+
+        {error && <ErrorMsg>{error}</ErrorMsg>}
+
+        <SesionesEspacio areaId={areaId} editable={false} />
+        <MaterialesEspacio areaId={areaId} editable={false} />
+      </>
+    )
+  }
+
+  const filas = tablero?.filas ?? []
+  const actividades = tablero?.actividades ?? []
 
   return (
     <>
@@ -112,6 +149,10 @@ export default function EspacioPage() {
           </button>
         </div>
       </Card>
+
+      <SesionesEspacio areaId={areaId} editable />
+
+      <MaterialesEspacio areaId={areaId} editable />
 
       {mostrarForm && (
         <Card titulo="Nueva actividad">
@@ -156,9 +197,11 @@ export default function EspacioPage() {
         </Card>
       )}
 
-      <Card titulo="Tablero">
-        <TableroSemaforo tablero={tablero} />
-      </Card>
+      {tablero && (
+        <Card titulo="Tablero">
+          <TableroSemaforo tablero={tablero} />
+        </Card>
+      )}
 
       {actividades.length > 0 && (
         <Card titulo="Actividades del espacio">

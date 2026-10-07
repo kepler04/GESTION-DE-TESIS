@@ -61,14 +61,24 @@ No puede: crear proyectos, hitos, asesorías, tareas ni observaciones; tampoco a
 | Registrar observación | ❌ | ✅ | ❌ |
 | Resolver observación | ❌ | ✅ | ❌ |
 | Abrir asesoría / consulta | ✅ | ✅ | ❌ |
-| Registrar acuerdo | ❌ | ✅ | ❌ |
+| Programar una reunión (asesoría con fecha y enlace) | ✅ | ✅ | ❌ |
+| Reprogramar o cancelar una reunión programada | ✅ solo la que abrió | ✅ | ❌ |
+| Marcar una asesoría como realizada | ❌ | ✅ | ❌ |
+| Registrar acuerdo (solo de una asesoría realizada) | ❌ | ✅ | ❌ |
 | Crear actividad de un espacio | ❌ | ✅ dueño del área | ❌ |
 | Ver el tablero de un espacio | ❌ | ✅ dueño del área | ❌ |
+| Ver un espacio: sesiones y materiales | ✅ si tiene una tesis en él | ✅ dueño del área | ✅ solo lectura |
+| Descargar un material del espacio | ✅ si tiene una tesis en él | ✅ dueño del área | ✅ |
+| Crear / editar / borrar carpetas, materiales y sesiones | ❌ | ✅ dueño del área | ❌ |
+| Ver el código de invitación de un espacio | ❌ | ✅ dueño del área | ❌ |
 | Crear tarea | ❌ | ✅ | ❌ |
 | Completar tarea | ✅ si es responsable | ✅ | ❌ |
 
 > [!note] El estudiante abre la asesoría, no el acuerdo
-> Es la [[Decisiones pendientes#Decisión 13 - Quién puede abrir una asesoría|Decisión 13]]: cualquiera de los dos deja constancia de una conversación, pero **solo el asesor decide qué de eso se vuelve un acuerdo** —y de ahí, una tarea—.
+> Es la [[Decisiones pendientes#Decisión 13 - Quién puede abrir una asesoría|Decisión 13]]: cualquiera de los dos deja constancia de una conversación, pero **solo el asesor decide qué de eso se vuelve un acuerdo** —y de ahí, una tarea—. Con la [[Decisiones pendientes#Decisión 20 - Reuniones con enlace - sesiones del espacio y asesorías programadas|Decisión 20]] el estudiante también puede *proponer* una reunión, pero marcarla realizada sigue siendo del asesor.
+
+> [!note] Los espacios y la pertenencia
+> "Miembro de un espacio" no es un rol nuevo: es el estudiante que tiene una tesis en él o el asesor que es su dueño. Se resuelve con la misma regla de pertenencia de siempre ([[Decisiones pendientes#Decisión 19 - Cómo se organizan los materiales del espacio|Decisión 19]]).
 
 ## Ver también
 - [[Funcionalidades]]

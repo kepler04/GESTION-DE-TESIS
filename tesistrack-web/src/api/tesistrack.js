@@ -47,6 +47,41 @@ export const eliminarActividad = (areaId, id) =>
 /** Grilla estudiantes × actividades. Solo la ve el dueño del espacio. */
 export const verTablero = (areaId) => api(`/api/areas/${areaId}/tablero`)
 
+/** La página de un espacio para cualquiera de sus miembros (el código solo lo ve el dueño). */
+export const verEspacio = (areaId) => api(`/api/areas/${areaId}/espacio`)
+/** Qué se lleva y qué deja borrar el espacio, en números. Solo el dueño. */
+export const resumenEspacio = (areaId) => api(`/api/areas/${areaId}/resumen`)
+
+// --- materiales del espacio: carpetas con enlaces y archivos ---
+export const listarCarpetas = (areaId) => api(`/api/areas/${areaId}/carpetas`)
+export const crearCarpeta = (areaId, nombre) =>
+  api(`/api/areas/${areaId}/carpetas`, { method: 'POST', body: { nombre } })
+export const renombrarCarpeta = (id, nombre) =>
+  api(`/api/carpetas/${id}`, { method: 'PUT', body: { nombre } })
+export const eliminarCarpeta = (id) => api(`/api/carpetas/${id}`, { method: 'DELETE' })
+export const crearMaterialEnlace = (carpetaId, body) =>
+  api(`/api/carpetas/${carpetaId}/materiales`, { method: 'POST', body })
+/** Un material que es un archivo se crea con su contenido en un solo paso. */
+export const subirMaterialArchivo = (carpetaId, archivo, titulo) =>
+  apiSubirArchivo(`/api/carpetas/${carpetaId}/materiales/archivo`, archivo, {
+    method: 'POST',
+    campos: { titulo },
+  })
+export const editarMaterial = (id, body) => api(`/api/materiales/${id}`, { method: 'PUT', body })
+export const eliminarMaterial = (id) => api(`/api/materiales/${id}`, { method: 'DELETE' })
+export const descargarMaterial = (material) =>
+  apiDescargarArchivo(`/api/materiales/${material.id}/archivo`, material.archivoNombre)
+
+// --- sesiones del espacio (clases con enlace para todos los miembros) ---
+export const listarSesiones = (areaId) => api(`/api/areas/${areaId}/sesiones`)
+export const crearSesion = (areaId, body) =>
+  api(`/api/areas/${areaId}/sesiones`, { method: 'POST', body })
+export const actualizarSesion = (id, body) => api(`/api/sesiones/${id}`, { method: 'PUT', body })
+export const eliminarSesion = (id) => api(`/api/sesiones/${id}`, { method: 'DELETE' })
+
+/** Sesiones del espacio y asesorías programadas del usuario, la más próxima primero. */
+export const proximasReuniones = () => api('/api/reuniones/proximas')
+
 // --- panel de asesorados ---
 export const listarAsesorados = () => api('/api/asesorados')
 
@@ -80,6 +115,12 @@ export const cambiarEstadoObservacion = (id, estado) =>
 export const listarAsesorias = (proyectoId) => api(`/api/proyectos/${proyectoId}/asesorias`)
 export const crearAsesoria = (proyectoId, body) =>
   api(`/api/proyectos/${proyectoId}/asesorias`, { method: 'POST', body })
+/** Reprogramar una asesoría que todavía está programada. */
+export const actualizarAsesoria = (id, body) =>
+  api(`/api/asesorias/${id}`, { method: 'PUT', body })
+/** `PROGRAMADA → REALIZADA | CANCELADA`; el resumen se completa al marcarla realizada. */
+export const cambiarEstadoAsesoria = (id, estado, resumen) =>
+  api(`/api/asesorias/${id}/estado`, { method: 'PATCH', body: { estado, resumen } })
 export const listarAcuerdos = (asesoriaId) => api(`/api/asesorias/${asesoriaId}/acuerdos`)
 export const crearAcuerdo = (asesoriaId, descripcion) =>
   api(`/api/asesorias/${asesoriaId}/acuerdos`, { method: 'POST', body: { descripcion } })
