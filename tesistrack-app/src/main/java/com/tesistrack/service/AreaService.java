@@ -10,10 +10,13 @@ import com.tesistrack.config.ForbiddenException;
 import com.tesistrack.config.NotFoundException;
 import com.tesistrack.dto.AreaDto;
 import com.tesistrack.dto.AreaRequest;
+import com.tesistrack.model.Actividad;
 import com.tesistrack.model.Area;
 import com.tesistrack.model.Role;
 import com.tesistrack.model.User;
+import com.tesistrack.repository.ActividadRepository;
 import com.tesistrack.repository.AreaRepository;
+import com.tesistrack.repository.HitoRepository;
 import com.tesistrack.repository.ProyectoRepository;
 
 /**
@@ -29,16 +32,22 @@ public class AreaService {
 
     private final AreaRepository areaRepository;
     private final ProyectoRepository proyectoRepository;
+    private final ActividadRepository actividadRepository;
+    private final HitoRepository hitoRepository;
     private final AccesoService acceso;
     private final GeneradorCodigos generadorCodigos;
 
     public AreaService(
             AreaRepository areaRepository,
             ProyectoRepository proyectoRepository,
+            ActividadRepository actividadRepository,
+            HitoRepository hitoRepository,
             AccesoService acceso,
             GeneradorCodigos generadorCodigos) {
         this.areaRepository = areaRepository;
         this.proyectoRepository = proyectoRepository;
+        this.actividadRepository = actividadRepository;
+        this.hitoRepository = hitoRepository;
         this.acceso = acceso;
         this.generadorCodigos = generadorCodigos;
     }
@@ -102,15 +111,31 @@ public class AreaService {
     }
 
     /**
-     * Borra el área y la saca de los proyectos que la tenían.
+     * Borra el espacio: sus actividades se van, las tesis y sus hitos se quedan.
      *
-     * Se descartó bloquear el borrado cuando el área está en uso: es una etiqueta
-     * organizativa, no un dato del proceso de tesis. Obligar a desetiquetar
-     * proyecto por proyecto sería un trámite sin ningún valor.
+     * Se descartó bloquear el borrado cuando el espacio está en uso: obligar a
+     * desetiquetar proyecto por proyecto sería un trámite sin ningún valor.
+     *
+     * <p>El orden importa porque {@code actividad.area_id} es NOT NULL y
+     * {@code hito.actividad_id} apunta a la actividad: primero se sueltan los hitos,
+     * después se borran las actividades, después se desvinculan los proyectos y
+     * recién ahí cae el área. Hibernate ejecuta los UPDATE antes que los DELETE al
+     * hacer flush, así que las dos primeras escrituras llegan a la base en orden.
+     *
+     * <p>A diferencia de {@link ActividadService#eliminar}, que quita <b>una</b>
+     * actividad y borra los hitos que nadie tocó, acá ningún hito se borra: es
+     * trabajo del estudiante y el asesor se está yendo del espacio, no limpiando
+     * una consigna (Decisión 12 sigue valiendo para ese caso).
      */
     public void eliminar(Long id, Authentication authentication) {
         User usuario = soloAsesor(authentication);
         Area area = buscarPropia(id, usuario);
+
+        List<Actividad> actividades = actividadRepository.findByAreaIdOrderByOrdenAsc(area.getId());
+        for (Actividad actividad : actividades) {
+            hitoRepository.findByActividadId(actividad.getId()).forEach(h -> h.setActividad(null));
+        }
+        actividadRepository.deleteAll(actividades);
 
         proyectoRepository.findByAreaId(area.getId()).forEach(p -> p.setArea(null));
         areaRepository.delete(area);

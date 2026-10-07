@@ -179,6 +179,7 @@ export default function ProyectosPage() {
       {esAsesor && mostrarAreas && (
         <GestorAreas
           areas={areas}
+          proyectos={proyectos}
           onCerrar={() => setMostrarAreas(false)}
           onCambio={async () => {
             await recargarAreas()

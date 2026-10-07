@@ -11,7 +11,15 @@ tags:
 
 ## Motor
 
-PostgreSQL 16 (ver [[Arquitectura]]). Las tablas las genera Hibernate a partir de las entidades JPA (`spring.jpa.hibernate.ddl-auto=update`); el [[#Esquema SQL]] de abajo es el reflejo de esas entidades y es lo que se entrega como esquema del entregable.
+PostgreSQL 16 (ver [[Arquitectura]]). Desde el Taller 2 (2026-09-20) **el esquema lo versiona Flyway**: vive en `tesistrack-app/src/main/resources/db/migration/V1__create_initial_schema.sql` y Hibernate solo lo **valida** (`spring.jpa.hibernate.ddl-auto=validate`). El [[#Esquema SQL]] de abajo es ese mismo esquema y es lo que se entrega como esquema del entregable.
+
+> [!important] Cómo se cambia el esquema desde ahora
+> Cada cambio va como **migración nueva** (`V2__...`, `V3__...`), **nunca editando la `V1`**: Flyway guarda el checksum de lo ya aplicado y una `V1` modificada hace fallar el arranque en cualquier base que ya la corrió. Con `validate`, si una entidad cambia y la migración no, la aplicación **no arranca**: es el aviso que antes no existía.
+>
+> En una base vacía Flyway crea todo desde `V1`; en una creada con `ddl-auto=update` (la local vieja) `baseline-on-migrate` la marca en la versión 1 y no recrea nada. *(Este segundo camino es el diseño del Taller 2; **no se probó** contra la base local vieja, solo contra una vacía.)*
+
+> [!success] Verificado el 2026-10-07 contra un PostgreSQL 16 vacío
+> `V1` se aplica sola, Hibernate `validate` pasa y la aplicación arranca en ~3 s. Quedan **13 tablas y 19 claves foráneas**: 7 `ON DELETE CASCADE`, 1 `SET NULL` (`tarea.acuerdo_id`) y 11 sin acción. Las cascadas **no** cubren `actividad.area_id` ni `hito.actividad_id`: ver la [[Decisiones pendientes#Decisión 18 - Qué se lleva un espacio al borrarse|Decisión 18]].
 
 ## Diagrama Entidad-Relación
 
@@ -320,7 +328,10 @@ CREATE INDEX idx_tarea_responsable   ON tarea (responsable_id);
 
 ## Cambios posteriores al Entregable 1
 
-El esquema de arriba ya los incluye. Se listan aparte porque **`ddl-auto=update` no pudo aplicarlos solo** y hay que repetir las migraciones a mano en producción — el detalle con el SQL está en [[Desarrollo]].
+El esquema de arriba ya los incluye. Se listan aparte porque **`ddl-auto=update` no pudo aplicarlos solo** y hubo que correr las migraciones a mano en la base local — el detalle con el SQL está en [[Desarrollo]].
+
+> [!info] Es historia, no una tarea pendiente
+> Una base **nueva** (Docker, producción en AWS) no necesita nada de esto: la `V1` ya trae todas esas columnas y tablas. Solo importa si alguien conserva una base creada antes del Taller 2 con `ddl-auto=update`.
 
 | Cambio | Fecha | Por qué no lo pudo hacer Hibernate |
 |---|---|---|

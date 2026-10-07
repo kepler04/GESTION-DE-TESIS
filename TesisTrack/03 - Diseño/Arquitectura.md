@@ -99,17 +99,17 @@ Los badges de estado llevan **siempre ícono + texto**; el color es refuerzo, nu
 
 ## Por definir
 - Login con Google (Google Identity Services + verificación de token en backend) — pendiente hasta tener el OAuth Client ID
-- Almacenamiento de documentos (entregas y versiones) — ¿S3 o filesystem local en la instancia?
-- Detalle del pipeline CI/CD (qué corre en cada paso, para backend y frontend por separado)
-- Servicio AWS exacto de compute para el backend: EC2 simple vs Elastic Beanstalk
+- ~~Almacenamiento de documentos~~ — resuelto: en PostgreSQL, ver la [[Decisiones pendientes#Decisión 16 - Dónde se guardan los archivos de las entregas|Decisión 16]]
+- Qué corre el pipeline de **tests** (hoy los workflows solo construyen y publican imágenes; ver [[#Despliegue y CI/CD]])
+- Servicio AWS exacto de compute para el backend: EC2 simple vs Elastic Beanstalk vs ECS, y si el frontend va a Vercel o sale de su propio contenedor
 
 ## Proyecto de código
 
-> [!success] Backend y frontend listos y conectados
-> - **Backend** — `e:\CLAUDE\UTEC\tesistrack-app` (Spring Boot 4 + Java 17). API REST, CORS configurado. Compila limpio.
-> - **Frontend** — `e:\CLAUDE\UTEC\tesistrack-web` (React **18.3.1**, versión exacta fijada). Scaffolding con Vite.
-> - Ambos con git inicializado (sin commit todavía).
-> - **Health check probado end-to-end con captura de pantalla en navegador real (Playwright)**: PostgreSQL (Docker) → Spring Boot → React. Cadena completa funcionando.
+> [!success] Backend y frontend en un monorepo, probados juntos
+> - **Backend** — `tesistrack-app/` (Spring Boot 4 + Java 17, Maven). API REST con **Flyway** (esquema versionado), **MapStruct** (`UserMapper`) y **Lombok**. Ver [[Base de datos#Motor]].
+> - **Frontend** — `tesistrack-web/` (React **18.3.1**, versión exacta fijada, Vite). En desarrollo habla con el backend por **proxy de Vite** (`/api` → 8080), igual que nginx en Docker.
+> - Monorepo en https://github.com/kepler04/GESTION-DE-TESIS; el código de trabajo está en `D:\UTEC 2`. *(Las rutas `e:\CLAUDE\UTEC\...` de agosto ya no existen.)*
+> - Verificado end-to-end en navegador real (Playwright + Edge) el 2026-10-07: registro en dos pasos, login, sesión que sobrevive al recargar, token inválido que cierra sesión y logout, tanto en desarrollo (`:5173`) como en Docker (`:3000`).
 
 ### Login (email + contraseña)
 
@@ -126,7 +126,15 @@ Los badges de estado llevan **siempre ícono + texto**; el color es refuerzo, nu
 
 ## Despliegue y CI/CD
 
-Flujo previsto (a validar en el Entregable 4):
+> [!info] Estado al 2026-10-07 — la parte de contenedores está hecha; falta el despliegue
+> **Hecho** (Alonso Castro, PRs #2 a #5, 2026-10-03): Dockerfile del backend (multi-stage, Java 17, usuario sin privilegios) y del frontend (Node 22 → **nginx**, que reenvía `/api` al backend, así que el navegador siempre habla con un solo origen); `docker-compose.yml` con base + backend + frontend en el puerto 3000; y dos workflows de GitHub Actions (`imagen-backend.yml`, `imagen-frontend.yml`) que **construyen y publican las imágenes en ghcr.io** al pushear a `main`. Las corridas del 2026-10-03 salieron en verde.
+>
+> **Falta**: un job que corra los **tests** (las imágenes se construyen con `-DskipTests` y el repo solo tiene `contextLoads`), el despliegue en AWS, y un `JWT_SECRET` real por variable de entorno (el compose trae uno de desarrollo).
+
+> [!important] Por qué nginx y no CORS en producción
+> Servir el frontend y reenviar `/api` desde el mismo origen evita configurar CORS entre dominios y hace que desarrollo (proxy de Vite), Docker (nginx) y producción se comporten igual. Cuando el frontend se despliegue aparte (Vercel), `VITE_API_URL` pasa a apuntar a la URL del backend y vuelve a hacer falta `CORS_ALLOWED_ORIGINS`.
+
+Flujo previsto (la parte de publicar imágenes ya existe; el resto está por validar):
 
 ```mermaid
 graph LR

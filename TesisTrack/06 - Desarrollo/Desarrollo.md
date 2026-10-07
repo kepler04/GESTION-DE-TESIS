@@ -6,19 +6,14 @@ tags:
 
 # Desarrollo
 
-> [!success] Entregables 1 y 2 cerrados; el 3 en curso
-> Las [[Decisiones pendientes]] están resueltas (8 de alcance + la 9, 10 y 11 que salieron durante el desarrollo), así que no hay nada bloqueando. El modelo de datos y la API están terminados y verificados; del panel faltan **Asesorías + Acuerdos** y **Tareas**.
+> [!success] Estado al 2026-10-07 — Entregables 1, 2 y 3 hechos en funcionalidad; el 4 empezado
+> Modelo de datos, API y panel cubren todo lo de [[Funcionalidades]]. Desde agosto entraron el **Taller 2** (Flyway, MapStruct, Lombok — 2026-09-20) y la parte de Docker del **Entregable 4** (2026-10-03). Se está en la tanda de **cierre**: la Fase 0 de errores ([[#Fase 0 - Errores corregidos (2026-10-07)]]), después el espacio del asesor como aula (materiales y reuniones con enlace) y el primer ingreso del estudiante en grupo.
 
-> [!warning] Antes de construir algo nuevo, leer [[Auditoría de requisitos]]
-> Contrasta lo construido contra el enunciado del curso. Varias funcionalidades de [[Funcionalidades]] siguen sin interfaz mientras se construyeron cosas que el enunciado no pide.
+> [!warning] La [[Auditoría de requisitos]] es del 2026-08-16
+> Su recuento de nota ("45% sin empezar") está desfasado: el Entregable 4 ya tiene imágenes Docker y un pipeline que las publica (ver más abajo). Lo que sigue valiendo es su regla: **antes de construir, verificar si está en [[Funcionalidades]]**.
 
-> [!success] Commiteado el 2026-08-16 en la rama `entregable-3-espacios`
-> 88 archivos, en el commit *"Completa el Entregable 3: espacios del asesor y las dos cadenas de trazabilidad"*. **Todavía no está pusheado al remoto.**
->
-> Antes de cada commit, sincronizar el vault:
-> `robocopy "E:\GENERAL\TesisTrack" "e:\CLAUDE\UTEC\TesisTrack" /MIR`
->
-> `.claude/settings.local.json` quedó en el `.gitignore` (permisos personales); la skill del vault sí se versiona.
+> [!info] Cómo se trabaja ahora
+> Ramas + **pull request**; Alonso Castro revisa. Nada de push directo a `main`. Cada cambio de esquema es una migración Flyway nueva ([[Base de datos#Motor]]). El código vive en `D:\UTEC 2` (clon de GitHub). `CLAUDE.md` se quitó del repo el 2026-09-20; la skill del vault (`.claude/skills/vault`) sí se versiona.
 
 ## Repositorio
 
@@ -26,41 +21,51 @@ tags:
 
 | Carpeta | Qué es |
 |---|---|
-| `tesistrack-app/` | Backend — Spring Boot 4, API REST, PostgreSQL |
+| `tesistrack-app/` | Backend — Spring Boot 4, Java 17, API REST, PostgreSQL, Flyway |
 | `tesistrack-web/` | Frontend — React 18.3.1 + Vite |
 | `TesisTrack/` | Copia versionada de este vault |
+| `TALLER-02/` | Índice de evidencias del Taller 2 |
+| `.github/workflows/` | `imagen-backend.yml` e `imagen-frontend.yml` |
+| `docker-compose.yml` | Stack completo: base + backend + frontend con nginx |
 
 > [!warning] El vault se edita en `E:\GENERAL\TesisTrack`
 > La carpeta `TesisTrack/` del repo es una **copia**. Se sincroniza antes de commitear con
-> `robocopy "E:\GENERAL\TesisTrack" "e:\CLAUDE\UTEC\TesisTrack" /MIR`.
-> Si editás la copia directamente, el próximo sync la pisa.
+> `robocopy "E:\GENERAL\TesisTrack" "D:\UTEC 2\TesisTrack" /MIR`.
+> Si editás la copia directamente, el próximo sync la pisa. *(Hasta el 2026-10-06 la ruta era `e:\CLAUDE\UTEC\TesisTrack`; esa carpeta ya no existe.)*
 
-En `e:\CLAUDE\UTEC\CLAUDE.md` está el contexto que se carga al trabajar con Claude Code. Ver el stack y el porqué de cada decisión en [[Arquitectura]].
+Ver el stack y el porqué de cada decisión en [[Arquitectura]].
 
 ## Cómo levantar el proyecto
 
+### Todo en Docker (lo más simple)
+
 ```
-# Base de datos (desde tesistrack-app)
-docker compose up -d          # PostgreSQL en :5432
+docker compose up -d --build     # desde la raíz del repo → http://localhost:3000
+```
 
-# Backend (desde tesistrack-app) → :8080
-./mvnw.cmd spring-boot:run
+Tres contenedores: `db` (PostgreSQL 16), `backend` y `frontend` (nginx, que reenvía `/api` al backend). **Solo se publica el 3000**; la base y el backend quedan internos, así que no choca con un PostgreSQL local en el 5432. Los datos viven en un volumen: `docker compose down` los conserva, `docker compose down -v` los borra. Hay que reconstruir (`--build`) después de cambiar código.
 
-# Frontend (desde tesistrack-web) → :5173
+### Desarrollo con recarga automática
+
+```
+# 1. Base de datos. Si el 5432 está libre:  docker compose up -d db   (desde tesistrack-app)
+#    Si lo ocupa un PostgreSQL local, usar otro puerto:
+docker run -d --name tesistrack-db -e POSTGRES_DB=tesistrack -e POSTGRES_USER=tesistrack \
+  -e POSTGRES_PASSWORD=tesistrack -p 5433:5432 postgres:16
+
+# 2. Backend (desde tesistrack-app) → :8080
+DB_PORT=5433 ./mvnw.cmd spring-boot:run        # PowerShell: $env:DB_PORT="5433"; .\mvnw.cmd spring-boot:run
+
+# 3. Frontend (desde tesistrack-web) → :5173
 npm run dev
 ```
 
-> [!important] El frontend tiene que quedar en el puerto 5173
-> El backend solo acepta CORS desde `http://localhost:5173` (`cors.allowed-origins`). Si Vite avisa "Port 5173 is in use" y salta a otro puerto, el login falla por CORS: matá el proceso viejo en vez de dejarlo cambiar de puerto.
+> [!important] El frontend queda en el 5173 y le habla al backend por proxy
+> `vite.config.js` fija el puerto con `strictPort` y reenvía `/api` al 8080: el navegador solo ve el 5173 (mismo origen), igual que con nginx en Docker. Si el 5173 está ocupado, Vite **falla** en vez de saltar a otro puerto. Ver [[#Fase 0 - Errores corregidos (2026-10-07)]].
 
 ### Usuarios de prueba
 
-Cargados a mano en la base local, no vienen con el repo.
-
-| Rol | Email | Contraseña |
-|---|---|---|
-| Estudiante | `prueba@tesistrack.com` | `password123` |
-| Asesor | `asesor@tesistrack.com` | `password123` |
+**Ya no vienen cargados**: una base nueva arranca vacía. Se registra un asesor y un estudiante desde `/registro`. *(Los `prueba@tesistrack.com` / `asesor@tesistrack.com` eran de la base local vieja, creada antes de Flyway.)*
 
 ## Avance
 
@@ -383,10 +388,32 @@ Página pública en `/privacidad`, fuera de `RutaPublica` para que se pueda leer
 
 Si se agrega o se saca un campo del registro hay que actualizar esa página **y** subir `app.politica.version`, porque cada usuario queda asociado a la versión que aceptó.
 
-**Entregable 4 — CI/CD y despliegue** ⬜
-- [ ] Pipeline de GitHub Actions
-- [ ] Backend en AWS, frontend en Vercel (con root directory en las subcarpetas)
-- [ ] `JWT_SECRET` real por variable de entorno en producción
+### Fase 0 - Errores corregidos (2026-10-07)
+
+Primera tanda del cierre del proyecto (rama `fix/fase-0-borrar-espacio-y-estilos`). Cada error se **reprodujo antes** de arreglarlo.
+
+**0.1 — Borrar un espacio con actividades daba "Internal Server Error".** `AreaService#eliminar` desvinculaba los proyectos pero no las actividades, y `actividad.area_id` es `NOT NULL` con FK. Ahora borra en orden (hitos sueltos → actividades → proyectos desvinculados → área) y **ningún hito se borra**: ver la [[Decisiones pendientes#Decisión 18 - Qué se lleva un espacio al borrarse|Decisión 18]].
+- El `confirm()` del navegador se reemplazó por `BorrarEspacio`, un diálogo que **pide escribir el nombre** y separa *se pierde* / *no se pierde* con los conteos reales.
+- `ApiExceptionHandler` devuelve **409** con mensaje legible ante `DataIntegrityViolationException`; `client.js` nunca muestra un 5xx crudo.
+- Verificado: **500 → 204** con la misma prueba; 25 comprobaciones de API y 32 en navegador, incluido borrar una tesis desde la vista del asesor.
+
+**0.2 — Títulos casi invisibles en modo oscuro.** `index.css` es el del template de Vite: `color-scheme: light dark` y un bloque `prefers-color-scheme: dark` que invertía `--text-h`, la variable que usa el `h1/h2` global. Con el sistema en oscuro quedaba blanco sobre tarjeta blanca (**contraste 1.1:1**). Arreglo: `.primeros__titulo` con color explícito, `color-scheme: light` y fuera el bloque oscuro del template.
+
+> [!important] El login y el registro **sí** tienen modo oscuro propio
+> Está en `auth.css` con colores explícitos ("la tarjeta mantiene el acabado plateado") y se conservó. No todo lo oscuro era un resto del template.
+
+> [!note] Un barrido de contraste encontró un segundo caso
+> No bastaba con mirar los dos títulos del pedido: se midió el contraste de **todo el texto** de cada pantalla en claro y en oscuro. Los fallos exclusivos del modo oscuro pasaron de **2 a 0**; el segundo era el **nombre del estudiante en las tarjetas de "Mis asesorados"**. Queda un resto menor que falla también en claro: el ícono "○" del badge *Pendiente* (2,91:1), que siempre va acompañado de texto.
+
+**0.3 — Puerto de desarrollo.** `vite.config.js` fija `port: 5173` + `strictPort` y un proxy `/api` → `http://localhost:8080`; `.env.development` trae `VITE_API_URL=` vacío. **El `.gitignore` del frontend ignoraba `.env.*`**, así que hubo que exceptuar `.env.development` (no lleva secretos) o no se habría commiteado. Verificado: un segundo `npm run dev` falla con *"Port 5173 is already in use"* en vez de abrir el 5174, y todas las llamadas del navegador salen a `:5173` sin CORS.
+
+**Entregable 4 — CI/CD y despliegue** 🔨 (empezado el 2026-10-03 por Alonso, PRs #2 a #5)
+- [x] Dockerfile del backend (multi-stage, Java 17, usuario sin privilegios) y del frontend (Node 22 → nginx con proxy `/api`)
+- [x] `docker-compose.yml` con el stack completo — verificado el 2026-10-07: los 3 contenedores levantan, Flyway aplica `V1` y el login y el registro andan en el navegador
+- [x] GitHub Actions: `imagen-backend.yml` e `imagen-frontend.yml` construyen y **publican las imágenes en ghcr.io** al pushear a `main` (corridas del 2026-10-03 en verde)
+- [ ] **CI que corra tests**: las imágenes se construyen con `-DskipTests` y el único test del repo es `contextLoads`
+- [ ] Backend en AWS, frontend en Vercel (con root directory en las subcarpetas) — no empezado
+- [ ] `JWT_SECRET` real por variable de entorno en producción: el compose trae uno de desarrollo a la vista
 
 **Fuera de alcance por ahora**
 - [ ] Login con Google — pendiente del OAuth Client ID
