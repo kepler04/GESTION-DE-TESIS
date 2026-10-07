@@ -78,7 +78,7 @@ public class ProyectoService {
     public ProyectoDto crear(CrearProyectoRequest request, Authentication authentication) {
         User usuario = acceso.usuarioActual(authentication);
         if (usuario.getRole() != Role.ESTUDIANTE) {
-            throw new ForbiddenException("Solo un estudiante puede crear un proyecto");
+            throw new ForbiddenException("Solo un estudiante puede crear una tesis");
         }
 
         Proyecto proyecto = new Proyecto();
@@ -195,7 +195,7 @@ public class ProyectoService {
         boolean esElAsesor = acceso.esAsesorDe(proyecto, usuario);
         boolean esDelGrupo = acceso.esEstudianteDe(proyecto, usuario);
         if (!esElAsesor && !esDelGrupo) {
-            throw new ForbiddenException("No tenés acceso a este proyecto");
+            throw new ForbiddenException("No tenés acceso a esta tesis");
         }
 
         proyecto.setAsesor(null);
@@ -302,7 +302,7 @@ public class ProyectoService {
     /** Usado por los demás servicios; ya deja el proyecto cargado en la transacción. */
     Proyecto buscar(Long id) {
         return proyectoRepository.findById(id)
-            .orElseThrow(() -> new NotFoundException("Proyecto no encontrado"));
+            .orElseThrow(() -> new NotFoundException("Tesis no encontrada"));
     }
 
     private User buscarAsesor(Long asesorId) {
@@ -310,6 +310,13 @@ public class ProyectoService {
             .orElseThrow(() -> new NotFoundException("Asesor no encontrado"));
         if (asesor.getRole() != Role.ASESOR) {
             throw new IllegalArgumentException("El usuario indicado no es un asesor");
+        }
+        // Elegir a un asesor por su nombre, sin un código de clase, es pedirle una
+        // asesoría privada. Solo la reciben quienes dijeron que las dan (Decisión 24);
+        // si no, la tesis quedaría a cargo de alguien que no la ve en su menú.
+        if (!Boolean.TRUE.equals(asesor.getAsesoriasPrivadas())) {
+            throw new IllegalArgumentException(
+                "Ese asesor no da asesorías privadas. Si trabaja con una clase, pedile el código de la clase");
         }
         return asesor;
     }

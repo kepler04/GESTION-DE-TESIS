@@ -20,9 +20,15 @@ public class UsuarioController {
         this.userRepository = userRepository;
     }
 
-    /** Lista de asesores disponibles, para que el estudiante elija al crear su proyecto. */
+    /**
+     * Los asesores que un estudiante puede elegir por su nombre, sin un código de
+     * clase: solo los que dan asesorías privadas (Decisión 24). Quien trabaja con
+     * clases se encuentra con el código, no con esta lista.
+     */
     @GetMapping("/asesores")
     public List<UserDto> asesores() {
-        return userRepository.findByRole(Role.ASESOR).stream().map(UserDto::from).toList();
+        return userRepository.findByRoleAndAsesoriasPrivadasTrue(Role.ASESOR).stream()
+            .map(UserDto::from)
+            .toList();
     }
 }

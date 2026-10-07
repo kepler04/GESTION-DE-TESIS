@@ -67,7 +67,7 @@ public class AuthService {
         userRepository.save(user);
 
         String token = jwtService.generateToken(user);
-        return new AuthResponse(token, userMapper.toDto(user));
+        return new AuthResponse(token, userMapper.toPerfil(user));
     }
 
     /** Un campo opcional que llega vacío se guarda como null, no como "". */
@@ -101,6 +101,6 @@ public class AuthService {
         }
 
         String token = jwtService.generateToken(user);
-        return new AuthResponse(token, userMapper.toDto(user));
+        return new AuthResponse(token, userMapper.toPerfil(user));
     }
 }

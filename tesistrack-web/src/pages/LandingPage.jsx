@@ -27,8 +27,8 @@ const ROLES = [
   },
   {
     rol: 'Coordinador',
-    pregunta: '¿Cómo vienen todos los proyectos?',
-    puntos: ['Consultás cualquier proyecto', 'Ves el cumplimiento de los hitos', 'Solo lectura: no toca el trabajo de nadie'],
+    pregunta: '¿Cómo vienen todas las tesis?',
+    puntos: ['Consultás cualquier tesis', 'Ves el cumplimiento de los hitos', 'Solo lectura: no toca el trabajo de nadie'],
   },
 ]
 
@@ -77,8 +77,8 @@ export default function LandingPage() {
             El problema es <em>dónde está</em>.
           </h1>
           <p className="plomo">
-            Los acuerdos quedaron en WhatsApp, las observaciones en el correo y las versiones en tu
-            carpeta de descargas. TesisTrack las junta en un solo lugar y te muestra en qué vas.
+            Los acuerdos quedaron en WhatsApp, las observaciones en el correo y las versiones en archivos
+            sueltos. TesisTrack las junta en un solo lugar y te muestra en qué vas.
           </p>
           <div className="hero-landing__acciones">
             <Link to="/registro" className="lbtn lbtn--oro lbtn--grande">
@@ -164,7 +164,7 @@ export default function LandingPage() {
       {/* ---------------- cierre ---------------- */}
       <section className="cierre">
         <h2>Empezá por tu próximo hito.</h2>
-        <p>Creás tu proyecto, elegís asesor y el resto queda registrado solo.</p>
+        <p>Creás tu tesis, te sumás a la clase de tu profesor y el resto queda registrado solo.</p>
         <Link to="/registro" className="lbtn lbtn--oro lbtn--grande">
           Crear cuenta
         </Link>

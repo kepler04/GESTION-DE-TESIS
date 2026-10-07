@@ -2,6 +2,7 @@ package com.tesistrack.mapper;
 
 import org.mapstruct.Mapper;
 
+import com.tesistrack.dto.PerfilDto;
 import com.tesistrack.dto.UserDto;
 import com.tesistrack.model.User;
 
@@ -13,4 +14,7 @@ import com.tesistrack.model.User;
 @Mapper(componentModel = "spring")
 public interface UserMapper {
     UserDto toDto(User user);
+
+    /** Para la propia sesión del usuario: incluye sus preferencias. */
+    PerfilDto toPerfil(User user);
 }

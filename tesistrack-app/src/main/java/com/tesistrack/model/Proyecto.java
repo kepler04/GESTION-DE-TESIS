@@ -88,6 +88,10 @@ public class Proyecto {
     @JoinColumn(name = "area_id")
     private Area area;
 
+    /** Cuándo entró el grupo a su clase. Es {@code null} si no está en ninguna. */
+    @Column(name = "area_desde")
+    private Instant areaDesde;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt = Instant.now();
 
@@ -165,8 +169,22 @@ public class Proyecto {
         return area;
     }
 
+    /**
+     * Cambia la clase del grupo y mantiene al día desde cuándo está en ella: sacarla
+     * borra la fecha, y entrar a una clase distinta la reinicia. Volver a asignar la
+     * misma no la toca.
+     */
     public void setArea(Area area) {
+        if (area == null) {
+            this.areaDesde = null;
+        } else if (this.area == null || !this.area.getId().equals(area.getId())) {
+            this.areaDesde = Instant.now();
+        }
         this.area = area;
+    }
+
+    public Instant getAreaDesde() {
+        return areaDesde;
     }
 
     public LocalDate getFechaInicio() {

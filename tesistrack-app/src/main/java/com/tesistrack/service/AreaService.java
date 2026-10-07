@@ -14,6 +14,7 @@ import com.tesistrack.dto.EspacioDto;
 import com.tesistrack.dto.ResumenEspacioDto;
 import com.tesistrack.model.Actividad;
 import com.tesistrack.model.Area;
+import com.tesistrack.model.Aviso;
 import com.tesistrack.model.CarpetaMaterial;
 import com.tesistrack.model.Material;
 import com.tesistrack.model.Role;
@@ -22,6 +23,7 @@ import com.tesistrack.model.User;
 import com.tesistrack.repository.ActividadRepository;
 import com.tesistrack.repository.ArchivoMaterialRepository;
 import com.tesistrack.repository.AreaRepository;
+import com.tesistrack.repository.AvisoRepository;
 import com.tesistrack.repository.CarpetaMaterialRepository;
 import com.tesistrack.repository.HitoRepository;
 import com.tesistrack.repository.MaterialRepository;
@@ -54,6 +56,7 @@ public class AreaService {
     private final MaterialRepository materialRepository;
     private final ArchivoMaterialRepository archivoMaterialRepository;
     private final SesionEspacioRepository sesionRepository;
+    private final AvisoRepository avisoRepository;
     private final AccesoService acceso;
     private final GeneradorCodigos generadorCodigos;
 
@@ -66,6 +69,7 @@ public class AreaService {
             MaterialRepository materialRepository,
             ArchivoMaterialRepository archivoMaterialRepository,
             SesionEspacioRepository sesionRepository,
+            AvisoRepository avisoRepository,
             AccesoService acceso,
             GeneradorCodigos generadorCodigos) {
         this.areaRepository = areaRepository;
@@ -76,6 +80,7 @@ public class AreaService {
         this.materialRepository = materialRepository;
         this.archivoMaterialRepository = archivoMaterialRepository;
         this.sesionRepository = sesionRepository;
+        this.avisoRepository = avisoRepository;
         this.acceso = acceso;
         this.generadorCodigos = generadorCodigos;
     }
@@ -84,7 +89,7 @@ public class AreaService {
         User usuario = soloAsesor(authentication);
 
         if (areaRepository.existsByPropietarioIdAndNombreIgnoreCase(usuario.getId(), request.nombre())) {
-            throw new IllegalArgumentException("Ya tenés un área con ese nombre");
+            throw new IllegalArgumentException("Ya tenés una clase con ese nombre");
         }
 
         Area area = new Area();
@@ -129,7 +134,8 @@ public class AreaService {
             carpetaRepository.countByAreaId(area.getId()),
             materialRepository.countByCarpetaAreaId(area.getId()),
             materialRepository.countByCarpetaAreaIdAndArchivoNombreIsNotNull(area.getId()),
-            sesionRepository.countByAreaId(area.getId()));
+            sesionRepository.countByAreaId(area.getId()),
+            avisoRepository.countByAreaId(area.getId()));
     }
 
     /**
@@ -169,7 +175,7 @@ public class AreaService {
 
         if (!area.getNombre().equalsIgnoreCase(request.nombre())
                 && areaRepository.existsByPropietarioIdAndNombreIgnoreCase(usuario.getId(), request.nombre())) {
-            throw new IllegalArgumentException("Ya tenés un área con ese nombre");
+            throw new IllegalArgumentException("Ya tenés una clase con ese nombre");
         }
 
         area.setNombre(request.nombre());
@@ -214,6 +220,8 @@ public class AreaService {
         carpetaRepository.deleteAll(carpetas);
         List<SesionEspacio> sesiones = sesionRepository.findByAreaIdOrderByFechaHoraAsc(area.getId());
         sesionRepository.deleteAll(sesiones);
+        List<Aviso> avisos = avisoRepository.findByAreaIdOrderByCreatedAtDesc(area.getId());
+        avisoRepository.deleteAll(avisos);
 
         proyectoRepository.findByAreaId(area.getId()).forEach(p -> p.setArea(null));
         areaRepository.delete(area);
@@ -227,7 +235,7 @@ public class AreaService {
     @Transactional(readOnly = true)
     public Area buscarComoMiembro(Long id, User usuario) {
         Area area = areaRepository.findById(id)
-            .orElseThrow(() -> new NotFoundException("Espacio no encontrado"));
+            .orElseThrow(() -> new NotFoundException("Clase no encontrada"));
         if (usuario.getRole() == Role.COORDINADOR || esPropietario(area, usuario)) {
             return area;
         }
@@ -235,7 +243,7 @@ public class AreaService {
                 && proyectoRepository.existsByAreaIdAndEstudiantesId(area.getId(), usuario.getId())) {
             return area;
         }
-        throw new ForbiddenException("No sos parte de este espacio");
+        throw new ForbiddenException("No sos parte de esta clase");
     }
 
     boolean esPropietario(Area area, User usuario) {
@@ -251,10 +259,10 @@ public class AreaService {
     /** Visible para {@link ActividadService}, que trabaja siempre sobre un área propia. */
     Area buscarPropia(Long id, User usuario) {
         Area area = areaRepository.findById(id)
-            .orElseThrow(() -> new NotFoundException("Área no encontrada"));
+            .orElseThrow(() -> new NotFoundException("Clase no encontrada"));
         // Mismo criterio que el resto de la app: pertenencia, no rol.
         if (!area.getPropietario().getId().equals(usuario.getId())) {
-            throw new ForbiddenException("Esa área no es tuya");
+            throw new ForbiddenException("Esa clase no es tuya");
         }
         return area;
     }
@@ -262,7 +270,7 @@ public class AreaService {
     private User soloAsesor(Authentication authentication) {
         User usuario = acceso.usuarioActual(authentication);
         if (usuario.getRole() != Role.ASESOR) {
-            throw new ForbiddenException("Solo un asesor puede gestionar áreas");
+            throw new ForbiddenException("Solo un asesor puede gestionar clases");
         }
         return usuario;
     }

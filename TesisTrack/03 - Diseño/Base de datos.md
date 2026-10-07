@@ -387,7 +387,7 @@ CREATE INDEX idx_tarea_responsable   ON tarea (responsable_id);
 | `ck_asesoria_estado` | `PROGRAMADA`, `REALIZADA` o `CANCELADA` |
 
 > [!info] Datos, no solo estructura
-> La migración **inserta** las tres carpetas sugeridas (*Temas de tesis*, *Rúbrica*, *Clases*) en cada espacio que ya existía. Los espacios nuevos las reciben al crearse, desde `AreaService`. Es la única migración que toca datos; corre una sola vez, así que si el asesor las borra después, no vuelven a aparecer.
+> La migración **inserta** las tres carpetas sugeridas (*Temas de tesis*, *Rúbrica*, *Clases*) en cada espacio que ya existía. Los espacios nuevos las reciben al crearse, desde `AreaService`. V2 y V3 incluyen transformación de datos; cada migración corre una sola vez, así que si el asesor las borra después, no vuelven a aparecer.
 
 ## Cambios posteriores al Entregable 1
 
@@ -437,6 +437,21 @@ COMMIT;
 - **Quién puede crear hitos** → [[Decisiones pendientes#Decisión 2 - Quién crea los hitos]]. No afecta al esquema, sí a los endpoints.
 - **Si los hitos se pueden modificar después** → [[Decisiones pendientes#Decisión 4 - Modificación de hitos]]. Si la respuesta exige auditoría, haría falta una tabla de historial.
 - **Permisos por rol y alcance del coordinador** → [[Decisiones pendientes#Decisión 7 - Permisos por rol]] y [[Decisiones pendientes#Decisión 8 - Alcance del coordinador]]. El coordinador no aparece en ninguna FK: por ahora solo lee.
+
+## Migración V3 - clases, avisos y archivos verificados
+
+`V3__clases_avisos_y_archivos_verificados.sql` (2026-10-07, Fase 1.5). No se editan V1 ni V2; una vez aplicada tampoco se reescribe V3. Hibernate conserva ddl-auto=validate.
+
+| Cambio | Regla y datos existentes |
+|---|---|
+| users.asesorias_privadas BOOLEAN nullable | NULL = todavía no respondió; TRUE/FALSE = elección del profesor |
+| proyecto.area_desde TIMESTAMPTZ nullable | Grupos legacy con clase: se usa created_at como aproximación; sin clase: NULL. En la aplicación cambiar de clase reinicia la fecha; quitarla la limpia; reasignar la misma no la altera |
+| aviso | id, area_id con ON DELETE CASCADE, texto y created_at; índice por clase y fecha descendente |
+| material.archivo_tipo y entrega.archivo_tipo | Se recalculan desde archivo_material/archivo_entrega por magic bytes. PNG, JPEG, GIF87a/GIF89a, WebP y PDF conservan tipo específico; resto octet-stream. Los bytes no cambian |
+
+**Prueba de datos legacy:** base temporal separada dentro de tesistrack-smoke-db; V1 y V2 íntegras, filas con MIME declarado falso, después V3 íntegra: **52 comprobaciones aprobadas**. Incluye 12 casos por tabla (formatos permitidos, SVG, HTML, ZIP/Office, RIFF no WebP, firma truncada y contenido vacío), conservación de bytes, fecha de ingreso, preferencia NULL y enlace sin archivo. La base temporal se elimina al terminar.
+
+El nombre físico area/proyecto no cambia. *Tema por definir* es presentación de un título vacío; la columna titulo sigue NOT NULL y no se implementa todavía el asistente de Fase 2. Ver [[Decisiones pendientes#Decisión 21 - Unificar el vocabulario de la interfaz]] y [[Decisiones pendientes#Decisión 25 - Previsualizar solo archivos con tipo verificado]].
 
 ## Ver también
 - [[Hitos]]

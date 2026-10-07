@@ -429,6 +429,32 @@ Segunda tanda del cierre, en la rama `feat/fase-1-espacio-aula`, **apilada sobre
 > - **API**: 135 comprobaciones nuevas (permisos de cada rol, validaciones, descarga con bytes idénticos, tope de 15 MB, ciclo de la asesoría, próximas reuniones, borrado con 0 filas huérfanas) y las 130 de las fases anteriores, sin regresiones.
 > - **Navegador** con 1 asesor y 3 estudiantes (uno solo y dos en grupo): 62 comprobaciones — subir y bajar un archivo, enlaces que abren en pestaña nueva, el compañero de un grupo que ve pero no cancela lo que no abrió, el ciclo completo de una asesoría y el borrado del espacio.
 
+### Fase 1.5 - Clases y vistas (2026-10-07)
+
+Rama `feat/fase-1-5-clases-y-vistas`, con PR sobre `feat/fase-1-espacio-aula`: depende del **#8** y transitivamente del **#6**. La implementación queda lista para revisión de Alonso; **Fase 2 detenida hasta el OK de Oscar**.
+
+- Vocabulario único: Clase, Grupo/Mi tesis y carpetas solo para materiales; compatibilidad de rutas antiguas mediante redirecciones.
+- Clase con cinco pestañas para el profesor y tres para el estudiante. Avisos simples, Personas con privacidad por grupo, quitar grupo preservando su tesis y Configuración con confirmaciones.
+- Dashboard agregado y semáforo por grupo; revisiones antiguas primero y enlaces a tesis/hito.
+- Preferencia privada persistida y editable desde perfil, selector de profesores filtrado y lista privada solo de tesis sin clase (ajuste D11).
+- Vista previa autenticada de PNG/JPEG/GIF/WebP/PDF desde blob y revocación al cerrar. SVG/HTML/Office solo descarga; MIME verificado también para archivos legacy mediante V3.
+- Se corrigieron dos textos residuales con “proyecto” y el contraste de texto secundario e iconos de estado. Política `app.politica.version=2026-10-07`; enlaces de entrega https.
+
+> [!success] Verificado el 2026-10-07 en infraestructura descartable
+> - **371 comprobaciones API**: smoke 70, smoke2 35, Fase 0 25, Fase 1 135, Fase 1.5 106.
+> - **163 comprobaciones de navegador Edge**: Fase 1.5 101 y regresión Fase 1 62. Profesor, estudiantes individual/grupal, profesor ajeno, sin privadas y coordinador; vocabulario visible, aislamiento, descargas idénticas, revocación de blobs y consola.
+> - **52 comprobaciones de V3 sobre filas legacy**; los MIME falsos se corrigen sin alterar bytes. V1/V2/V3 no se reescribieron.
+> - Barrido de contraste de pantallas nuevas en preferencias claras y oscuras: **0 incidencias** con umbrales 4,5:1 para texto normal y 3:1 para texto grande, excluyendo controles deshabilitados. Es un barrido de colores sólidos, no una certificación completa de accesibilidad.
+> - `mvnw.cmd -B test`: contextLoads aprobado, Flyway valida tres migraciones y Hibernate valida esquema. `npm run build`: aprobado. Lint: 0 errores, los 4 avisos previos de Fast Refresh.
+
+**Adaptaciones de las pruebas anteriores:** /asesorados ahora excluye tesis de clase y los bytes aleatorios declarados como PDF son octet-stream. La regresión UI conserva sus operaciones pero navega las pestañas nuevas; las esperas se hacen sobre el contenido apropiado. Los fallos de pruebas por mayúsculas CSS, radios controlados y el segundo privado resultante de borrar una clase quedaron corregidos sin alterar esas reglas del producto.
+
+**Evidencia local:** scripts y logs `cierre-*.log` en el scratchpad de la sesión (fuera del repo), más capturas `f15-*.png`. Son pruebas locales; convertirlas en suites versionadas y un job de CI sigue siendo deuda. El Docker de :3000 con datos reales no se reinició ni modificó para esta fase. Solo se usaron :5173, :8080 y tesistrack-smoke-db en :5433.
+
+**Interpretaciones para confirmar con Oscar:** avisos como texto simple; quitar por grupo; privado = tesis sin clase; profesores elegibles por nombre solo si ofrecen privadas; endurecimiento https en entregas; nueva versión de política. **Pregunta abierta:** código personal para privadas. *Tema por definir* queda preparado visualmente para Fase 2, sin implementar el asistente ni el tope de integrantes.
+
+Ver [[Decisiones pendientes#Decisión 21 - Unificar el vocabulario de la interfaz]], [[API#Perfil y asesorías privadas]] y [[Base de datos#Migración V3 - clases, avisos y archivos verificados]].
+
 **Entregable 4 — CI/CD y despliegue** 🔨 (empezado el 2026-10-03 por Alonso, PRs #2 a #5)
 - [x] Dockerfile del backend (multi-stage, Java 17, usuario sin privilegios) y del frontend (Node 22 → nginx con proxy `/api`)
 - [x] `docker-compose.yml` con el stack completo — verificado el 2026-10-07: los 3 contenedores levantan, Flyway aplica `V1` y el login y el registro andan en el navegador

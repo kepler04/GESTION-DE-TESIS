@@ -63,6 +63,14 @@ public class User {
     @Column(name = "politica_aceptada_at")
     private Instant politicaAceptadaAt;
 
+    /**
+     * Si el asesor da asesorías privadas, uno a uno y fuera de una clase. Es una
+     * preferencia, no un dato de perfil: {@code null} significa que todavía no
+     * respondió la pregunta. Solo se usa con el rol ASESOR.
+     */
+    @Column(name = "asesorias_privadas")
+    private Boolean asesoriasPrivadas;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt = Instant.now();
 
@@ -162,6 +170,14 @@ public class User {
 
     public void setPoliticaAceptadaAt(Instant politicaAceptadaAt) {
         this.politicaAceptadaAt = politicaAceptadaAt;
+    }
+
+    public Boolean getAsesoriasPrivadas() {
+        return asesoriasPrivadas;
+    }
+
+    public void setAsesoriasPrivadas(Boolean asesoriasPrivadas) {
+        this.asesoriasPrivadas = asesoriasPrivadas;
     }
 
     public Instant getCreatedAt() {

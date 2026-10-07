@@ -41,12 +41,25 @@ const ASESORIA = {
   CANCELADA: { texto: 'Cancelada', icono: '✕', clase: 'neutro' },
 }
 
+/**
+ * El estado de un grupo entero en la clase (el semáforo de la pestaña Personas y
+ * de las tarjetas del Dashboard). Siempre ícono + texto: el rojo y el verde se
+ * confunden en daltonismo.
+ */
+const GRUPO = {
+  ROJO: { texto: 'Atrasado', icono: '!', clase: 'observado' },
+  AMARILLO: { texto: 'Por atender', icono: '◐', clase: 'aviso' },
+  VERDE: { texto: 'Al día', icono: '✓', clase: 'completado' },
+  SIN_ACTIVIDAD: { texto: 'Sin actividades', icono: '○', clase: 'neutro' },
+}
+
 const MAPAS = {
   hito: HITO,
   observacion: OBSERVACION,
   proyecto: PROYECTO,
   entrega: ENTREGA,
   asesoria: ASESORIA,
+  grupo: GRUPO,
 }
 
 export default function EstadoBadge({ estado, tipo = 'hito' }) {

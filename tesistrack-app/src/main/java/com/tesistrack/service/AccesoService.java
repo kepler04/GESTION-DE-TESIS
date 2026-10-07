@@ -45,20 +45,20 @@ public class AccesoService {
         if (esEstudianteDe(proyecto, usuario) || esAsesorDe(proyecto, usuario)) {
             return;
         }
-        throw new ForbiddenException("No tenés acceso a este proyecto");
+        throw new ForbiddenException("No tenés acceso a esta tesis");
     }
 
     /** Acciones del asesor: hitos, asesorías, acuerdos, tareas, observaciones. */
     public void verificarAsesorDelProyecto(Proyecto proyecto, User usuario) {
         if (!esAsesorDe(proyecto, usuario)) {
-            throw new ForbiddenException("Solo el asesor del proyecto puede hacer esto");
+            throw new ForbiddenException("Solo el asesor de esta tesis puede hacer esto");
         }
     }
 
     /** Acciones del estudiante: crear el proyecto, elegir asesor, subir entregas. */
     public void verificarEstudianteDelProyecto(Proyecto proyecto, User usuario) {
         if (!esEstudianteDe(proyecto, usuario)) {
-            throw new ForbiddenException("Solo un estudiante del proyecto puede hacer esto");
+            throw new ForbiddenException("Solo un estudiante de esta tesis puede hacer esto");
         }
     }
 

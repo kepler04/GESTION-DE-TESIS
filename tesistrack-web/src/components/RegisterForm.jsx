@@ -314,7 +314,7 @@ export default function RegisterForm({ onSuccess }) {
         <input
           id="register-carrera"
           type="text"
-          placeholder="Carrera o área (opcional)"
+          placeholder="Carrera o especialidad (opcional)"
           value={carrera}
           onChange={(e) => setCarrera(e.target.value)}
         />

@@ -56,17 +56,17 @@ export default function BorrarEspacio({ area, onCerrar, onBorrado }) {
   return createPortal(
     <dialog className="dialogo" ref={dialogo} onClose={onCerrar}>
       <div className="dialogo__cuerpo legal-texto">
-        <h2>Borrar este espacio</h2>
+        <h2>Borrar esta clase</h2>
         <p>
-          Vas a borrar el espacio <strong>{area.nombre}</strong>.
+          Vas a borrar la clase <strong>{area.nombre}</strong>.
         </p>
 
         <p className="dialogo__subtitulo">Se pierde</p>
         <ul className="dialogo__lista">
           <li>
             {conNumeros
-              ? `${plural(resumen.actividades, 'actividad', 'actividades')} del espacio`
-              : 'Las actividades del espacio'}{' '}
+              ? `${plural(resumen.actividades, 'actividad', 'actividades')} de la clase`
+              : 'Las actividades de la clase'}{' '}
             y su tablero con el semáforo
           </li>
           <li>
@@ -95,6 +95,9 @@ export default function BorrarEspacio({ area, onCerrar, onBorrado }) {
               : 'Las sesiones con su enlace de reunión'}
           </li>
           <li>
+            {conNumeros ? plural(resumen.avisos ?? 0, 'aviso', 'avisos') : 'Los avisos'} del Tablón
+          </li>
+          <li>
             El código de invitación <code>{area.codigo}</code>: nadie más podrá entrar con él
           </li>
         </ul>
@@ -103,12 +106,12 @@ export default function BorrarEspacio({ area, onCerrar, onBorrado }) {
         <ul className="dialogo__lista">
           <li>
             {!conNumeros
-              ? 'Las tesis del espacio siguen enteras, con sus entregas y observaciones'
+              ? 'Las tesis de la clase siguen enteras, con sus entregas y observaciones'
               : resumen.tesis === 0
-                ? 'Ninguna tesis está en este espacio todavía'
+                ? 'Ninguna tesis está en esta clase todavía'
                 : resumen.tesis === 1
-                  ? 'La tesis del espacio sigue entera, con sus entregas y observaciones'
-                  : `Las ${resumen.tesis} tesis del espacio siguen enteras, con sus entregas y observaciones`}
+                  ? 'La tesis de la clase sigue entera, con sus entregas y observaciones'
+                  : `Las ${resumen.tesis} tesis de la clase siguen enteras, con sus entregas y observaciones`}
           </li>
           <li>Los hitos que nacieron de las actividades siguen en cada tesis como hitos comunes</li>
         </ul>

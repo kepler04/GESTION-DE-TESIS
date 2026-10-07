@@ -38,3 +38,11 @@ export function dominio(url) {
     return url
   }
 }
+
+/** "hoy", "hace 1 día", "hace 5 días": cuánto lleva esperando algo, de un vistazo. */
+export function haceTiempo(valor) {
+  if (!valor) return ''
+  const dias = Math.floor((Date.now() - new Date(valor).getTime()) / 86400000)
+  if (dias <= 0) return 'hoy'
+  return `hace ${plural(dias, 'día')}`
+}

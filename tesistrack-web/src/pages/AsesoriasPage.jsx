@@ -166,7 +166,7 @@ export default function AsesoriasPage() {
         titulo="Asesorías"
         descripcion={
           esAsesor
-            ? 'Reuniones y consultas de tus asesorados, con los acuerdos de cada una.'
+            ? 'Reuniones y consultas de tus grupos, con los acuerdos de cada una.'
             : 'Tus consultas al asesor y lo que se acordó en cada reunión.'
         }
       >
@@ -233,7 +233,7 @@ export default function AsesoriasPage() {
                   />
                 </label>
                 <p className="tenue">
-                  Creá la reunión en Zoom o Meet y pegá el enlace. {esAsesor ? 'Tu asesorado' : 'Tu asesor'}{' '}
+                  Creá la reunión en Zoom o Meet y pegá el enlace. {esAsesor ? 'El grupo' : 'Tu asesor'}{' '}
                   la va a ver acá y en su Dashboard con un botón para unirse.
                 </p>
               </>
@@ -268,7 +268,7 @@ export default function AsesoriasPage() {
         <Card>
           <Vacio>
             {esAsesor
-              ? 'Todavía no hay asesorías en este proyecto.'
+              ? 'Todavía no hay asesorías en esta tesis.'
               : 'Todavía no hiciste ninguna consulta ni programaste una reunión. Usá los botones de arriba.'}
           </Vacio>
         </Card>

@@ -65,8 +65,8 @@ No puede: crear proyectos, hitos, asesorías, tareas ni observaciones; tampoco a
 | Reprogramar o cancelar una reunión programada | ✅ solo la que abrió | ✅ | ❌ |
 | Marcar una asesoría como realizada | ❌ | ✅ | ❌ |
 | Registrar acuerdo (solo de una asesoría realizada) | ❌ | ✅ | ❌ |
-| Crear actividad de un espacio | ❌ | ✅ dueño del área | ❌ |
-| Ver el tablero de un espacio | ❌ | ✅ dueño del área | ❌ |
+| Crear actividad de una clase | ❌ | ✅ dueño del área | ❌ |
+| Ver el tablero de una clase | ❌ | ✅ dueño del área | ❌ |
 | Ver un espacio: sesiones y materiales | ✅ si tiene una tesis en él | ✅ dueño del área | ✅ solo lectura |
 | Descargar un material del espacio | ✅ si tiene una tesis en él | ✅ dueño del área | ✅ |
 | Crear / editar / borrar carpetas, materiales y sesiones | ❌ | ✅ dueño del área | ❌ |
@@ -79,6 +79,24 @@ No puede: crear proyectos, hitos, asesorías, tareas ni observaciones; tampoco a
 
 > [!note] Los espacios y la pertenencia
 > "Miembro de un espacio" no es un rol nuevo: es el estudiante que tiene una tesis en él o el asesor que es su dueño. Se resuelve con la misma regla de pertenencia de siempre ([[Decisiones pendientes#Decisión 19 - Cómo se organizan los materiales del espacio|Decisión 19]]).
+
+## Clases y privacidad de Personas
+
+Desde la Fase 1.5, el rol técnico ASESOR se presenta como profesor dentro de la clase. No hay roles ni instituciones nuevas.
+
+| Acción | Estudiante de la clase | Profesor dueño | Coordinador |
+|---|---|---|---|
+| Ver Tablón, actividades y materiales | Sí | Sí | Lectura |
+| Ver Personas | Propio grupo completo; de otros solo nombres | Detalles de todos sus grupos | Detalles, solo lectura |
+| Publicar/quitar avisos | No | Sí | No |
+| Quitar grupo de la clase desde Personas | No | Sí, desvincula también al profesor; no borra tesis | No |
+| Seguimiento y Configuración | No | Sí | No se ofrecen como gestión |
+| Dashboard agregado del profesor | No | Solo sus clases y tesis | No |
+| Preferencia de asesorías privadas | No | Propia | No |
+
+El estudiante no recibe por API los correos, tema, semáforo, fecha de ingreso ni id de tesis de otros grupos. El profesor aparece arriba; el propio grupo primero. La preferencia privada cambia menú y elección por nombre, **no el acceso a las tesis ya asignadas**. Ver [[Decisiones pendientes#Decisión 22 - Organizar la clase como salón con pestañas]] y [[Decisiones pendientes#Decisión 24 - Hacer opcionales las asesorías privadas]].
+
+La política se actualiza a **2026-10-07** para describir la visibilidad de Personas y privadas. Los consentimientos anteriores conservan su versión.
 
 ## Ver también
 - [[Funcionalidades]]

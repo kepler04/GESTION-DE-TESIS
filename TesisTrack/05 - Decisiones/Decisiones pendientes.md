@@ -14,7 +14,7 @@ tags:
 > **2, 4, 7 y 8** se cerraron a continuación para poder escribir la API del [[Entregables y evaluación|Entregable 2]], porque definen qué rol puede llamar a cada endpoint.
 > De la **9** a la **16** surgieron durante el [[Entregables y evaluación|Entregable 3]]: al rediseñar el registro, al ordenar la carga de trabajo del asesor, al resolver cómo un asesor privado suma a sus asesorados, al repartir una consigna a todo un espacio, al abrir las asesorías como canal de consultas y al arreglar el primer minuto del asesor nuevo.
 >
-> No quedan decisiones abiertas. Las que surjan de acá en adelante se agregan a esta nota con su fecha.
+> Las decisiones nuevas se agregan con su fecha. La Fase 1.5 incorpora las decisiones 21 a 25; queda por confirmar si las asesorías privadas necesitan un código personal, sin implementarlo en esta fase.
 
 ## Decisión 1 - Universidad específica o plataforma general
 
@@ -151,6 +151,9 @@ Un asesor con muchas tesis a la vez necesita agruparlas. Se le permite crear sus
 Ver [[Desarrollo#Áreas del asesor]].
 
 ## Decisión 11 - Cómo entran los asesorados de un asesor privado
+
+> [!important] Ajustada por la Decisión 24 (2026-10-07)
+> El código TT- sigue siendo de una **clase**. La asesoría privada pasa a ser opcional: tesis asignada al profesor **sin clase**, y elección por nombre solo entre quienes activaron esa preferencia. El texto siguiente documenta el flujo original; para el comportamiento actual, ver [[#Decisión 24 - Hacer opcionales las asesorías privadas]].
 
 Un asesor privado ya sabe a quiénes asesora. ¿Cómo los suma a la plataforma, en vez de esperar a que lo encuentren en una lista?
 
@@ -436,6 +439,86 @@ Esto **conserva la asimetría de la [[#Decisión 13 - Quién puede abrir una ase
 | Que solo el asesor programe | El estudiante necesita poder proponer una reunión; es la apertura de la D13 |
 
 Ver [[Desarrollo#Fase 1 - El espacio como aula (2026-10-07)]] y [[API#Sesiones del espacio]].
+
+## Decisión 21 - Unificar el vocabulario de la interfaz
+
+¿Qué nombres ve cada rol para dejar de mezclar área, espacio, carpeta y proyecto?
+
+**Estado:** ✅ cerrada (2026-10-07) — **Clase, Grupo y Mi tesis, sin renombrar el modelo técnico**.
+
+El profesor entra por **Mis clases**; dentro de una clase cada tesis es un **grupo**, incluso si tiene una sola persona. El estudiante entra por **Mi tesis** y **Mi clase**. **Carpeta** se reserva para materiales; **asesorados** queda en Asesorías privadas, el perfil y su pregunta inicial. Aplica a botones, títulos, ayudas, errores y estados vacíos. Las rutas antiguas del frontend redirigen a las nuevas.
+
+**Alternativa descartada:** renombrar tablas, entidades Java y rutas REST. Agregaba migraciones y rompía consumidores sin aportar claridad adicional a la interfaz; `area`, `proyecto`, `/areas` y `/proyectos` conservan su contrato técnico.
+
+> [!note] Consecuencia
+> El vocabulario se verificó en navegador para profesor, estudiantes, coordinador, estados vacíos y pantallas públicas. Ver [[Desarrollo#Fase 1.5 - Clases y vistas (2026-10-07)]].
+
+## Decisión 22 - Organizar la clase como salón con pestañas
+
+¿Cómo se separan los avisos, el trabajo y la gestión de una clase?
+
+**Estado:** ✅ cerrada (2026-10-07) — **Tablón, Trabajo de clase, Personas, Seguimiento y Configuración**.
+
+El profesor ve las cinco pestañas. El estudiante ve Tablón, Trabajo de clase y Personas. El Tablón reúne avisos y próximas sesiones; Trabajo de clase reúne actividades y carpetas de materiales. Seguimiento conserva el semáforo; Configuración permite renombrar, regenerar código y borrar con confirmación escrita reutilizando `BorrarEspacio`.
+
+**Interpretaciones implementadas para revisión de Oscar:** avisos como **texto simple**, sin editor rico ni comentarios; **quitar de la clase actúa sobre el grupo completo**, reutilizando la desvinculación de la D17: deja de estar en esa clase y a cargo del profesor, pero conserva tesis, integrantes e historial. No equivale a expulsar a una sola persona de su tesis.
+
+Personas muestra primero al profesor y después los grupos. El dueño ve nombres, correos, tema o *Tema por definir*, semáforo e ingreso. El estudiante ve los nombres de otros grupos; correos, tema, identificador de tesis y fecha de ingreso ajenos se ocultan en la API. Su propio grupo conserva esos datos. El coordinador mantiene lectura global, sin gestión.
+
+**Alternativas descartadas:** una única página extensa dificulta encontrar cada tarea; avisos con HTML/comentarios agregan edición y moderación fuera del pedido; quitar personas desde la clase cambiaría la composición de una tesis y contradice la acción segura de la D17.
+
+Ver [[Usuarios y roles#Clases y privacidad de Personas]] y [[API#Clases - Personas y avisos]].
+
+## Decisión 23 - Mostrar un Dashboard agregado del profesor
+
+¿Qué necesita ver el profesor al entrar cuando atiende varias clases y tesis?
+
+**Estado:** ✅ cerrada (2026-10-07) — **próximas reuniones, clases, entregas para revisar y grupos que necesitan atención**.
+
+`GET /dashboard/asesor` agrega solo sus clases y tesis. *Para revisar* agrupa las entregas EN_REVISION por hito y muestra la versión pendiente de mayor número de cada uno; las ordena de la más antigua a la más reciente, con enlace a la tesis e hito correctos. Esta agrupación es una interpretación implementada para revisión de Oscar. *Necesitan atención* reúne grupos atrasados y sin tema. Las próximas reuniones siguen viniendo de `/reuniones/proximas`.
+
+**Semáforo del grupo:** ROJO si algún hito está EN_FALTA; AMARILLO si hay POR_REVISAR u OBSERVADO; VERDE si tiene hitos y no se cumplen los casos anteriores; SIN_ACTIVIDAD si no tiene hitos. Una entrega pendiente de revisión queda amarilla. El cálculo usa todos los hitos de la tesis, incluidos los que no provienen de una actividad de clase.
+
+**Alternativa descartada:** mostrar el Dashboard de la primera tesis elegida, porque oculta el resto de la carga del profesor. Calcular cada tarjeta desde el frontend exigiría recorrer tesis/hitos/entregas en múltiples solicitudes y repartir la lógica de pertenencia.
+
+> [!note] Consecuencia
+> No hay acceso global por tener rol ASESOR. El endpoint y los enlaces mantienen los chequeos de pertenencia. Ver [[API#Dashboard del profesor]].
+
+## Decisión 24 - Hacer opcionales las asesorías privadas
+
+¿Todos los profesores necesitan una sección de asesorados privados?
+
+**Estado:** ✅ cerrada (2026-10-07) — **preferencia opcional y persistida; ajusta la D11**.
+
+Al primer ingreso se pregunta *¿Das asesorías privadas, fuera de una clase?*; después se modifica en Mi perfil. `users.asesorias_privadas` es nullable: NULL = sin responder; TRUE/FALSE = respuesta. Solo TRUE muestra Asesorías privadas en el menú. Con FALSE se explica una vez: *Asesorías privadas es para acompañamiento personal, uno a uno. Si trabajás con una organización o con grupos, usá Mis clases.*
+
+**Interpretación implementada:** asesorado privado = **tesis asignada al profesor sin clase**. `GET /asesorados` excluye tesis de clase. Borrar una clase conserva al profesor asignado, por lo que sus tesis pasan a estar sin clase; quitar un grupo desde Personas desvincula también al profesor según la D17. No se puede desactivar la preferencia mientras queden tesis privadas: primero hay que desvincularlas conscientemente. Esta preferencia organiza el menú y la captación; no elimina permisos existentes sobre tesis asignadas.
+
+La lista de profesores que el estudiante puede elegir por nombre se filtra a quienes activaron privadas. La API también rechaza una asignación por nombre a quien no las ofrece; entrar con el código de una clase sigue funcionando cualquiera sea su preferencia.
+
+**Alternativas descartadas:** mostrar siempre Mis asesorados confunde a quien trabaja exclusivamente con clases; usar una clase denominada Privadas mezcla dos flujos que el pedido separa; crear una entidad o rol de asesor privado duplica el seguimiento existente.
+
+> [!question] Pendiente de confirmación de Oscar
+> ¿Las asesorías privadas necesitan un **código personal**? No se implementó: el código actual sigue perteneciendo a una clase. También debe confirmar la definición de privado y el filtro del selector de profesores.
+
+Ver [[#Decisión 11 - Cómo entran los asesorados de un asesor privado]], [[Base de datos#Migración V3 - clases, avisos y archivos verificados]] y [[API#Perfil y asesorías privadas]].
+
+## Decisión 25 - Previsualizar solo archivos con tipo verificado
+
+¿Cómo permitir Ver en materiales y entregas sin confiar en el tipo declarado al subir?
+
+**Estado:** ✅ cerrada (2026-10-07) — **magic bytes para PNG, JPEG, GIF, WebP y PDF; el resto solo descarga**.
+
+`ArchivoTipos` reconoce la firma de los bytes y guarda el tipo detectado. SVG, HTML, Word, PowerPoint y formatos desconocidos quedan como `application/octet-stream`; nunca se ofrecen para vista previa. La migración V3 vuelve a verificar también los archivos legacy de materiales y entregas, aunque ya tuvieran un tipo declarado, sin modificar su contenido.
+
+El botón **Ver** abre un modal: `fetch` autenticado → Blob con el MIME verificado → `URL.createObjectURL`; imágenes en `img`, PDF en `iframe`. La URL se revoca al cerrar o desmontar. La descarga conserva `Content-Disposition: attachment`. Para los demás formatos se explica que hay que descargar para abrirlos.
+
+**Alternativas descartadas:** confiar en extensión o Content-Type permite disfrazar HTML/SVG; usar la URL del servidor directamente en el iframe no envía el bearer token y altera el contrato de descarga; convertir Word/PPT agrega motores y dependencias fuera del alcance. La firma identifica el formato: no pretende validar íntegramente el documento ni analizar malware.
+
+> [!note] Cambios asociados para revisión de Oscar
+> El enlace externo de una entrega ahora exige **https**. La política de privacidad refleja Personas y las asesorías privadas; `app.politica.version=2026-10-07`. No se reescriben consentimientos anteriores ni se implementa una nueva pantalla de reaceptación.
+
+Ver [[API#Archivos verificados y vista previa]] y [[Base de datos#Migración V3 - clases, avisos y archivos verificados]].
 
 ## Ver también
 - [[Feedback profesor]]

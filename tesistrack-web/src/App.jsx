@@ -1,18 +1,21 @@
-import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Outlet, Route, Routes, useParams } from 'react-router-dom'
 import { AuthProvider, useAuth } from './auth/AuthContext'
 import AppLayout from './layouts/AppLayout'
 import AsesoradosPage from './pages/AsesoradosPage'
-import EspacioPage from './pages/EspacioPage'
+import ClasePage from './pages/ClasePage'
 import AsesoriasPage from './pages/AsesoriasPage'
 import TareasPage from './pages/TareasPage'
 import DashboardPage from './pages/DashboardPage'
 import EntregasPage from './pages/EntregasPage'
 import HitosPage from './pages/HitosPage'
 import LandingPage from './pages/LandingPage'
-import MiEspacioPage from './pages/MiEspacioPage'
+import MiClasePage from './pages/MiClasePage'
+import MiTesisPage from './pages/MiTesisPage'
+import MisClasesPage from './pages/MisClasesPage'
 import ObservacionesPage from './pages/ObservacionesPage'
 import PrivacidadPage from './pages/PrivacidadPage'
-import ProyectosPage from './pages/ProyectosPage'
+import PerfilPage from './pages/PerfilPage'
+import TesisPage from './pages/TesisPage'
 import { LoginPage, RegisterPage } from './pages/LoginPage'
 
 /** Solo deja pasar con sesión válida; espera a que se revalide el token guardado. */
@@ -29,6 +32,23 @@ function RutaPublica() {
   if (verificando) return <div className="arranque">Cargando…</div>
   if (session) return <Navigate to="/panel" replace />
   return <Outlet />
+}
+
+/**
+ * Las rutas viejas siguen llevando a algún lado: alguien puede tener guardado un
+ * enlace de antes de que el vocabulario cambiara (`/proyectos`, `/espacios/3`…). Cada
+ * una redirige a su equivalente, que según el rol puede ser otra pantalla.
+ */
+function RedirigirProyectos() {
+  const { user } = useAuth()
+  const destino =
+    user?.role === 'ASESOR' ? '/clases' : user?.role === 'COORDINADOR' ? '/tesis' : '/mi-tesis'
+  return <Navigate to={destino} replace />
+}
+
+function RedirigirEspacio() {
+  const { areaId } = useParams()
+  return <Navigate to={`/clases/${areaId}`} replace />
 }
 
 /** La landing es para quien todavía no entró: con sesión abierta va derecho al panel. */
@@ -58,10 +78,18 @@ export default function App() {
           <Route element={<RutaPrivada />}>
             <Route element={<AppLayout />}>
               <Route path="/panel" element={<DashboardPage />} />
-              <Route path="/proyectos" element={<ProyectosPage />} />
-              <Route path="/asesorados" element={<AsesoradosPage />} />
-              <Route path="/espacio" element={<MiEspacioPage />} />
-              <Route path="/espacios/:areaId" element={<EspacioPage />} />
+              <Route path="/clases" element={<MisClasesPage />} />
+              <Route path="/clases/:areaId" element={<ClasePage />} />
+              <Route path="/clase" element={<MiClasePage />} />
+              <Route path="/mi-tesis" element={<MiTesisPage />} />
+              <Route path="/tesis" element={<TesisPage />} />
+              <Route path="/asesorias-privadas" element={<AsesoradosPage />} />
+              <Route path="/perfil" element={<PerfilPage />} />
+              {/* Los nombres de antes: ver RedirigirProyectos. */}
+              <Route path="/proyectos" element={<RedirigirProyectos />} />
+              <Route path="/asesorados" element={<Navigate to="/asesorias-privadas" replace />} />
+              <Route path="/espacio" element={<Navigate to="/clase" replace />} />
+              <Route path="/espacios/:areaId" element={<RedirigirEspacio />} />
               <Route path="/hitos" element={<HitosPage />} />
               <Route path="/entregas" element={<EntregasPage />} />
               <Route path="/observaciones" element={<ObservacionesPage />} />

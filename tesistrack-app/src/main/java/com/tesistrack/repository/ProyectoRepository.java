@@ -15,6 +15,11 @@ public interface ProyectoRepository extends JpaRepository<Proyecto, Long> {
 
     List<Proyecto> findByAreaId(Long areaId);
 
+    /** Las tesis de un asesor que no están en ninguna clase: sus asesorías privadas. */
+    List<Proyecto> findByAsesorIdAndAreaIsNull(Long asesorId);
+
+    long countByAsesorIdAndAreaIsNull(Long asesorId);
+
     /** ¿Algún proyecto de ese espacio tiene a este estudiante? Es lo que lo hace miembro del espacio. */
     boolean existsByAreaIdAndEstudiantesId(Long areaId, Long estudianteId);
 }

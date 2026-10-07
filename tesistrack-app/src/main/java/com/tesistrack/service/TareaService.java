@@ -57,7 +57,7 @@ public class TareaService {
             Acuerdo acuerdo = acuerdoRepository.findById(request.acuerdoId())
                 .orElseThrow(() -> new NotFoundException("Acuerdo no encontrado"));
             if (!Objects.equals(acuerdo.getAsesoria().getProyecto().getId(), proyectoId)) {
-                throw new IllegalArgumentException("El acuerdo pertenece a otro proyecto");
+                throw new IllegalArgumentException("El acuerdo pertenece a otra tesis");
             }
             tarea.setAcuerdo(acuerdo);
         }

@@ -141,6 +141,12 @@ public class MaterialService {
                 "El archivo supera los " + (TAMANO_MAXIMO / (1024 * 1024)) + " MB");
         }
         String nombre = nombreSeguro(archivo.getOriginalFilename());
+        byte[] bytes;
+        try {
+            bytes = archivo.getBytes();
+        } catch (IOException e) {
+            throw new IllegalArgumentException("No se pudo leer el archivo subido", e);
+        }
 
         Material material = new Material();
         material.setCarpeta(carpeta);
@@ -149,17 +155,14 @@ public class MaterialService {
             throw new IllegalArgumentException("El título es demasiado largo");
         }
         material.setArchivoNombre(nombre);
-        material.setArchivoTipo(archivo.getContentType());
+        // El tipo sale de los bytes, no de lo que declare quien sube: ver ArchivoTipos.
+        material.setArchivoTipo(ArchivoTipos.verificar(bytes));
         material.setArchivoTamano(archivo.getSize());
         materialRepository.save(material);
 
         ArchivoMaterial contenido = new ArchivoMaterial();
         contenido.setMaterial(material);
-        try {
-            contenido.setContenido(archivo.getBytes());
-        } catch (IOException e) {
-            throw new IllegalArgumentException("No se pudo leer el archivo subido", e);
-        }
+        contenido.setContenido(bytes);
         archivoRepository.save(contenido);
         return MaterialDto.from(material);
     }
@@ -231,7 +234,7 @@ public class MaterialService {
 
     private void verificarNombreLibre(Long areaId, String nombre) {
         if (carpetaRepository.existsByAreaIdAndNombreIgnoreCase(areaId, nombre)) {
-            throw new IllegalArgumentException("Ya tenés una carpeta con ese nombre en este espacio");
+            throw new IllegalArgumentException("Ya tenés una carpeta con ese nombre en esta clase");
         }
     }
 

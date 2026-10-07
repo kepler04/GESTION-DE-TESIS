@@ -161,7 +161,7 @@ export default function ObservacionesPage() {
         <Cargando />
       ) : hitos.length === 0 ? (
         <Card>
-          <Vacio>Este proyecto todavía no tiene hitos, así que no hay nada que observar.</Vacio>
+          <Vacio>Esta tesis todavía no tiene hitos, así que no hay nada que observar.</Vacio>
         </Card>
       ) : (
         <>

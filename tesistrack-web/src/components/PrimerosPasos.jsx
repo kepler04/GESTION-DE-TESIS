@@ -81,7 +81,7 @@ export default function PrimerosPasos({ onListo }) {
           <p className="primeros__hola">¿Es tu primera vez acá?</p>
           <h2 className="primeros__titulo">Empecemos por tu tesis</h2>
           <p className="primeros__texto">
-            Si tu asesor o tu coordinación te pasó un código, con eso te sumás a su carpeta y ya
+            Si tu profesor te pasó el código de su clase, con eso te sumás a ella y ya
             quedan conectados. Si todavía no tenés uno, podés crear tu tesis igual y sumarte
             después.
           </p>
@@ -108,7 +108,7 @@ export default function PrimerosPasos({ onListo }) {
 
   if (paso === 'codigo') {
     return (
-      <Card titulo="Unirme a la carpeta de mi asesor">
+      <Card titulo="Unirme a la clase de mi profesor">
         {alerta}
         <form className="form" onSubmit={handleBuscar}>
           <label>
@@ -124,8 +124,8 @@ export default function PrimerosPasos({ onListo }) {
             />
           </label>
           <p className="tenue">
-            Antes de crear nada te vamos a mostrar de quién es la carpeta, para que confirmes que
-            es la correcta.
+            Antes de crear nada te vamos a mostrar a qué clase y a qué profesor corresponde, para
+            que confirmes que es la correcta.
           </p>
           <div className="form__acciones">
             <button type="submit" className="btn btn--primario" disabled={ocupado}>

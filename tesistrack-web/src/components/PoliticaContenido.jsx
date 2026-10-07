@@ -10,7 +10,7 @@
  * subir `app.politica.version` en el backend: cada usuario queda asociado a la
  * versión que aceptó.
  */
-export const VERSION_POLITICA = '2026-08-16'
+export const VERSION_POLITICA = '2026-10-07'
 
 const DATOS = [
   {
@@ -40,7 +40,7 @@ const DATOS = [
     porque: 'Permite un canal de contacto alternativo al correo.',
     obligatorio: false,
   },
-  { dato: 'Ubicación', porque: 'Da contexto geográfico al proyecto.', obligatorio: false },
+  { dato: 'Ubicación', porque: 'Da contexto geográfico a la tesis.', obligatorio: false },
 ]
 
 export default function PoliticaContenido() {
@@ -60,7 +60,7 @@ export default function PoliticaContenido() {
           <code>[correo de contacto]</code>.
         </p>
         <p>
-          TesisTrack es un proyecto académico desarrollado en el marco del Programa Especializado en
+          TesisTrack es un trabajo académico desarrollado en el marco del Programa Especializado en
           Fundamentos de Programación y Desarrollo Web Full-Stack.
         </p>
       </section>
@@ -96,8 +96,9 @@ export default function PoliticaContenido() {
         </div>
 
         <p>
-          Además guardamos el contenido que generás usando la plataforma: proyectos, hitos, entregas,
-          observaciones, asesorías, acuerdos y tareas.
+          Además guardamos el contenido que generás usando la plataforma: tesis, hitos, entregas,
+          observaciones, asesorías, acuerdos, tareas, y —si das clases— avisos, materiales y
+          sesiones.
         </p>
       </section>
 
@@ -105,8 +106,10 @@ export default function PoliticaContenido() {
         <h2>Quién puede ver tus datos</h2>
         <ul>
           <li>
-            <strong>Tu nombre, correo y rol</strong> son visibles para las personas que comparten un
-            proyecto con vos: el estudiante y el asesor de esa tesis.
+            <strong>Tu nombre, correo y rol</strong> son visibles para las personas que comparten una
+            tesis con vos: el estudiante y el asesor de esa tesis. Si estás en una clase, tu
+            nombre también lo ven los demás alumnos y el profesor; tu correo, solo tu profesor y
+            tu propio grupo.
           </li>
           <li>
             <strong>Teléfono, ubicación, carrera y organización</strong> no se muestran en ninguna
@@ -114,7 +117,7 @@ export default function PoliticaContenido() {
             usuarios.
           </li>
           <li>
-            El <strong>coordinador académico</strong> puede consultar los proyectos y su avance, en
+            El <strong>coordinador académico</strong> puede consultar las tesis y su avance, en
             modo lectura.
           </li>
           <li>No vendemos, cedemos ni compartimos tus datos con terceros con fines comerciales.</li>

@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.tesistrack.model.Entrega;
+import com.tesistrack.model.EstadoEntrega;
 
 public interface EntregaRepository extends JpaRepository<Entrega, Long> {
 
@@ -22,4 +23,7 @@ public interface EntregaRepository extends JpaRepository<Entrega, Long> {
 
     /** Todas las entregas de un proyecto, para poder borrarlo entero. */
     List<Entrega> findByHitoProyectoId(Long proyectoId);
+
+    /** Las entregas de ese estado en todas las tesis de un asesor (por ejemplo, las que esperan revisión). */
+    List<Entrega> findByEstadoAndHitoProyectoAsesorId(EstadoEntrega estado, Long asesorId);
 }

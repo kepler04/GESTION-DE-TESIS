@@ -197,7 +197,7 @@ export default function TareasPage() {
           <Vacio>
             {soloPendientes
               ? 'No queda ninguna tarea pendiente.'
-              : 'Todavía no hay tareas en este proyecto.'}
+              : 'Todavía no hay tareas en esta tesis.'}
           </Vacio>
         </Card>
       ) : (

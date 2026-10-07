@@ -17,4 +17,7 @@ public interface HitoRepository extends JpaRepository<Hito, Long> {
 
     /** Todos los hitos de los proyectos de un área, para armar el tablero de una sola vez. */
     List<Hito> findByProyectoAreaId(Long areaId);
+
+    /** Todos los hitos de las tesis de un asesor, para armar su Dashboard con una sola consulta. */
+    List<Hito> findByProyectoAsesorId(Long asesorId);
 }

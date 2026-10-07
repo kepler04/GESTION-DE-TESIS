@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { obtenerDashboard, listarAreas, listarHitos } from '../api/tesistrack'
+import { obtenerDashboard, listarHitos } from '../api/tesistrack'
 import useProyectoActivo from '../hooks/useProyectoActivo'
 import { useAuth } from '../auth/AuthContext'
 import EstadoBadge from '../components/EstadoBadge'
 import ProgressRing from '../components/ProgressRing'
 import UnirseConCodigo from '../components/UnirseConCodigo'
 import PrimerosPasos from '../components/PrimerosPasos'
-import PrimerosPasosAsesor from '../components/PrimerosPasosAsesor'
+import DashboardAsesor from '../components/DashboardAsesor'
 import ProximasReuniones from '../components/ProximasReuniones'
 import { Card, Cargando, ErrorMsg, PageHead, SelectorProyecto, SinProyecto, Vacio, fecha } from '../components/ui'
 
@@ -21,7 +21,18 @@ function Tile({ valor, etiqueta, detalle, tono = 'neutro' }) {
   )
 }
 
+/**
+ * El Dashboard cambia de forma según el rol, no solo de datos: el **profesor** ve un
+ * panel agregado sobre todas sus clases; el **estudiante** (y el coordinador, que
+ * mira cualquier tesis) ven el estado de **una** tesis. Un profesor con el anillo de
+ * "0% de hitos" de un alumno cualquiera estaba mirando la pantalla de otro.
+ */
 export default function DashboardPage() {
+  const { user } = useAuth()
+  return user?.role === 'ASESOR' ? <DashboardAsesor /> : <DashboardTesis />
+}
+
+function DashboardTesis() {
   const { user } = useAuth()
   const {
     proyectos,
@@ -36,19 +47,6 @@ export default function DashboardPage() {
   const [cargando, setCargando] = useState(false)
   const [mostrarUnirse, setMostrarUnirse] = useState(false)
   const [recarga, setRecarga] = useState(0)
-  const [areas, setAreas] = useState(null)
-
-  const esAsesor = user?.role === 'ASESOR'
-
-  // El asesor sin asesorados necesita su código antes que cualquier resumen.
-  const recargarAreas = useCallback(
-    () => (esAsesor ? listarAreas().then(setAreas).catch(() => setAreas([])) : Promise.resolve()),
-    [esAsesor],
-  )
-
-  useEffect(() => {
-    recargarAreas()
-  }, [recargarAreas])
 
   useEffect(() => {
     if (!activoId) return
@@ -73,12 +71,6 @@ export default function DashboardPage() {
   if (!activoId && user?.role === 'ESTUDIANTE') {
     return <PrimerosPasos onListo={recargarProyectos} />
   }
-  // El asesor sin asesorados tampoco: ve cómo crear su espacio y conseguir el
-  // código, que es lo único que destraba todo lo demás.
-  if (!activoId && esAsesor) {
-    if (areas === null) return <Cargando />
-    return <PrimerosPasosAsesor areas={areas} onCreada={recargarAreas} />
-  }
   if (!activoId) return <SinProyecto rol={user?.role} />
 
   const completados = hitos.filter((h) => h.estado === 'COMPLETADO').length
@@ -88,7 +80,7 @@ export default function DashboardPage() {
 
   return (
     <>
-      <PageHead titulo="Dashboard" descripcion={data?.proyecto?.titulo}>
+      <PageHead titulo="Dashboard" descripcion={data?.proyecto?.titulo ?? 'Tema por definir'}>
         <SelectorProyecto proyectos={proyectos} activoId={activoId} onChange={seleccionar} />
       </PageHead>
 
@@ -118,7 +110,7 @@ export default function DashboardPage() {
                 </button>
               }
             >
-              Si tu asesor te pasó un código de carpeta, pegalo acá y tu tesis se suma a su espacio.
+              Si tu profesor te pasó el código de su clase, pegalo acá y tu tesis se suma a la clase.
             </Vacio>
           </Card>
         ))}
@@ -127,7 +119,7 @@ export default function DashboardPage() {
 
       {data && (
         <>
-          <Card titulo="Estado del proyecto" className="card--resumen">
+          <Card titulo="Estado de la tesis" className="card--resumen">
             <div className="resumen">
               <ProgressRing valor={completados} total={hitos.length} etiqueta="hitos completados" />
               <div className="tiles">
