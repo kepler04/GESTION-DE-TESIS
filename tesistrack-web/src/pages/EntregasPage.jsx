@@ -329,7 +329,7 @@ export default function EntregasPage() {
                         {/* Ver solo para lo que el backend verificó por sus bytes (imágenes
                             y PDF): el profesor lee la tesis sin descargarla. */}
                         {e.tieneArchivo && esPrevisualizable(e.archivoTipo) && (
-                          <button type="button" className="btn btn--primario" onClick={() => setViendo(e)}>
+                          <button type="button" className="btn btn--primario btn--chico" onClick={() => setViendo(e)}>
                             Ver
                           </button>
                         )}
@@ -392,7 +392,14 @@ export default function EntregasPage() {
           titulo={`${viendo.archivoNombre ?? 'Entrega'} · v${viendo.version}`}
           nombreArchivo={viendo.archivoNombre}
           tipo={viendo.archivoTipo}
+          tamano={viendo.archivoTamano}
+          detalle={viendo.entregadaPor?.name ? `Entrega de ${viendo.entregadaPor.name}` : null}
+          fecha={viendo.createdAt}
           ruta={rutaArchivoEntrega(viendo.id)}
+          entregaId={viendo.id}
+          estado={viendo.estado}
+          revisable={esAsesor}
+          onCambio={recargarEntregas}
           onCerrar={() => setViendo(null)}
         />
       )}

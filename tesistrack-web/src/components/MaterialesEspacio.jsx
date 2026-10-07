@@ -12,6 +12,7 @@ import {
   subirMaterialArchivo,
 } from '../api/tesistrack'
 import ConfirmarAccion from './ConfirmarAccion'
+import Icono from './Icono'
 import VisorArchivo from './VisorArchivo'
 import {
   Card,
@@ -76,13 +77,13 @@ export default function MaterialesEspacio({ areaId, editable, destacar }) {
       {error && <ErrorMsg>{error}</ErrorMsg>}
 
       {visibles.length === 0 ? (
-        <Vacio>
+        <Vacio icono="carpeta">
           {editable
             ? 'Todavía no tenés carpetas. Creá una y subí enlaces o archivos para tus alumnos.'
-            : 'Tu asesor todavía no subió material.'}
+            : 'Tu profesor todavía no subió material.'}
         </Vacio>
       ) : (
-        <div className="materiales">
+        <div className="materiales carpetas-grid">
           {visibles.map((c) => (
             <Carpeta
               key={c.id}
@@ -158,6 +159,7 @@ function Carpeta({ carpeta, editable, destacada, onCambio, onError }) {
         ) : (
           <>
             <h3 className="carpeta-mat__nombre">
+              <Icono nombre="carpeta" />
               {carpeta.nombre}
               <span className="carpeta-mat__cuenta">
                 {plural(carpeta.materiales.length, 'material', 'materiales')}
@@ -167,14 +169,14 @@ function Carpeta({ carpeta, editable, destacada, onCambio, onError }) {
               <div className="acciones-fila">
                 <button
                   type="button"
-                  className="btn btn--sutil"
+                  className="btn btn--sutil btn--chico"
                   onClick={() => setAgregando((v) => !v)}
                 >
                   {agregando ? 'Cancelar' : 'Agregar material'}
                 </button>
                 <button
                   type="button"
-                  className="btn btn--sutil"
+                  className="btn btn--fantasma btn--chico"
                   onClick={() => {
                     setNombre(carpeta.nombre)
                     setRenombrando(true)
@@ -182,7 +184,7 @@ function Carpeta({ carpeta, editable, destacada, onCambio, onError }) {
                 >
                   Renombrar
                 </button>
-                <button type="button" className="btn btn--sutil" onClick={() => setABorrar(true)}>
+                <button type="button" className="btn btn--fantasma btn--chico" onClick={() => setABorrar(true)}>
                   Borrar
                 </button>
               </div>
@@ -332,7 +334,8 @@ function Material({ material, editable, onCambio, onError }) {
             {/* Solo se previsualiza lo que el backend verificó por sus bytes (imágenes y
                 PDF). Word, PowerPoint y el resto solo se descargan, y se dice por qué. */}
             {esPrevisualizable(material.archivoTipo) ? (
-              <button type="button" className="btn btn--sutil" onClick={() => setViendo(true)}>
+              <button type="button" className="btn btn--sutil btn--chico" onClick={() => setViendo(true)}>
+                <Icono nombre="ojo" />
                 Ver
               </button>
             ) : (
@@ -340,24 +343,26 @@ function Material({ material, editable, onCambio, onError }) {
             )}
             <button
               type="button"
-              className="btn btn--sutil"
+              className="btn btn--sutil btn--chico"
               onClick={handleDescargar}
               disabled={descargando}
             >
+              <Icono nombre="descargar" />
               {descargando ? 'Descargando…' : 'Descargar'}
             </button>
           </>
         ) : (
-          <a className="btn btn--sutil" href={material.url} target="_blank" rel="noopener noreferrer">
-            Abrir ↗
+          <a className="btn btn--sutil btn--chico" href={material.url} target="_blank" rel="noopener noreferrer">
+            <Icono nombre="externo" />
+            Abrir enlace
           </a>
         )}
         {editable && (
           <>
-            <button type="button" className="btn btn--sutil" onClick={() => setEditando(true)}>
+            <button type="button" className="btn btn--fantasma btn--chico" onClick={() => setEditando(true)}>
               Editar
             </button>
-            <button type="button" className="btn btn--sutil" onClick={() => setAQuitar(true)}>
+            <button type="button" className="btn btn--fantasma btn--chico" onClick={() => setAQuitar(true)}>
               Quitar
             </button>
           </>
@@ -369,6 +374,7 @@ function Material({ material, editable, onCambio, onError }) {
           titulo={material.titulo}
           nombreArchivo={material.archivoNombre}
           tipo={material.archivoTipo}
+          tamano={material.archivoTamano}
           ruta={rutaArchivoMaterial(material.id)}
           onCerrar={() => setViendo(false)}
         />

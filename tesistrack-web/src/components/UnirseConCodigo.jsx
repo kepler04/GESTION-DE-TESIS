@@ -87,7 +87,7 @@ export default function UnirseConCodigo({ proyectoId, onUnido, onCerrar }) {
       ) : (
         <form className="form" onSubmit={handleBuscar}>
           <label>
-            Código que te pasó tu asesor
+            Código que te pasó tu profesor
             <input
               value={codigo}
               onChange={(e) => setCodigo(e.target.value)}

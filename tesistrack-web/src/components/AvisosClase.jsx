@@ -1,16 +1,18 @@
 import { useCallback, useEffect, useState } from 'react'
 import { crearAviso, eliminarAviso, listarAvisos } from '../api/tesistrack'
 import ConfirmarAccion from './ConfirmarAccion'
-import { Card, Cargando, ErrorMsg, Vacio, fechaHora } from './ui'
+import { Cargando, ErrorMsg, Vacio, fechaHora } from './ui'
+import { iniciales } from '../utils/formato'
 
 /**
  * Los avisos del Tablón: lo que el profesor le quiere decir a toda la clase.
  *
  * Texto simple, el más nuevo primero. Sin comentarios, sin adjuntos y sin avisos por
  * correo: es un tablón, no un chat. Los publica y los quita el profesor; los leen
- * todos los miembros de la clase.
+ * todos los miembros de la clase. Por eso el autor de cada aviso es siempre el
+ * profesor de la clase (`profesor`).
  */
-export default function AvisosClase({ areaId, editable }) {
+export default function AvisosClase({ areaId, editable, profesor }) {
   const [avisos, setAvisos] = useState(null)
   const [error, setError] = useState(null)
   const [texto, setTexto] = useState('')
@@ -49,49 +51,64 @@ export default function AvisosClase({ areaId, editable }) {
   const lista = avisos ?? []
 
   return (
-    <Card titulo="Avisos">
+    <section className="avisos-clase" aria-label="Avisos">
+      <h2 className="sr-only">Avisos</h2>
       {error && <ErrorMsg>{error}</ErrorMsg>}
 
       {editable && (
-        <form className="form aviso__form" onSubmit={handlePublicar}>
-          <label>
-            Publicar un aviso para toda la clase
+        <div className="aviso aviso-nuevo">
+          <span className="avatar" aria-hidden="true">
+            {iniciales(profesor)}
+          </span>
+          <form className="aviso__form" onSubmit={handlePublicar}>
+            <label className="sr-only" htmlFor={`aviso-nuevo-${areaId}`}>
+              Publicar un aviso para toda la clase
+            </label>
             <textarea
-              rows={3}
+              id={`aviso-nuevo-${areaId}`}
+              rows={2}
               value={texto}
               onChange={(e) => setTexto(e.target.value)}
               maxLength={2000}
-              placeholder="Mañana la clase empieza a las 7. Traigan la matriz impresa."
+              placeholder="Compartí un aviso o una indicación con toda la clase…"
               required
             />
-          </label>
-          <div className="form__acciones">
-            <button type="submit" className="btn btn--primario" disabled={publicando || !texto.trim()}>
-              {publicando ? 'Publicando…' : 'Publicar aviso'}
-            </button>
-          </div>
-        </form>
+            {texto.trim() && (
+              <div className="form__acciones">
+                <button type="submit" className="btn btn--primario btn--chico" disabled={publicando}>
+                  {publicando ? 'Publicando…' : 'Publicar aviso'}
+                </button>
+              </div>
+            )}
+          </form>
+        </div>
       )}
 
       {lista.length === 0 ? (
-        <Vacio>
+        <Vacio icono="tablon">
           {editable
-            ? 'Todavía no publicaste ningún aviso.'
+            ? 'Todavía no publicaste ningún aviso. Lo que escribas acá lo ve toda la clase.'
             : 'Tu profesor todavía no publicó avisos.'}
         </Vacio>
       ) : (
         <ul className="avisos">
           {lista.map((a) => (
             <li key={a.id} className="aviso">
-              <p className="aviso__texto">{a.texto}</p>
-              <div className="aviso__pie">
-                <span className="lista__meta">{fechaHora(a.createdAt)}</span>
+              <div className="aviso__autor">
+                <span className="avatar" aria-hidden="true">
+                  {iniciales(profesor)}
+                </span>
+                <div>
+                  <strong>{profesor}</strong>
+                  <span>{fechaHora(a.createdAt)}</span>
+                </div>
                 {editable && (
-                  <button type="button" className="btn btn--sutil" onClick={() => setAQuitar(a)}>
+                  <button type="button" className="btn btn--fantasma btn--chico" onClick={() => setAQuitar(a)}>
                     Quitar
                   </button>
                 )}
               </div>
+              <p className="aviso__texto">{a.texto}</p>
             </li>
           ))}
         </ul>
@@ -111,6 +128,6 @@ export default function AvisosClase({ areaId, editable }) {
           <p>El aviso deja de verse para toda la clase. No se puede recuperar.</p>
         </ConfirmarAccion>
       )}
-    </Card>
+    </section>
   )
 }

@@ -320,7 +320,17 @@ Personas: dueño/coordinador reciben detalles; el estudiante recibe correos/tema
 
 ## Dashboard del profesor
 
-`GET /dashboard/asesor`, solo ASESOR: `{ clases, paraRevisar, necesitanAtencion }`. Clases incluye alumnos/grupos y contadores verde/amarillo/rojo/sinActividad; Para revisar incluye entregaId, hitoId, proyectoId, desde, versión, alumnos y clase, agrupado por hito tomando la versión EN_REVISION de mayor número y ordenado por fecha ascendente. Necesitan atención reúne rojos o sin tema. Solo agrega recursos del profesor autenticado. Próximas reuniones conserva su endpoint propio. Ver [[Decisiones pendientes#Decisión 23 - Mostrar un Dashboard agregado del profesor]].
+`GET /dashboard/asesor`, solo ASESOR: `{ clases, paraRevisar, necesitanAtencion }`. Solo agrega recursos del profesor autenticado. Próximas reuniones conserva su endpoint propio. Ver [[Decisiones pendientes#Decisión 23 - Mostrar un Dashboard agregado del profesor]].
+
+| Campo | Contenido |
+|---|---|
+| `clases[]` | `id`, `nombre`, `codigo`, `alumnos`, `grupos`, contadores `verde`/`amarillo`/`rojo`/`sinActividad` y `proximaSesion` (`id`, `titulo`, `fechaHora`, `enlace`; `null` si no hay). Una sesión que empezó hace menos de una hora todavía cuenta. |
+| `paraRevisar[]` | `entregaId`, `hitoId`, `hito`, `version`, `desde`, `proyectoId`, `tesis`, `alumnos`, `areaId`, `clase` y la `entrega` completa (con el `archivoTipo` verificado, para abrirla en el visor). Agrupado por hito tomando la versión EN_REVISION de mayor número; la más antigua primero. |
+| `necesitanAtencion[]` | Grupos atrasados, en riesgo o sin tema, en ese orden: `semaforo`, `hitosEnFalta`, `hitosObservados`, `proximoHito`/`proximoVence` (el hito que vence en ≤3 días sin entrega) y `sinTema`. |
+
+Las reglas del semáforo están en [[Decisiones pendientes#Decisión 26 - Semáforo del grupo - En riesgo en vez de Por atender]].
+
+**Dashboard de una tesis.** `GET /proyectos/{id}/dashboard` (miembros, asesor y coordinador) suma `semaforo`: el del grupo entero, con las mismas reglas. Cada observación (`ObservacionDto`) trae ahora `hitoId` y `hitoNombre`, para listarla sin abrir la entrega.
 
 ## Archivos verificados y vista previa
 

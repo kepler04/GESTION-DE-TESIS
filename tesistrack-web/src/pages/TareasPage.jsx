@@ -3,6 +3,7 @@ import { completarTarea, crearTarea, listarAsesorias, listarAcuerdos, listarTare
 import useProyectoActivo from '../hooks/useProyectoActivo'
 import { useAuth } from '../auth/AuthContext'
 import { Card, Cargando, ErrorMsg, PageHead, SelectorProyecto, SinProyecto, Vacio, fecha } from '../components/ui'
+import { aInputLocal } from '../utils/formato'
 
 /**
  * Tareas del proyecto: lo que quedó por hacer, con responsable y fecha.
@@ -94,7 +95,9 @@ export default function TareasPage() {
   if (cargandoProyectos) return <Cargando />
   if (!activoId) return <SinProyecto rol={user?.role} />
 
-  const hoy = new Date().toISOString().slice(0, 10)
+  // La fecha de hoy en la zona del usuario: toISOString() da la de Greenwich, que en Lima
+  // pasa a ser mañana a las 19:00 y marcaba como vencida una tarea que vence hoy.
+  const hoy = aInputLocal().slice(0, 10)
   const vencidas = tareas.filter((t) => !t.completada && t.fechaLimite && t.fechaLimite < hoy).length
   // Responsables posibles: cualquier integrante de la tesis, más el asesor.
   const candidatos = [...(proyecto?.estudiantes ?? []), proyecto?.asesor].filter(Boolean)

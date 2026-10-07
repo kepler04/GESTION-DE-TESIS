@@ -479,6 +479,9 @@ Ver [[Usuarios y roles#Clases y privacidad de Personas]] y [[API#Clases - Person
 
 **Semáforo del grupo:** ROJO si algún hito está EN_FALTA; AMARILLO si hay POR_REVISAR u OBSERVADO; VERDE si tiene hitos y no se cumplen los casos anteriores; SIN_ACTIVIDAD si no tiene hitos. Una entrega pendiente de revisión queda amarilla. El cálculo usa todos los hitos de la tesis, incluidos los que no provienen de una actividad de clase.
 
+> [!warning] Reglas del semáforo ajustadas por la Decisión 26 (2026-10-07)
+> El párrafo anterior describe la regla original. Desde la Fase 1.6 el amarillo es **En riesgo** (observaciones sin subsanar o un hito que vence en ≤3 días sin entrega) y una entrega que espera revisión deja al grupo **Al día**. *Necesitan atención* suma a los grupos en riesgo. Ver [[#Decisión 26 - Semáforo del grupo - En riesgo en vez de Por atender]].
+
 **Alternativa descartada:** mostrar el Dashboard de la primera tesis elegida, porque oculta el resto de la carga del profesor. Calcular cada tarjeta desde el frontend exigiría recorrer tesis/hitos/entregas en múltiples solicitudes y repartir la lógica de pertenencia.
 
 > [!note] Consecuencia
@@ -519,6 +522,76 @@ El botón **Ver** abre un modal: `fetch` autenticado → Blob con el MIME verifi
 > El enlace externo de una entrega ahora exige **https**. La política de privacidad refleja Personas y las asesorías privadas; `app.politica.version=2026-10-07`. No se reescriben consentimientos anteriores ni se implementa una nueva pantalla de reaceptación.
 
 Ver [[API#Archivos verificados y vista previa]] y [[Base de datos#Migración V3 - clases, avisos y archivos verificados]].
+
+## Decisión 26 - Semáforo del grupo - En riesgo en vez de Por atender
+
+¿Qué significa el amarillo del semáforo de un grupo, y cuenta como rojo un grupo sin tema?
+
+**Estado:** ✅ cerrada (2026-10-07, elegida por Oscar al adoptar la guía visual) — **cuatro estados con nombre fijo: Al día, En riesgo, Atrasado, Sin empezar; sin tema no cambia el color**.
+
+La guía visual nombra los estados *Verde: Al día*, *Amarillo: En riesgo*, *Rojo: Atrasado*, *Gris: Sin empezar*. Con la regla de la [[#Decisión 23 - Mostrar un Dashboard agregado del profesor|D23]], el amarillo quería decir "por atender": entraba un grupo que **entregó a tiempo** y esperaba la revisión. Llamar "en riesgo" a ese grupo es falso: hizo su parte y el turno es del profesor. Por eso cambia la regla, no solo la etiqueta:
+
+| Estado | Regla (`SemaforoGrupo`) |
+|---|---|
+| ✕ **Atrasado** (ROJO) | algún hito vencido sin entrega (`EN_FALTA`) |
+| ⚠ **En riesgo** (AMARILLO) | algún hito OBSERVADO sin subsanar, o un hito en plazo y sin entregar que vence en **≤3 días** (hoy incluido) |
+| ✓ **Al día** (VERDE) | tiene hitos y nada de lo anterior; una entrega esperando revisión cuenta acá |
+| — **Sin empezar** (SIN_ACTIVIDAD) | todavía no tiene hitos |
+
+El rojo pesa más que el amarillo. Los 3 días son la constante `SemaforoGrupo.DIAS_DE_RIESGO`, y la regla está fijada con 7 tests unitarios (`SemaforoGrupoTest`).
+
+**Sin tema no es rojo.** La maqueta lo ponía en rojo, pero el primer ingreso de la Fase 2 le va a decir al estudiante *"No te apresures, podés definirlo después"*. Pintar de rojo a quien siguió ese consejo contradice la propia pantalla. El profesor lo sigue viendo en *Necesitan atención*, como etiqueta aparte ("Sin tema registrado todavía").
+
+**El estudiante ve su propio semáforo.** `GET /proyectos/{id}/dashboard` suma `semaforo`, y el Dashboard del estudiante lo muestra con ícono y texto. Sigue sin ver el de los otros grupos: Personas no lo envía ([[#Decisión 22 - Organizar la clase como salón con pestañas|D22]]).
+
+**Alternativas descartadas:**
+- **Cambiar solo la etiqueta** a "En riesgo" con la regla vieja: barato, pero un grupo que entregó a tiempo aparecería en riesgo.
+- **Dejar "Por atender"**: no sigue la guía visual aprobada, y mezcla dos preguntas distintas en un color ("¿le toca al profesor?" y "¿el grupo va mal?"). La primera ya la responde *Para revisar*.
+- **Sin tema = rojo**, como la maqueta: contradice el mensaje del primer ingreso.
+
+> [!note] Consecuencia
+> *Necesitan atención* ahora incluye a los grupos en riesgo, en orden atrasados → en riesgo → solo sin tema, y cada fila dice el motivo con números (`hitosEnFalta`, `hitosObservados`, `proximoHito` y `proximoVence`). La celda del tablero (`Semaforo`, por hito) no cambia: sigue diciendo de quién es el turno.
+
+Ver [[API#Dashboard del profesor]].
+
+## Decisión 27 - Adoptar la guía visual sin tocar el login
+
+¿Cómo se lleva al código la guía visual aprobada (maquetas 01 a 07) sin romper lo que ya funciona?
+
+**Estado:** ✅ cerrada (2026-10-07) — **el sistema visual se aplica al panel; el logo, el login, el registro y la landing quedan idénticos; solo se construye lo que tiene datos**.
+
+Oscar aprobó las maquetas de un diseñador de producto (Dashboard del profesor, Mis clases, vista de la clase, visor, Dashboard del estudiante y dos asistentes de primer ingreso). Lo que se aplicó en la Fase 1.6:
+
+- **Tokens en `:root`** (`app.css`). Antes vivían en `.shell`, y los diálogos, que se montan en `<body>`, se quedaban sin variables.
+- **Shell:** menú en secciones con íconos SVG de línea y contadores (clases, entregas por revisar). El usuario pasa al pie de la barra y arriba van las migas de pan.
+- **Pantallas:** tarjetas de clase estilo Classroom con banda y buscador; portada de la clase con el código copiable; Tablón en dos columnas; actividades en cronología; carpetas en grilla; matriz con estado escrito en cada celda y leyenda fija; Dashboards según las maquetas 01 y 05.
+- **Visor (maqueta 04):** zoom para imágenes y panel de observaciones de la versión. El profesor del grupo puede observar o aprobar ahí mismo, con los mismos endpoints y permisos de siempre.
+
+**Desvíos de la guía, a propósito:**
+- **Contraste.** La guía promete AA, pero varios de sus pares no llegan, así que los textos de estado usan una variante oscura `--*-tinta` y el color de la guía queda para bordes, barras e íconos:
+
+  | Par de la guía | Contraste | Reemplazo | Contraste |
+  |---|---|---|---|
+  | texto blanco sobre `#2a78d6` | 4,4:1 | `#1f64b8` | 5,9:1 |
+  | `#0ca30c` sobre su fondo suave | 3,1:1 | `#0a7a0a` | 5,1:1 |
+  | `#b26a00` sobre su fondo suave | 4,0:1 | `#8a5200` | 6,0:1 |
+  | `#d03b3b` sobre su fondo suave | 4,4:1 | `#b42a2a` | 5,8:1 |
+  | `--tinta-3` `#878d9c` sobre blanco | 3,3:1 | `#656c7b` (el que ya estaba) | 5,3:1 |
+
+- **Observado es ámbar** en el panel, como pide la guía. En la portada del login el badge conserva su estilo propio.
+- **Sin modo oscuro** en el panel, como ya estaba desde la Fase 0: el sistema operativo en oscuro no lo cambia.
+
+**Lo que se dejó afuera**, por no tener datos: ciclo lectivo, descripción de la clase, notas del profesor ancladas a una página del PDF y adjuntos en los avisos. Los asistentes de primer ingreso (maquetas 06 y 07) son de la **Fase 2**.
+
+**Alternativas descartadas:**
+- **Reemplazar `index.css`** con los tokens, como sugería el handoff: lo usan el login y la landing. Se dejó intacto y se comprobó con capturas píxel a píxel (login, registro, landing, privacidad y el modal de la política, en claro y oscuro: idénticas).
+- **Copiar el HTML de las maquetas tal cual**: traía datos inventados (ciclos, notas por página) y su propia marca "TK"; Oscar pidió conservar el logo.
+- **Dejar los badges globales**: el login muestra uno en su portada y habría cambiado.
+
+> [!warning] Choques de nombres entre hojas
+> En producción todo el CSS va en un solo archivo. `.seccion` ya existía en la landing (oculta hasta entrar en pantalla) y escondía secciones del Dashboard: el componente se llama `panel-seccion`. Los botones nuevos van acotados con `:where(.shell, .dialogo)`, porque el modal de la política usa `.btn--primario`.
+
+Ver [[Desarrollo#Fase 1.6 - Rediseño visual (2026-10-07)]].
 
 ## Ver también
 - [[Feedback profesor]]

@@ -156,7 +156,7 @@ export default function SesionesEspacio({ areaId, editable }) {
         <Vacio>
           {editable
             ? 'No hay sesiones programadas. Creá una y tus estudiantes la ven con un botón para unirse.'
-            : 'Tu asesor todavía no programó ninguna sesión.'}
+            : 'Tu profesor todavía no programó ninguna sesión.'}
         </Vacio>
       ) : (
         <ul className="lista sesiones">

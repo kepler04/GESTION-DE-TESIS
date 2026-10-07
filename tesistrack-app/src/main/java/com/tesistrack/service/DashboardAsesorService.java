@@ -1,5 +1,6 @@
 package com.tesistrack.service;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -16,6 +17,8 @@ import com.tesistrack.dto.DashboardAsesorDto;
 import com.tesistrack.dto.DashboardAsesorDto.AtencionDto;
 import com.tesistrack.dto.DashboardAsesorDto.ClaseDto;
 import com.tesistrack.dto.DashboardAsesorDto.RevisionDto;
+import com.tesistrack.dto.DashboardAsesorDto.SesionDto;
+import com.tesistrack.dto.EntregaDto;
 import com.tesistrack.dto.Semaforo;
 import com.tesistrack.dto.SemaforoGrupo;
 import com.tesistrack.model.Area;
@@ -24,19 +27,21 @@ import com.tesistrack.model.EstadoEntrega;
 import com.tesistrack.model.Hito;
 import com.tesistrack.model.Proyecto;
 import com.tesistrack.model.Role;
+import com.tesistrack.model.SesionEspacio;
 import com.tesistrack.model.User;
 import com.tesistrack.repository.AreaRepository;
 import com.tesistrack.repository.EntregaRepository;
 import com.tesistrack.repository.HitoRepository;
 import com.tesistrack.repository.ProyectoRepository;
+import com.tesistrack.repository.SesionEspacioRepository;
 
 /**
  * El Dashboard del profesor, agregado sobre todas sus clases.
  *
  * <p>La pertenencia es la de siempre y no se afloja: se parte de las clases de las
  * que el usuario es dueño y de las tesis donde es el asesor, y todo lo demás se
- * calcula a partir de eso. Con tres consultas (tesis, hitos y entregas) alcanza
- * para todo el panel: no hay una consulta por clase ni por grupo.
+ * calcula a partir de eso. Con cuatro consultas (tesis, hitos, entregas y sesiones)
+ * alcanza para todo el panel: no hay una consulta por clase ni por grupo.
  */
 @Service
 @Transactional(readOnly = true)
@@ -46,6 +51,7 @@ public class DashboardAsesorService {
     private final ProyectoRepository proyectoRepository;
     private final HitoRepository hitoRepository;
     private final EntregaRepository entregaRepository;
+    private final SesionEspacioRepository sesionRepository;
     private final AccesoService acceso;
 
     public DashboardAsesorService(
@@ -53,11 +59,13 @@ public class DashboardAsesorService {
             ProyectoRepository proyectoRepository,
             HitoRepository hitoRepository,
             EntregaRepository entregaRepository,
+            SesionEspacioRepository sesionRepository,
             AccesoService acceso) {
         this.areaRepository = areaRepository;
         this.proyectoRepository = proyectoRepository;
         this.hitoRepository = hitoRepository;
         this.entregaRepository = entregaRepository;
+        this.sesionRepository = sesionRepository;
         this.acceso = acceso;
     }
 
@@ -84,6 +92,7 @@ public class DashboardAsesorService {
     }
 
     private List<ClaseDto> clases(List<Area> areas, List<Proyecto> proyectos, Map<Long, SemaforoGrupo> semaforos) {
+        Map<Long, SesionDto> proximas = proximasSesiones(areas);
         return areas.stream().map(area -> {
             List<Proyecto> grupos = proyectos.stream()
                 .filter(p -> p.getArea() != null && p.getArea().getId().equals(area.getId()))
@@ -92,13 +101,38 @@ public class DashboardAsesorService {
             return new ClaseDto(
                 area.getId(),
                 area.getNombre(),
+                area.getCodigo(),
                 alumnos,
                 grupos.size(),
                 contar(grupos, semaforos, SemaforoGrupo.VERDE),
                 contar(grupos, semaforos, SemaforoGrupo.AMARILLO),
                 contar(grupos, semaforos, SemaforoGrupo.ROJO),
-                contar(grupos, semaforos, SemaforoGrupo.SIN_ACTIVIDAD));
+                contar(grupos, semaforos, SemaforoGrupo.SIN_ACTIVIDAD),
+                proximas.get(area.getId()));
         }).toList();
+    }
+
+    /**
+     * La próxima sesión de cada clase, en una sola consulta. Una sesión que empezó hace
+     * menos de una hora todavía cuenta (mismo criterio que las próximas reuniones):
+     * el botón Unirse sirve mientras la clase está en curso.
+     */
+    private Map<Long, SesionDto> proximasSesiones(List<Area> areas) {
+        if (areas.isEmpty()) {
+            return Map.of();
+        }
+        List<Long> ids = areas.stream().map(Area::getId).toList();
+        Instant desde = Instant.now().minus(ReunionService.EN_CURSO);
+        return sesionRepository.findByAreaIdInAndFechaHoraGreaterThanEqualOrderByFechaHoraAsc(ids, desde).stream()
+            .collect(Collectors.toMap(
+                s -> s.getArea().getId(),
+                DashboardAsesorService::sesion,
+                // Vienen ordenadas por fecha: la primera de cada clase es la próxima.
+                (primera, otra) -> primera));
+    }
+
+    private static SesionDto sesion(SesionEspacio s) {
+        return new SesionDto(s.getId(), s.getTitulo(), s.getFechaHora(), s.getEnlace());
     }
 
     private static int contar(List<Proyecto> grupos, Map<Long, SemaforoGrupo> semaforos, SemaforoGrupo buscado) {
@@ -134,12 +168,17 @@ public class DashboardAsesorService {
                     PersonasService.tema(p),
                     nombres(p),
                     area == null ? null : area.getId(),
-                    area == null ? null : area.getNombre());
+                    area == null ? null : area.getNombre(),
+                    EntregaDto.from(e));
             })
             .toList();
     }
 
-    /** Los grupos atrasados y los que siguen sin tema; primero los atrasados. */
+    /**
+     * Los grupos atrasados, los que están en riesgo y los que siguen sin tema: primero
+     * los atrasados, después los que están en riesgo y al final los que solo deben el
+     * tema. Cada uno trae el motivo con números.
+     */
     private List<AtencionDto> necesitanAtencion(
             List<Proyecto> proyectos,
             Map<Long, List<Hito>> hitosPorProyecto,
@@ -149,12 +188,16 @@ public class DashboardAsesorService {
         for (Proyecto p : proyectos) {
             SemaforoGrupo semaforo = semaforos.get(p.getId());
             boolean sinTema = PersonasService.tema(p) == null;
-            if (semaforo != SemaforoGrupo.ROJO && !sinTema) {
+            if (semaforo != SemaforoGrupo.ROJO && semaforo != SemaforoGrupo.AMARILLO && !sinTema) {
                 continue;
             }
-            int enFalta = (int) hitosPorProyecto.getOrDefault(p.getId(), List.of()).stream()
-                .filter(h -> Semaforo.de(h, hoy) == Semaforo.EN_FALTA)
-                .count();
+            List<Hito> hitos = hitosPorProyecto.getOrDefault(p.getId(), List.of());
+            int enFalta = (int) hitos.stream().filter(h -> Semaforo.de(h, hoy) == Semaforo.EN_FALTA).count();
+            int observados = (int) hitos.stream().filter(h -> Semaforo.de(h, hoy) == Semaforo.OBSERVADO).count();
+            Hito proximo = hitos.stream()
+                .filter(h -> SemaforoGrupo.venceProntoSinEntregar(h, hoy))
+                .min(Comparator.comparing(Hito::getFechaLimite))
+                .orElse(null);
             Area area = p.getArea();
             lista.add(new AtencionDto(
                 p.getId(),
@@ -164,13 +207,24 @@ public class DashboardAsesorService {
                 area == null ? null : area.getNombre(),
                 semaforo,
                 enFalta,
+                observados,
+                proximo == null ? null : proximo.getNombre(),
+                proximo == null ? null : proximo.getFechaLimite(),
                 sinTema));
         }
         return lista.stream()
             .sorted(Comparator
-                .comparing((AtencionDto a) -> a.semaforo() != SemaforoGrupo.ROJO)
+                .comparing((AtencionDto a) -> gravedad(a.semaforo()))
                 .thenComparing(a -> a.alumnos().isEmpty() ? "" : a.alumnos().get(0), String.CASE_INSENSITIVE_ORDER))
             .toList();
+    }
+
+    private static int gravedad(SemaforoGrupo semaforo) {
+        return switch (semaforo) {
+            case ROJO -> 0;
+            case AMARILLO -> 1;
+            default -> 2;
+        };
     }
 
     private static List<String> nombres(Proyecto proyecto) {
