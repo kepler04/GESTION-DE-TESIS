@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { crearArea, eliminarArea, regenerarCodigo, renombrarArea } from '../api/tesistrack'
+import BorrarEspacio from './BorrarEspacio'
 import { Card, Vacio } from './ui'
 
 /**
@@ -9,12 +10,13 @@ import { Card, Vacio } from './ui'
  * Software", "Consultorías privadas"). No son instituciones: no se comparten con
  * nadie ni otorgan permisos — eso es lo que descartó la Decisión 1.
  */
-export default function GestorAreas({ areas, onCambio, onCerrar }) {
+export default function GestorAreas({ areas, proyectos = [], onCambio, onCerrar }) {
   const [nombre, setNombre] = useState('')
   const [editando, setEditando] = useState(null)
   const [nombreEditado, setNombreEditado] = useState('')
   const [ocupado, setOcupado] = useState(false)
   const [copiado, setCopiado] = useState(null)
+  const [borrando, setBorrando] = useState(null)
   const [error, setError] = useState(null)
 
   async function correr(accion) {
@@ -162,13 +164,9 @@ export default function GestorAreas({ areas, onCambio, onCerrar }) {
                       type="button"
                       className="btn btn--sutil"
                       disabled={ocupado}
-                      onClick={() => {
-                        // Borrar solo despega la etiqueta: los proyectos quedan
-                        // intactos, por eso no hace falta una confirmación grave.
-                        if (confirm(`¿Borrar el área "${a.nombre}"? Los proyectos no se borran.`)) {
-                          correr(() => eliminarArea(a.id))
-                        }
-                      }}
+                      // Borrar un espacio se lleva sus actividades y el código de
+                      // invitación: no alcanza con un confirm(), pide escribir el nombre.
+                      onClick={() => setBorrando(a)}
                     >
                       Borrar
                     </button>
@@ -178,6 +176,19 @@ export default function GestorAreas({ areas, onCambio, onCerrar }) {
             </li>
           ))}
         </ul>
+      )}
+
+      {borrando && (
+        <BorrarEspacio
+          area={borrando}
+          tesis={proyectos.filter((p) => p.area?.id === borrando.id).length}
+          onCerrar={() => setBorrando(null)}
+          onBorrado={async () => {
+            await eliminarArea(borrando.id)
+            setBorrando(null)
+            await onCambio()
+          }}
+        />
       )}
     </Card>
   )

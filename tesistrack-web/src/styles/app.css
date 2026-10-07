@@ -1087,6 +1087,19 @@
   margin: 0 0 12px;
   font-size: 26px;
   font-weight: 600;
+  /* Explícito a propósito: el h2 global de index.css toma su color de una
+     variable del template de Vite, y no hay que dejar que un título dependa
+     de cómo esté configurado el sistema operativo del lector. */
+  color: var(--tinta);
+}
+
+.dialogo__subtitulo {
+  margin: 14px 0 4px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--tinta-2);
 }
 
 .primeros__texto {

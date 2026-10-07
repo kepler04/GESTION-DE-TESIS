@@ -12,10 +12,12 @@ dist
 dist-ssr
 *.local
 
-# Config local: .env.example sí se versiona, .env no
+# Config local: .env.example y .env.development sí se versionan (no llevan
+# secretos), .env y los demás no
 .env
 .env.*
 !.env.example
+!.env.development
 
 # Editor directories and files
 .vscode/*

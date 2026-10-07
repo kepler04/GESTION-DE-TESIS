@@ -24,6 +24,10 @@ Base: `http://localhost:8080/api` en desarrollo (`VITE_API_URL` en el frontend).
 | `401` | Sin token, token inválido o expirado, credenciales incorrectas |
 | `403` | Autenticado pero sin permiso sobre ese recurso |
 | `404` | El recurso no existe |
+| `409` | Una restricción de la base impidió la operación (clave foránea, `UNIQUE`). Mensaje legible; el detalle técnico queda solo en el log. Ver [[Decisiones pendientes#Decisión 18 - Qué se lleva un espacio al borrarse\|D18]] |
+
+> [!note] Un 5xx no se muestra crudo
+> Cualquier error 5xx que nadie previó lo devuelve Spring como `{"error": "Internal Server Error"}`. El cliente (`client.js`) lo reemplaza por *"Algo falló de nuestro lado…"* en vez de ponerlo en pantalla.
 
 > [!important] El acceso se resuelve por pertenencia, no por rol
 > Tener rol `ASESOR` no habilita a tocar un proyecto ajeno: hay que ser **el** asesor de ese proyecto. Ver [[Usuarios y roles#Matriz de permisos]]. El coordinador es la única excepción: lee todo, no escribe nada.
@@ -62,7 +66,7 @@ Agrupan las tesis de un asesor y le dan un **código de invitación**. Ver [[Dec
 | `POST` | `/areas` | asesor | Crea una carpeta y le genera un código. 400 si el nombre se repite (sin distinguir mayúsculas) |
 | `GET` | `/areas` | asesor | Sus carpetas, **con** el código |
 | `PUT` | `/areas/{id}` | dueño | Renombra |
-| `DELETE` | `/areas/{id}` | dueño | Borra la carpeta y **desetiqueta** sus proyectos, no los borra |
+| `DELETE` | `/areas/{id}` | dueño | Borra el espacio: **se van sus actividades** y el código; las tesis quedan **desetiquetadas** y **todos sus hitos se quedan** (con `actividad_id = NULL`). `204`. Ver [[Decisiones pendientes#Decisión 18 - Qué se lleva un espacio al borrarse\|D18]] |
 | `POST` | `/areas/{id}/codigo` | dueño | Genera un código nuevo e invalida el anterior |
 | `GET` | `/areas/invitacion/{codigo}` | autenticado, **10/min por IP** | Previsualiza a quién pertenece: `{ area, asesor, asesorEmail }` |
 
@@ -119,7 +123,7 @@ El tablero devuelve `actividades` (las columnas) aparte de `filas`, porque un es
 > [!warning] Las dos formas de sacarse un proyecto de encima no son lo mismo
 > `DELETE /asesor` es reversible: la tesis queda entera y el estudiante puede sumarse a otro espacio con un código. `DELETE /proyectos/{id}` destruye hitos, entregas con archivos, observaciones, asesorías, acuerdos y tareas — ver [[Decisiones pendientes#Decisión 17 - Quién puede borrar una tesis, y cómo|D17]].
 >
-> El borrado se hace **explícito y en orden** dentro del service, no con `ON DELETE CASCADE`: `ddl-auto=update` no genera esas cascadas, así que las claves foráneas reales no las tienen.
+> El borrado se hace **explícito y en orden** dentro del service, no confiado a `ON DELETE CASCADE`. Una base creada con Flyway (`V1`) sí tiene 7 cascadas, pero una vieja creada con `ddl-auto=update` no, y el orden a la vista se razona mejor. Ver la nota de actualización en [[Decisiones pendientes#Decisión 17 - Quién puede borrar una tesis, y cómo|D17]].
 
 > [!important] `ProyectoDto` devuelve `estudiantes` (lista), no `estudiante`
 > Una tesis puede ser grupal ([[Decisiones pendientes#Decisión 15 - Tesis grupales|D15]]) y todos sus integrantes tienen los mismos permisos: cualquiera entrega, se une a un espacio y arma el grupo. La lista **nunca viene vacía**.
@@ -231,7 +235,7 @@ sequenceDiagram
 
 ## Lo que todavía no hace
 
-- **Los archivos no se suben**: `archivoUrl` guarda una referencia, pero no hay endpoint de upload. Falta decidir S3 vs. filesystem — ver [[Arquitectura#Por definir]].
+- **Los archivos van en PostgreSQL, no en S3**: tope de 15 MB por archivo, `bytea` en tabla aparte — [[Decisiones pendientes#Decisión 16 - Dónde se guardan los archivos de las entregas|D16]]. Si el volumen creciera, habría que pasar a S3.
 - **Sin paginación**: los listados devuelven todo. Con el volumen de un proyecto de tesis alcanza; si crece, agregar `Pageable`.
 - **Sin login con Google ni recuperación de contraseña** — ver [[Arquitectura#Por definir]].
 - **El coordinador no tiene endpoints propios**: usa los mismos y ve todo por la regla de lectura global.
