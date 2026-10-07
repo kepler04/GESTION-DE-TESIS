@@ -42,15 +42,14 @@ const ASESORIA = {
 }
 
 /**
- * El estado de un grupo entero en la clase (el semáforo de la pestaña Personas y
- * de las tarjetas del Dashboard). Siempre ícono + texto: el rojo y el verde se
- * confunden en daltonismo.
+ * El semáforo de un grupo entero (Decisión 26): Personas, las tarjetas de clase, el
+ * Dashboard. Siempre ícono + texto: el rojo y el verde se confunden en daltonismo.
  */
 const GRUPO = {
-  ROJO: { texto: 'Atrasado', icono: '!', clase: 'observado' },
-  AMARILLO: { texto: 'Por atender', icono: '◐', clase: 'aviso' },
+  ROJO: { texto: 'Atrasado', icono: '✕', clase: 'alerta' },
+  AMARILLO: { texto: 'En riesgo', icono: '⚠', clase: 'aviso' },
   VERDE: { texto: 'Al día', icono: '✓', clase: 'completado' },
-  SIN_ACTIVIDAD: { texto: 'Sin actividades', icono: '○', clase: 'neutro' },
+  SIN_ACTIVIDAD: { texto: 'Sin empezar', icono: '—', clase: 'neutro' },
 }
 
 const MAPAS = {

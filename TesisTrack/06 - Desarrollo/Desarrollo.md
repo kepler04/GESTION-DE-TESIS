@@ -455,6 +455,32 @@ Rama `feat/fase-1-5-clases-y-vistas`, con PR sobre `feat/fase-1-espacio-aula`: d
 
 Ver [[Decisiones pendientes#Decisión 21 - Unificar el vocabulario de la interfaz]], [[API#Perfil y asesorías privadas]] y [[Base de datos#Migración V3 - clases, avisos y archivos verificados]].
 
+### Fase 1.6 - Rediseño visual (2026-10-07)
+
+Rama `feat/fase-1-6-rediseno`, con PR sobre `feat/fase-1-5-clases-y-vistas`: depende del **#9** y, transitivamente, del #8 y el #6. Aplica la guía visual aprobada por Oscar ([[Decisiones pendientes#Decisión 27 - Adoptar la guía visual sin tocar el login|D27]]) y el semáforo nuevo ([[Decisiones pendientes#Decisión 26 - Semáforo del grupo - En riesgo en vez de Por atender|D26]]). **La Fase 2 sigue detenida hasta el OK de Oscar**; los asistentes de primer ingreso (maquetas 06 y 07) son parte de ella.
+
+- **Backend:** `SemaforoGrupo` con la regla de riesgo por plazo, más su primer test unitario real (`SemaforoGrupoTest`, 7 casos). El Dashboard del profesor suma código y próxima sesión por clase, la entrega con su tipo verificado y los motivos de *Necesitan atención*. El de la tesis suma su `semaforo`, y `ObservacionDto` suma el hito. Sin migración: no cambia el esquema.
+- **Frontend:** tokens en `:root`, `Icono.jsx` (SVG de línea), migas de pan (`useMigas`), `RepartoSemaforo`, `ChipCodigo`, `Seccion` y `Vacio` con ícono. Se rehicieron el layout, los Dashboards, Mis clases, la clase completa, el visor y la matriz de Seguimiento. Se borró `ProgressRing`, el anillo de "0% de hitos".
+- **Bugs que aparecieron en el camino:**
+  - Las fechas límite se mostraban **un día antes**: `new Date('2026-10-03')` es medianoche UTC, que en Lima es el día anterior. `fecha()` ahora lee las fechas sin hora como día local.
+  - En Tareas, después de las 19:00 de Lima una tarea que vencía hoy aparecía vencida, porque `toISOString()` ya daba la fecha de mañana.
+  - En celular, el selector de grupo de Entregas estiraba la página a 754 px.
+  - Un texto daba por hecho el género del profesor ("él lo deja").
+
+> [!success] Verificado el 2026-10-07 en infraestructura descartable (:5173, :8080, `tesistrack-smoke-db` en :5433)
+> - **Fase 1.6: 76 comprobaciones** (API y Edge): las cuatro reglas del semáforo, incluido el riesgo por plazo a 2 y a 5 días; orden y motivos de *Necesitan atención*; aislamiento entre profesores; privacidad de Personas.
+>   - En el visor: observar (pide texto y actualiza el Dashboard y el contador del menú) y aprobar; zoom con topes.
+>   - Buscador de clases por nombre y por código; migas; fechas sin corrimiento; leyenda fija.
+>   - Dashboard del estudiante con su semáforo, el próximo hito y las observaciones con enlace a su hito.
+>   - Sin scroll horizontal a 390 px en 6 pantallas. Contraste AA en panel, barra lateral, visor y diálogos: 0 incidencias.
+> - **Regresión: 371 API + 163 navegador**: smoke 70, smoke2 35, Fase 0 21, Fase 1 135, Fase 1.5 106; navegador Fase 1 62 y Fase 1.5 101. El crawl de vocabulario sigue sin "espacio", "área" ni "proyecto".
+> - **Login, registro (con el modal de la política), landing y privacidad**, en claro y oscuro: **idénticos píxel a píxel** antes y después.
+> - `mvnw.cmd -B test`: 8/8 (contextLoads y SemaforoGrupoTest). Build aprobado. Lint con los 4 avisos previos.
+
+**Adaptaciones de las pruebas anteriores:** las que fijaban la regla vieja del amarillo ("entregó → amarillo") pasan a esperar "al día". Los selectores siguen el markup nuevo: portada de la clase, cronología, "Evaluar" en vez de "Revisar" y "Próximas reuniones" como sección. Ninguna regla de permisos cambió.
+
+**Para confirmar con Oscar:** el umbral de riesgo de **3 días**. Qué quedó afuera por falta de datos: ciclo lectivo, descripción de la clase, notas ancladas a una página del PDF y adjuntos en avisos.
+
 **Entregable 4 — CI/CD y despliegue** 🔨 (empezado el 2026-10-03 por Alonso, PRs #2 a #5)
 - [x] Dockerfile del backend (multi-stage, Java 17, usuario sin privilegios) y del frontend (Node 22 → nginx con proxy `/api`)
 - [x] `docker-compose.yml` con el stack completo — verificado el 2026-10-07: los 3 contenedores levantan, Flyway aplica `V1` y el login y el registro andan en el navegador

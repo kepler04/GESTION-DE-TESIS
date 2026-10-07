@@ -8,6 +8,9 @@ import com.tesistrack.model.Observacion;
 public record ObservacionDto(
     Long id,
     Long entregaId,
+    /** El hito de la entrega observada: el estudiante la corrige subiendo otra versión ahí. */
+    Long hitoId,
+    String hitoNombre,
     String descripcion,
     EstadoObservacion estado,
     UserDto registradaPor,
@@ -18,6 +21,8 @@ public record ObservacionDto(
         return new ObservacionDto(
             observacion.getId(),
             observacion.getEntrega().getId(),
+            observacion.getEntrega().getHito().getId(),
+            observacion.getEntrega().getHito().getNombre(),
             observacion.getDescripcion(),
             observacion.getEstado(),
             UserDto.from(observacion.getRegistradaPor()),

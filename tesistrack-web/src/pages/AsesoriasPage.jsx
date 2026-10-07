@@ -246,8 +246,8 @@ export default function AsesoriasPage() {
                 </label>
                 {!esAsesor && (
                   <p className="tenue">
-                    Tu asesor la va a ver acá. Si de la conversación sale algo por hacer, él lo
-                    deja como acuerdo y de ahí sale una tarea.
+                    Tu profesor la va a ver acá. Si de la conversación sale algo por hacer, lo
+                    registra como acuerdo y de ahí sale una tarea.
                   </p>
                 )}
               </>

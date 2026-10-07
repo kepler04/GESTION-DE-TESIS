@@ -46,3 +46,35 @@ export function haceTiempo(valor) {
   if (dias <= 0) return 'hoy'
   return `hace ${plural(dias, 'día')}`
 }
+
+/** "jueves, 9 oct, 18:00": el día de la semana importa para una reunión. */
+export function diaYHora(valor) {
+  return new Date(valor).toLocaleString('es', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+/**
+ * Días que faltan para una fecha límite (`2026-10-19`): 0 es hoy, negativo es que
+ * ya venció. Se cuenta en días de calendario, no en horas.
+ */
+export function diasHasta(fechaLimite) {
+  const hoy = new Date()
+  hoy.setHours(0, 0, 0, 0)
+  return Math.round((new Date(`${fechaLimite}T00:00:00`) - hoy) / 86400000)
+}
+
+/** "Roberto Silva" → "RS": el avatar de una persona cuando no hay foto. */
+export function iniciales(nombre) {
+  return (nombre ?? '?')
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0])
+    .join('')
+    .toUpperCase()
+}

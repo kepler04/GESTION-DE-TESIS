@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { eliminarArea, regenerarCodigo, renombrarArea } from '../api/tesistrack'
 import BorrarEspacio from './BorrarEspacio'
 import ConfirmarAccion from './ConfirmarAccion'
-import { Card, ErrorMsg } from './ui'
+import { Card, ChipCodigo, ErrorMsg } from './ui'
 
 /**
  * Configuración de la clase (solo el profesor): cambiarle el nombre, cambiar el
@@ -19,7 +19,6 @@ export default function ConfiguracionClase({ area, onCambio }) {
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState(null)
   const [guardado, setGuardado] = useState(false)
-  const [copiado, setCopiado] = useState(false)
   const [regenerar, setRegenerar] = useState(false)
   const [borrando, setBorrando] = useState(false)
 
@@ -77,18 +76,7 @@ export default function ConfiguracionClase({ area, onCambio }) {
           ven afectados.
         </p>
         <div className="carpeta__codigo-caja">
-          <code className="carpeta__codigo">{area.codigo}</code>
-          <button
-            type="button"
-            className="btn btn--sutil"
-            onClick={() => {
-              navigator.clipboard?.writeText(area.codigo)
-              setCopiado(true)
-              setTimeout(() => setCopiado(false), 1800)
-            }}
-          >
-            {copiado ? '✓ Copiado' : 'Copiar'}
-          </button>
+          <ChipCodigo codigo={area.codigo} grande />
           <button type="button" className="btn btn--sutil" onClick={() => setRegenerar(true)}>
             Generar código nuevo
           </button>

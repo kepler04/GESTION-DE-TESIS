@@ -1,5 +1,6 @@
 package com.tesistrack.service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.security.core.Authentication;
@@ -12,10 +13,12 @@ import com.tesistrack.dto.EntregaDto;
 import com.tesistrack.dto.HitoDto;
 import com.tesistrack.dto.ObservacionDto;
 import com.tesistrack.dto.ProyectoDto;
+import com.tesistrack.dto.SemaforoGrupo;
 import com.tesistrack.dto.TareaDto;
 import com.tesistrack.model.EstadoAsesoria;
 import com.tesistrack.model.EstadoHito;
 import com.tesistrack.model.EstadoObservacion;
+import com.tesistrack.model.Hito;
 import com.tesistrack.model.Proyecto;
 import com.tesistrack.model.User;
 import com.tesistrack.repository.AsesoriaRepository;
@@ -61,7 +64,8 @@ public class DashboardService {
         Proyecto proyecto = proyectoService.buscar(proyectoId);
         acceso.verificarLectura(proyecto, usuario);
 
-        List<HitoDto> proximosHitos = hitoRepository.findByProyectoIdOrderByOrdenAsc(proyectoId).stream()
+        List<Hito> hitos = hitoRepository.findByProyectoIdOrderByOrdenAsc(proyectoId);
+        List<HitoDto> proximosHitos = hitos.stream()
             .filter(hito -> hito.getEstado() != EstadoHito.COMPLETADO)
             .map(HitoDto::from)
             .toList();
@@ -95,6 +99,7 @@ public class DashboardService {
             tareasPendientes,
             ultimaEntrega,
             observacionesPendientes,
-            ultimasAsesorias);
+            ultimasAsesorias,
+            SemaforoGrupo.de(hitos, LocalDate.now()));
     }
 }

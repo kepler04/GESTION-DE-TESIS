@@ -3,7 +3,7 @@ import { desvincularAsesor, verPersonas } from '../api/tesistrack'
 import ConfirmarAccion from './ConfirmarAccion'
 import EstadoBadge from './EstadoBadge'
 import { Card, Cargando, ErrorMsg, Vacio, fecha } from './ui'
-import { plural } from '../utils/formato'
+import { iniciales, plural } from '../utils/formato'
 
 /**
  * La pestaña Personas: el profesor arriba y los alumnos agrupados por grupo.
@@ -146,14 +146,4 @@ export default function PersonasClase({ areaId, claseNombre, onCambio }) {
       )}
     </>
   )
-}
-
-function iniciales(nombre) {
-  return (nombre ?? '?')
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((p) => p[0])
-    .join('')
-    .toUpperCase()
 }
