@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { listarActividades } from '../api/tesistrack'
+import { resumenEspacio } from '../api/tesistrack'
+import { plural } from '../utils/formato'
 
 /**
  * Confirmación para borrar un espacio de trabajo.
@@ -9,17 +10,19 @@ import { listarActividades } from '../api/tesistrack'
  * nombre** en vez de un "¿estás seguro?", porque el borrado es irreversible y un
  * botón de confirmación se acepta de memoria.
  *
- * Lo importante del texto es separar lo que se pierde de lo que no. La primera
- * versión de este borrado era un `confirm()` que solo decía "los proyectos no se
- * borran" y no mencionaba las actividades, que son justo lo que se va.
+ * Lo importante del texto es separar lo que se pierde de lo que no, **con números**:
+ * las actividades, las carpetas con sus materiales y archivos subidos, y las
+ * sesiones se van; las tesis y todos sus hitos se quedan (Decisión 18). Los
+ * números salen del backend (`GET /areas/{id}/resumen`), no de lo que la pantalla
+ * casualmente tenga cargado.
  */
-export default function BorrarEspacio({ area, tesis, onCerrar, onBorrado }) {
+export default function BorrarEspacio({ area, onCerrar, onBorrado }) {
   const dialogo = useRef(null)
   const [texto, setTexto] = useState('')
   const [ocupado, setOcupado] = useState(false)
   const [error, setError] = useState(null)
-  // null mientras carga; si la consulta falla se muestra el texto sin el número.
-  const [actividades, setActividades] = useState(null)
+  // null mientras carga; undefined si la consulta falla (se muestra sin números).
+  const [resumen, setResumen] = useState(null)
 
   useEffect(() => {
     dialogo.current?.showModal()
@@ -27,9 +30,9 @@ export default function BorrarEspacio({ area, tesis, onCerrar, onBorrado }) {
 
   useEffect(() => {
     let cancelado = false
-    listarActividades(area.id)
-      .then((lista) => !cancelado && setActividades(lista.length))
-      .catch(() => !cancelado && setActividades(undefined))
+    resumenEspacio(area.id)
+      .then((r) => !cancelado && setResumen(r))
+      .catch(() => !cancelado && setResumen(undefined))
     return () => {
       cancelado = true
     }
@@ -48,10 +51,7 @@ export default function BorrarEspacio({ area, tesis, onCerrar, onBorrado }) {
     }
   }
 
-  const cuentaActividades =
-    typeof actividades === 'number'
-      ? `Las ${actividades} ${actividades === 1 ? 'actividad' : 'actividades'} del espacio`
-      : 'Las actividades del espacio'
+  const conNumeros = typeof resumen === 'object' && resumen !== null
 
   return createPortal(
     <dialog className="dialogo" ref={dialogo} onClose={onCerrar}>
@@ -63,7 +63,37 @@ export default function BorrarEspacio({ area, tesis, onCerrar, onBorrado }) {
 
         <p className="dialogo__subtitulo">Se pierde</p>
         <ul className="dialogo__lista">
-          <li>{cuentaActividades} y su tablero con el semáforo</li>
+          <li>
+            {conNumeros
+              ? `${plural(resumen.actividades, 'actividad', 'actividades')} del espacio`
+              : 'Las actividades del espacio'}{' '}
+            y su tablero con el semáforo
+          </li>
+          <li>
+            {conNumeros ? (
+              resumen.carpetas === 0 ? (
+                'Los materiales: no hay carpetas todavía'
+              ) : (
+                <>
+                  {plural(resumen.carpetas, 'carpeta', 'carpetas')} de materiales con{' '}
+                  {plural(resumen.materiales, 'material', 'materiales')}
+                  {resumen.archivos > 0 && (
+                    <>
+                      , de los cuales <strong>{plural(resumen.archivos, 'archivo subido', 'archivos subidos')}</strong>{' '}
+                      (no se pueden recuperar)
+                    </>
+                  )}
+                </>
+              )
+            ) : (
+              'Las carpetas de materiales, con sus enlaces y archivos subidos'
+            )}
+          </li>
+          <li>
+            {conNumeros
+              ? `${plural(resumen.sesiones, 'sesión', 'sesiones')} con su enlace de reunión`
+              : 'Las sesiones con su enlace de reunión'}
+          </li>
           <li>
             El código de invitación <code>{area.codigo}</code>: nadie más podrá entrar con él
           </li>
@@ -72,11 +102,13 @@ export default function BorrarEspacio({ area, tesis, onCerrar, onBorrado }) {
         <p className="dialogo__subtitulo">No se pierde</p>
         <ul className="dialogo__lista">
           <li>
-            {tesis === 0
-              ? 'Ninguna tesis está en este espacio todavía'
-              : tesis === 1
-                ? 'La tesis del espacio sigue entera, con sus entregas y observaciones'
-                : `Las ${tesis} tesis del espacio siguen enteras, con sus entregas y observaciones`}
+            {!conNumeros
+              ? 'Las tesis del espacio siguen enteras, con sus entregas y observaciones'
+              : resumen.tesis === 0
+                ? 'Ninguna tesis está en este espacio todavía'
+                : resumen.tesis === 1
+                  ? 'La tesis del espacio sigue entera, con sus entregas y observaciones'
+                  : `Las ${resumen.tesis} tesis del espacio siguen enteras, con sus entregas y observaciones`}
           </li>
           <li>Los hitos que nacieron de las actividades siguen en cada tesis como hitos comunes</li>
         </ul>

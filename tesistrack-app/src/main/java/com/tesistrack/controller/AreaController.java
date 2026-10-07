@@ -16,7 +16,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.tesistrack.dto.AreaDto;
 import com.tesistrack.dto.AreaRequest;
+import com.tesistrack.dto.EspacioDto;
 import com.tesistrack.dto.InvitacionDto;
+import com.tesistrack.dto.ResumenEspacioDto;
 import com.tesistrack.service.AreaService;
 import com.tesistrack.service.LimitadorConsultas;
 
@@ -59,6 +61,21 @@ public class AreaController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void eliminar(@PathVariable Long id, Authentication authentication) {
         areaService.eliminar(id, authentication);
+    }
+
+    /**
+     * La página de un espacio para cualquiera de sus miembros: el asesor dueño, los
+     * estudiantes con una tesis en él y el coordinador. El código solo lo ve el dueño.
+     */
+    @GetMapping("/{id}/espacio")
+    public EspacioDto espacio(@PathVariable Long id, Authentication authentication) {
+        return areaService.espacio(id, authentication);
+    }
+
+    /** Qué se lleva y qué deja borrar el espacio, en números. Solo el dueño. */
+    @GetMapping("/{id}/resumen")
+    public ResumenEspacioDto resumen(@PathVariable Long id, Authentication authentication) {
+        return areaService.resumen(id, authentication);
     }
 
     /** Cambia el código de invitación, por si el anterior se filtró. */

@@ -13,6 +13,7 @@ import com.tesistrack.dto.HitoDto;
 import com.tesistrack.dto.ObservacionDto;
 import com.tesistrack.dto.ProyectoDto;
 import com.tesistrack.dto.TareaDto;
+import com.tesistrack.model.EstadoAsesoria;
 import com.tesistrack.model.EstadoHito;
 import com.tesistrack.model.EstadoObservacion;
 import com.tesistrack.model.Proyecto;
@@ -80,8 +81,10 @@ public class DashboardService {
             .map(ObservacionDto::from)
             .toList();
 
+        // Solo las realizadas: las programadas todavía no pasaron y se ven como
+        // "próximas reuniones", con su botón Unirse.
         List<AsesoriaDto> ultimasAsesorias =
-            asesoriaRepository.findByProyectoIdOrderByFechaDesc(proyectoId).stream()
+            asesoriaRepository.findByProyectoIdAndEstadoOrderByFechaDesc(proyectoId, EstadoAsesoria.REALIZADA).stream()
                 .limit(MAX_ASESORIAS)
                 .map(AsesoriaDto::from)
                 .toList();

@@ -15,6 +15,8 @@ function menuPara(rol) {
     // Solo el asesor tiene asesorados; para los demás la entrada no existe.
     ...(rol === 'ASESOR' ? [{ to: '/asesorados', label: 'Mis asesorados', icono: '☺' }] : []),
     { to: '/proyectos', label: rol === 'ESTUDIANTE' ? 'Mi proyecto' : 'Proyectos', icono: '◈' },
+    // El espacio del asesor al que pertenece la tesis: sesiones y materiales.
+    ...(rol === 'ESTUDIANTE' ? [{ to: '/espacio', label: 'Mi espacio', icono: '⌂' }] : []),
     { to: '/hitos', label: 'Hitos', icono: '◎' },
     { to: '/entregas', label: 'Entregas', icono: '↑' },
     { to: '/observaciones', label: 'Observaciones', icono: '!' },

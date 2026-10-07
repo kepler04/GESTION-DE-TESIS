@@ -10,7 +10,7 @@ import { Card, Vacio } from './ui'
  * Software", "Consultorías privadas"). No son instituciones: no se comparten con
  * nadie ni otorgan permisos — eso es lo que descartó la Decisión 1.
  */
-export default function GestorAreas({ areas, proyectos = [], onCambio, onCerrar }) {
+export default function GestorAreas({ areas, onCambio, onCerrar }) {
   const [nombre, setNombre] = useState('')
   const [editando, setEditando] = useState(null)
   const [nombreEditado, setNombreEditado] = useState('')
@@ -181,7 +181,6 @@ export default function GestorAreas({ areas, proyectos = [], onCambio, onCerrar 
       {borrando && (
         <BorrarEspacio
           area={borrando}
-          tesis={proyectos.filter((p) => p.area?.id === borrando.id).length}
           onCerrar={() => setBorrando(null)}
           onBorrado={async () => {
             await eliminarArea(borrando.id)

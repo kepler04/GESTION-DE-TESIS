@@ -24,6 +24,7 @@ Base: `http://localhost:8080/api` en desarrollo (`VITE_API_URL` en el frontend).
 | `401` | Sin token, token inválido o expirado, credenciales incorrectas |
 | `403` | Autenticado pero sin permiso sobre ese recurso |
 | `404` | El recurso no existe |
+| `413` | Un archivo supera el tope de 15 MB. Mensaje: *"El archivo supera los 15 MB"* |
 | `409` | Una restricción de la base impidió la operación (clave foránea, `UNIQUE`). Mensaje legible; el detalle técnico queda solo en el log. Ver [[Decisiones pendientes#Decisión 18 - Qué se lleva un espacio al borrarse\|D18]] |
 
 > [!note] Un 5xx no se muestra crudo
@@ -66,7 +67,9 @@ Agrupan las tesis de un asesor y le dan un **código de invitación**. Ver [[Dec
 | `POST` | `/areas` | asesor | Crea una carpeta y le genera un código. 400 si el nombre se repite (sin distinguir mayúsculas) |
 | `GET` | `/areas` | asesor | Sus carpetas, **con** el código |
 | `PUT` | `/areas/{id}` | dueño | Renombra |
-| `DELETE` | `/areas/{id}` | dueño | Borra el espacio: **se van sus actividades** y el código; las tesis quedan **desetiquetadas** y **todos sus hitos se quedan** (con `actividad_id = NULL`). `204`. Ver [[Decisiones pendientes#Decisión 18 - Qué se lleva un espacio al borrarse\|D18]] |
+| `DELETE` | `/areas/{id}` | dueño | Borra el espacio: **se van sus actividades, materiales (con sus archivos) y sesiones**, y el código; las tesis quedan **desetiquetadas** y **todos sus hitos se quedan** (con `actividad_id = NULL`). `204`. Ver [[Decisiones pendientes#Decisión 18 - Qué se lleva un espacio al borrarse\|D18]] |
+| `GET` | `/areas/{id}/espacio` | **miembro**: dueño, estudiante con tesis en él, coordinador | `{ area, asesor, propietario }`. El código solo viaja si `propietario` es `true` |
+| `GET` | `/areas/{id}/resumen` | dueño | Qué se lleva el borrado, en números: `{ actividades, tesis, carpetas, materiales, archivos, sesiones }` |
 | `POST` | `/areas/{id}/codigo` | dueño | Genera un código nuevo e invalida el anterior |
 | `GET` | `/areas/invitacion/{codigo}` | autenticado, **10/min por IP** | Previsualiza a quién pertenece: `{ area, asesor, asesorEmail }` |
 
@@ -104,6 +107,49 @@ El tablero devuelve `actividades` (las columnas) aparte de `filas`, porque un es
 | `EN_FALTA` | `PENDIENTE`/`EN_PROCESO` con `fechaLimite` pasada |
 | `PENDIENTE` | `PENDIENTE`/`EN_PROCESO` en plazo |
 | `SIN_ASIGNAR` | El estudiante no tiene esa actividad |
+
+## Materiales del espacio
+
+Carpetas con enlaces y archivos, como un aula. **Miembro** = el dueño, el estudiante con una tesis en el espacio, y el coordinador (solo lectura). Un estudiante ajeno al espacio y otro asesor reciben `403`. Ver [[Decisiones pendientes#Decisión 19 - Cómo se organizan los materiales del espacio|D19]].
+
+| Método | Ruta | Quién | Qué hace |
+|---|---|---|---|
+| `GET` | `/areas/{id}/carpetas` | miembro | Las carpetas con sus materiales anidados (dos consultas, sin los bytes) |
+| `POST` | `/areas/{id}/carpetas` | dueño | Crea una carpeta. `400` si el nombre se repite (sin distinguir mayúsculas) |
+| `PUT` | `/carpetas/{id}` | dueño | Renombra |
+| `DELETE` | `/carpetas/{id}` | dueño | Borra la carpeta **y sus materiales y archivos**. `204`, irreversible |
+| `POST` | `/carpetas/{id}/materiales` | dueño | Crea un material que es un **enlace** `{ titulo, url }`. La `url` tiene que ser `https://` |
+| `POST` | `/carpetas/{id}/materiales/archivo` | dueño | Sube un **archivo**: `multipart` con `archivo` y, opcional, `titulo` (si no, el nombre del archivo). Máx. **15 MB** → `413` |
+| `PUT` | `/materiales/{id}` | dueño | Cambia el título; la `url` solo si es un enlace (a un archivo no se le puede poner) |
+| `DELETE` | `/materiales/{id}` | dueño | Borra el material y sus bytes |
+| `GET` | `/materiales/{id}/archivo` | miembro | Descarga como `attachment` (`filename*` UTF-8). `400` si el material es un enlace |
+
+```jsonc
+// POST /api/carpetas/1/materiales
+{ "titulo": "Banco de temas 2026", "url": "https://drive.google.com/drive/folders/abc" }
+```
+
+> [!note] Un espacio nuevo trae tres carpetas
+> *Temas de tesis*, *Rúbrica* y *Clases*, que el dueño puede renombrar o borrar. Los espacios que ya existían las recibieron con la migración `V2`.
+
+## Sesiones del espacio
+
+Clases o reuniones para **todo** el espacio, con el enlace que pega el asesor. No se integra ninguna API de videollamadas. Ver [[Decisiones pendientes#Decisión 20 - Reuniones con enlace - sesiones del espacio y asesorías programadas|D20]].
+
+| Método | Ruta | Quién | Qué hace |
+|---|---|---|---|
+| `GET` | `/areas/{id}/sesiones` | miembro | Todas, por fecha ascendente; la pantalla separa las pasadas |
+| `POST` | `/areas/{id}/sesiones` | dueño | Crea una `{ titulo, fechaHora, enlace }`. `400` si el enlace no es `https://` |
+| `PUT` | `/sesiones/{id}` | dueño | Reprograma o corrige |
+| `DELETE` | `/sesiones/{id}` | dueño | La quita. `204` |
+
+## Próximas reuniones
+
+| Método | Ruta | Quién | Qué hace |
+|---|---|---|---|
+| `GET` | `/reuniones/proximas` | autenticado | Las sesiones de su espacio y las asesorías programadas de sus tesis, en una lista, las **5** más cercanas |
+
+Cada elemento trae `tipo` (`SESION` o `ASESORIA`), `titulo`, `fechaHora`, `enlace` y de dónde viene (`areaNombre`, `proyectoTitulo`). Una reunión que empezó hace **menos de una hora** sigue apareciendo —quien llega tarde a una clase en curso todavía necesita el botón—. El coordinador recibe una lista vacía. La usan los dos Dashboards.
 
 ## Proyectos
 
@@ -191,9 +237,11 @@ Cuelgan de la **entrega concreta**, no del hito ([[Decisiones pendientes#Decisi�
 
 | Método | Ruta | Quién | Qué hace |
 |---|---|---|---|
-| `POST` | `/proyectos/{id}/asesorias` | **estudiante o asesor** del proyecto | Abre una reunión o una consulta. `registradaPor` guarda quién |
+| `POST` | `/proyectos/{id}/asesorias` | **estudiante o asesor** del proyecto | Abre una reunión o una consulta. `registradaPor` guarda quién. Sin `estado` nace `REALIZADA`; con `estado: "PROGRAMADA"` se agenda (con `enlace` opcional). **No puede nacer `CANCELADA`** |
 | `GET` | `/proyectos/{id}/asesorias` | con acceso | Historial, más reciente primero |
-| `POST` | `/asesorias/{id}/acuerdos` | **solo el asesor** del proyecto | Registra un acuerdo de esa reunión |
+| `PUT` | `/asesorias/{id}` | asesor **o** quien la abrió | Reprograma (`fecha`, `tema`, `enlace`). Solo si sigue `PROGRAMADA` |
+| `PATCH` | `/asesorias/{id}/estado` | ver abajo | `PROGRAMADA → REALIZADA` (solo el **asesor**, con `resumen` opcional) o `→ CANCELADA` (asesor o quien la abrió). Una realizada o cancelada no cambia |
+| `POST` | `/asesorias/{id}/acuerdos` | **solo el asesor** del proyecto | Registra un acuerdo. **Solo de una asesoría `REALIZADA`**: sobre otra da `400` |
 | `GET` | `/asesorias/{id}/acuerdos` | con acceso | Acuerdos de la reunión |
 
 > [!important] La asimetría es la [[Decisiones pendientes#Decisión 13 - Quién puede abrir una asesoría|Decisión 13]]
@@ -202,9 +250,19 @@ Cuelgan de la **entrega concreta**, no del hito ([[Decisiones pendientes#Decisi�
 > `crear` usa `verificarLectura`, que también deja pasar al coordinador, así que lleva un rechazo explícito para su rol: el coordinador consulta y no escribe (Decisión 8).
 
 ```jsonc
-// POST /api/proyectos/1/asesorias
+// POST /api/proyectos/1/asesorias — registrar una reunión que ya ocurrió (nace REALIZADA)
 { "fecha": "2026-08-10T15:00:00Z", "tema": "Revisar antecedentes", "resumen": "..." }
+
+// POST /api/proyectos/1/asesorias — programar una reunión con enlace
+{ "fecha": "2026-10-12T15:00:00Z", "tema": "Revisar el capítulo 1", "estado": "PROGRAMADA",
+  "enlace": "https://meet.google.com/abc-defg-hij" }
+
+// PATCH /api/asesorias/7/estado — el asesor la marca realizada y completa el resumen
+{ "estado": "REALIZADA", "resumen": "Se acordó rehacer el marco teórico" }
 ```
+
+> [!note] El Dashboard cuenta solo las realizadas
+> `ultimasAsesorias` del Dashboard de un proyecto devuelve únicamente las `REALIZADA`. Las programadas aparecen en [[#Próximas reuniones]].
 
 ## Tareas
 

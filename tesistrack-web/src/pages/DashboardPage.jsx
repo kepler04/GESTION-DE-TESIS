@@ -8,6 +8,7 @@ import ProgressRing from '../components/ProgressRing'
 import UnirseConCodigo from '../components/UnirseConCodigo'
 import PrimerosPasos from '../components/PrimerosPasos'
 import PrimerosPasosAsesor from '../components/PrimerosPasosAsesor'
+import ProximasReuniones from '../components/ProximasReuniones'
 import { Card, Cargando, ErrorMsg, PageHead, SelectorProyecto, SinProyecto, Vacio, fecha } from '../components/ui'
 
 function Tile({ valor, etiqueta, detalle, tono = 'neutro' }) {
@@ -121,6 +122,8 @@ export default function DashboardPage() {
             </Vacio>
           </Card>
         ))}
+
+      <ProximasReuniones rol={user?.role} />
 
       {data && (
         <>

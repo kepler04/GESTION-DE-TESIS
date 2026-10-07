@@ -16,10 +16,14 @@ PostgreSQL 16 (ver [[Arquitectura]]). Desde el Taller 2 (2026-09-20) **el esquem
 > [!important] Cómo se cambia el esquema desde ahora
 > Cada cambio va como **migración nueva** (`V2__...`, `V3__...`), **nunca editando la `V1`**: Flyway guarda el checksum de lo ya aplicado y una `V1` modificada hace fallar el arranque en cualquier base que ya la corrió. Con `validate`, si una entidad cambia y la migración no, la aplicación **no arranca**: es el aviso que antes no existía.
 >
-> En una base vacía Flyway crea todo desde `V1`; en una creada con `ddl-auto=update` (la local vieja) `baseline-on-migrate` la marca en la versión 1 y no recrea nada. *(Este segundo camino es el diseño del Taller 2; **no se probó** contra la base local vieja, solo contra una vacía.)*
+> En una base vacía Flyway crea todo desde `V1`; en una creada con `ddl-auto=update` (la local vieja) `baseline-on-migrate` la marca en la versión 1 y no recrea nada.
 
-> [!success] Verificado el 2026-10-07 contra un PostgreSQL 16 vacío
-> `V1` se aplica sola, Hibernate `validate` pasa y la aplicación arranca en ~3 s. Quedan **13 tablas y 19 claves foráneas**: 7 `ON DELETE CASCADE`, 1 `SET NULL` (`tarea.acuerdo_id`) y 11 sin acción. Las cascadas **no** cubren `actividad.area_id` ni `hito.actividad_id`: ver la [[Decisiones pendientes#Decisión 18 - Qué se lleva un espacio al borrarse|Decisión 18]].
+> [!success] Verificado el 2026-10-07 por los tres caminos posibles
+> 1. **Base vacía** → aplica `V1` y `V2`, Hibernate `validate` pasa y la aplicación arranca en ~3 s.
+> 2. **Base sin historial de Flyway que ya tenía el esquema de `V1`** (la creada con `ddl-auto=update`) → `baseline-on-migrate` la marca en la versión 1 y aplica **solo `V2`**, sin recrear nada.
+> 3. **Base con `V1` ya en su historial** (la que levanta `docker compose` hoy) → aplica solo `V2`. Se probó con datos: el espacio, la tesis y la asesoría que ya existían quedaron intactos.
+>
+> Con `V1` y `V2` quedan **17 tablas** (16 de dominio y el historial de Flyway) y **23 claves foráneas**: 11 `ON DELETE CASCADE`, 1 `SET NULL` (`tarea.acuerdo_id`) y 11 sin acción. Las cascadas **no** cubren `actividad.area_id` ni `hito.actividad_id`: ver la [[Decisiones pendientes#Decisión 18 - Qué se lleva un espacio al borrarse|Decisión 18]].
 
 ## Diagrama Entidad-Relación
 
@@ -43,6 +47,10 @@ erDiagram
     AREA ||--o{ PROYECTO : "agrupa"
     AREA ||--o{ ACTIVIDAD : "propone"
     ACTIVIDAD ||--o{ HITO : "se reparte como"
+    AREA ||--o{ CARPETA_MATERIAL : "organiza"
+    CARPETA_MATERIAL ||--o{ MATERIAL : "contiene"
+    MATERIAL ||--o| ARCHIVO_MATERIAL : "guarda los bytes"
+    AREA ||--o{ SESION_ESPACIO : "programa"
 
     USERS {
         bigint id PK
@@ -114,6 +122,8 @@ erDiagram
         timestamp fecha
         varchar tema
         text resumen
+        varchar estado "PROGRAMADA, REALIZADA o CANCELADA (V2)"
+        varchar enlace "https, opcional (V2)"
         bigint registrada_por_id FK
         timestamp created_at
     }
@@ -132,6 +142,36 @@ erDiagram
         date fecha_limite
         boolean completada
         timestamp completada_at
+        timestamp created_at
+    }
+    CARPETA_MATERIAL {
+        bigint id PK
+        bigint area_id FK
+        varchar nombre "UK con area_id"
+        int orden
+        timestamp created_at
+    }
+    MATERIAL {
+        bigint id PK
+        bigint carpeta_id FK
+        varchar titulo
+        varchar url "enlace https, o null"
+        varchar archivo_nombre "archivo, o null"
+        varchar archivo_tipo
+        bigint archivo_tamano
+        timestamp created_at
+    }
+    ARCHIVO_MATERIAL {
+        bigint id PK
+        bigint material_id FK "UK"
+        bytea contenido
+    }
+    SESION_ESPACIO {
+        bigint id PK
+        bigint area_id FK
+        varchar titulo
+        timestamp fecha_hora
+        varchar enlace "https"
         timestamp created_at
     }
 ```
@@ -325,6 +365,29 @@ CREATE INDEX idx_acuerdo_asesoria    ON acuerdo (asesoria_id);
 CREATE INDEX idx_tarea_proyecto      ON tarea (proyecto_id);
 CREATE INDEX idx_tarea_responsable   ON tarea (responsable_id);
 ```
+
+## Migración V2 - materiales y reuniones
+
+`V2__materiales_y_reuniones.sql` (2026-10-07, Fase 1). Es la primera migración que se escribe **sobre** la `V1` en lugar de reemplazarla. Decisiones que la explican: la [[Decisiones pendientes#Decisión 19 - Cómo se organizan los materiales del espacio|19]] y la [[Decisiones pendientes#Decisión 20 - Reuniones con enlace - sesiones del espacio y asesorías programadas|20]].
+
+| Tabla | Para qué | Notas |
+|---|---|---|
+| `carpeta_material` | Carpetas de un espacio | `UNIQUE (area_id, nombre)`; `ON DELETE CASCADE` desde `area` |
+| `material` | Un enlace **o** un archivo | Los metadatos del archivo viven acá; `ON DELETE CASCADE` desde la carpeta |
+| `archivo_material` | Los bytes del archivo | `bytea`, `UNIQUE (material_id)`, aparte para que listar no los cargue; mismo criterio que `archivo_entrega` |
+| `sesion_espacio` | Clase para todo el espacio | Fecha y hora, título y enlace; `ON DELETE CASCADE` desde `area` |
+| `asesoria` (columnas nuevas) | `estado` y `enlace` | Las filas existentes quedan `REALIZADA` (`DEFAULT`) |
+
+**Restricciones** (la base las exige aunque se escriba sin pasar por la aplicación; se probó que cada una rechaza lo inválido y acepta lo válido):
+
+| Restricción | Regla |
+|---|---|
+| `ck_material_enlace_o_archivo` | `(url IS NOT NULL) <> (archivo_nombre IS NOT NULL)`: exactamente uno de los dos |
+| `ck_material_url_https`, `ck_sesion_enlace_https`, `ck_asesoria_enlace_https` | Todo enlace empieza con `https://` |
+| `ck_asesoria_estado` | `PROGRAMADA`, `REALIZADA` o `CANCELADA` |
+
+> [!info] Datos, no solo estructura
+> La migración **inserta** las tres carpetas sugeridas (*Temas de tesis*, *Rúbrica*, *Clases*) en cada espacio que ya existía. Los espacios nuevos las reciben al crearse, desde `AreaService`. Es la única migración que toca datos; corre una sola vez, así que si el asesor las borra después, no vuelven a aparecer.
 
 ## Cambios posteriores al Entregable 1
 

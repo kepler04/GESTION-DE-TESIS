@@ -59,14 +59,16 @@ aliases:
 ## Estado actual
 
 > [!success] Al 2026-10-07 — Entregables 1, 2 y 3 hechos en funcionalidad; el 4 empezado
-> - **Decisiones 1 a 17 cerradas**, y la **18** (qué se lleva un espacio al borrarse) desde hoy. Las 4 preguntas del profesor quedaron respondidas: hitos configurables creados por el asesor, plataforma general.
+> - **Decisiones 1 a 20 cerradas**: la 18 (qué se lleva un espacio al borrarse), la 19 (materiales del espacio) y la 20 (reuniones con enlace) son de hoy. Las 4 preguntas del profesor quedaron respondidas: hitos configurables creados por el asesor, plataforma general.
 > - **Entregable 1 (Modelo de datos)** — esquema versionado con **Flyway** (`V1`) y validado por Hibernate; verificado contra un PostgreSQL vacío el 2026-10-07. Ver [[Base de datos]].
 > - **Entregable 2 (Backend)** — API REST en [[API]]. Se re-verificó el 2026-10-07 con 105 comprobaciones HTTP (permisos, ciclo completo, coordinador de solo lectura, tesis grupal, borrado). **Esas pruebas todavía no están en el repo**: el único test es `contextLoads`.
 > - **Entregable 3 (Full-stack)** — todo lo de [[Funcionalidades]] anda; queda el menú del coordinador (contradice la Decisión 8). **Taller 2** (Flyway, MapStruct, Lombok) entregado el 2026-09-20.
 > - **Entregable 4 (CI/CD)** 🔨 — Dockerfiles, `docker-compose.yml` del stack completo y dos workflows que publican las imágenes en ghcr.io (en verde el 2026-10-03). Falta el CI con tests, el despliegue en AWS/Vercel y un `JWT_SECRET` real.
 
 > [!info] En curso — tanda de cierre (2026-10-07)
-> **Fase 0** (errores): borrar espacio con actividades, títulos invisibles en modo oscuro y puerto de desarrollo — ver [[Desarrollo#Fase 0 - Errores corregidos (2026-10-07)]]. Después: el espacio del asesor como aula (materiales en carpetas, reuniones con enlace) y el primer ingreso del estudiante (solo o en grupo).
+> - ✅ **Fase 0** (errores): borrar espacio con actividades, títulos invisibles en modo oscuro y puerto de desarrollo — ver [[Desarrollo#Fase 0 - Errores corregidos (2026-10-07)]].
+> - ✅ **Fase 1** (el espacio como aula): materiales en carpetas, sesiones y asesorías con enlace, y *Próximas reuniones* en los Dashboards — ver [[Desarrollo#Fase 1 - El espacio como aula (2026-10-07)]] y las decisiones [[Decisiones pendientes#Decisión 19 - Cómo se organizan los materiales del espacio|19]] y [[Decisiones pendientes#Decisión 20 - Reuniones con enlace - sesiones del espacio y asesorías programadas|20]].
+> - ⬜ **Fase 2**: el primer ingreso del estudiante (solo o en grupo, con grupos visibles dentro del espacio).
 
 > [!warning] La [[Auditoría de requisitos]] es del 2026-08-16 y quedó desfasada
 > Su "45% de la nota sin empezar" ya no vale: el Entregable 4 tiene la parte de Docker y el pipeline de imágenes. Sigue vigente su regla de trabajo: **antes de construir, verificar si está en [[Funcionalidades]]**, y si no está, decidirlo a conciencia y anotarlo.

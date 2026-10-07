@@ -28,7 +28,8 @@
 }
 
 .badge--neutro .badge__icono {
-  color: #878d9c;
+  /* Era #878d9c (2,91:1 sobre blanco); este llega a 5,3:1. */
+  color: #5f6676;
 }
 
 .badge--proceso {
@@ -60,5 +61,6 @@
   border-color: #cfe9cf;
 }
 .badge--completado .badge__icono {
-  color: #0ca30c;
+  /* Era #0ca30c (3,00:1 sobre el fondo del badge); este llega a 4,9:1. */
+  color: #0a7f0a;
 }

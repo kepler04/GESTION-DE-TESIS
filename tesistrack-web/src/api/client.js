@@ -51,13 +51,20 @@ export async function api(path, { method = 'GET', body } = {}) {
  * Sube un archivo. No usa {@link api} porque el `Content-Type: application/json`
  * fijo rompería el multipart: el navegador tiene que poner el suyo con el boundary,
  * y para eso hay que **no** mandar la cabecera.
+ *
+ * `method` es PUT para el documento de una entrega ya creada y POST para un
+ * material, que se crea con su archivo en un solo paso. `campos` suma partes de
+ * texto al multipart (el título del material).
  */
-export async function apiSubirArchivo(path, archivo) {
+export async function apiSubirArchivo(path, archivo, { method = 'PUT', campos = {} } = {}) {
   const datos = new FormData()
   datos.append('archivo', archivo)
+  Object.entries(campos).forEach(([nombre, valor]) => {
+    if (valor !== undefined && valor !== null && valor !== '') datos.append(nombre, valor)
+  })
 
   const res = await fetch(`${API_URL}${path}`, {
-    method: 'PUT',
+    method,
     headers: { ...(token() ? { Authorization: `Bearer ${token()}` } : {}) },
     body: datos,
   })
