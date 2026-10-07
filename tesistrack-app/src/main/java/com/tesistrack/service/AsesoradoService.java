@@ -25,7 +25,8 @@ import com.tesistrack.repository.ProyectoRepository;
 import com.tesistrack.repository.TareaRepository;
 
 /**
- * Panel del asesor: sus asesorados y qué necesita atención de cada uno.
+ * Asesorías privadas: los asesorados individuales del asesor (sus tesis fuera de
+ * una clase) y qué necesita atención de cada uno.
  *
  * Es una vista de lectura sobre lo que ya existe — no agrega entidades ni cambia
  * permisos. Solo lista proyectos donde el usuario ya es el asesor asignado.
@@ -56,12 +57,14 @@ public class AsesoradoService {
     public List<AsesoradoDto> listar(Authentication authentication) {
         User usuario = acceso.usuarioActual(authentication);
         if (usuario.getRole() != Role.ASESOR) {
-            throw new ForbiddenException("Solo un asesor tiene asesorados");
+            throw new ForbiddenException("Solo un asesor tiene asesorías privadas");
         }
 
         LocalDate hoy = LocalDate.now();
 
-        return proyectoRepository.findByAsesorId(usuario.getId()).stream()
+        // Solo las tesis que no están en una clase: el seguimiento de un grupo dentro
+        // de una clase vive en la propia clase (Personas y Seguimiento).
+        return proyectoRepository.findByAsesorIdAndAreaIsNull(usuario.getId()).stream()
             .map(p -> armar(p, hoy))
             // Primero lo que necesita atención, y dentro de eso lo más cargado.
             .sorted(

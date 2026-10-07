@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
   cambiarEstadoEntrega,
   crearEntrega,
   descargarArchivoEntrega,
   listarEntregas,
   listarHitos,
+  rutaArchivoEntrega,
   subirArchivoEntrega,
 } from '../api/tesistrack'
 import useProyectoActivo from '../hooks/useProyectoActivo'
 import { useAuth } from '../auth/AuthContext'
 import EstadoBadge from '../components/EstadoBadge'
+import VisorArchivo from '../components/VisorArchivo'
 import {
   Card,
   Cargando,
@@ -20,6 +23,7 @@ import {
   Vacio,
   fechaHora,
 } from '../components/ui'
+import { esPrevisualizable } from '../utils/archivos'
 
 /**
  * Entregas de un hito. Cada entrega es una versión nueva del mismo hito
@@ -31,6 +35,9 @@ import {
  */
 export default function EntregasPage() {
   const { user } = useAuth()
+  const [params] = useSearchParams()
+  // Un enlace directo (desde "Para revisar" del Dashboard) puede traer el hito.
+  const hitoPedido = Number(params.get('hito')) || null
   const { proyectos, activoId, activo, seleccionar, cargando: cargandoProyectos } = useProyectoActivo()
 
   // Solo los estudiantes del proyecto suben entregas (verificarEstudianteDelProyecto).
@@ -53,6 +60,8 @@ export default function EntregasPage() {
   const [comentario, setComentario] = useState('')
   const [guardando, setGuardando] = useState(false)
   const [bajando, setBajando] = useState(null)
+  // La versión que se está viendo en el visor; null si ninguna.
+  const [viendo, setViendo] = useState(null)
 
   const hito = hitos.find((h) => h.id === hitoId) ?? null
 
@@ -68,7 +77,9 @@ export default function EntregasPage() {
         setHitos(lista)
         // El hito "en juego" es el que espera acción: primero el observado (hay
         // que corregir), después el entregado, después el que está en proceso.
+        // El hito pedido por enlace manda sobre eso.
         const enJuego =
+          lista.find((h) => h.id === hitoPedido) ??
           lista.find((h) => h.estado === 'OBSERVADO') ??
           lista.find((h) => h.estado === 'ENTREGADO') ??
           lista.find((h) => h.estado === 'EN_PROCESO') ??
@@ -80,7 +91,7 @@ export default function EntregasPage() {
     return () => {
       cancelado = true
     }
-  }, [activoId])
+  }, [activoId, hitoPedido])
 
   function recargarEntregas(id = hitoId) {
     if (!id) {
@@ -186,8 +197,8 @@ export default function EntregasPage() {
       ) : hitos.length === 0 ? (
         <Card>
           <Vacio>
-            Este proyecto todavía no tiene hitos, así que no hay contra qué entregar. Los define el
-            asesor del proyecto.
+            Esta tesis todavía no tiene hitos, así que no hay contra qué entregar. Los define el
+            asesor de la tesis.
           </Vacio>
         </Card>
       ) : (
@@ -223,7 +234,7 @@ export default function EntregasPage() {
                   <input
                     type="file"
                     onChange={(e) => setArchivo(e.target.files?.[0] ?? null)}
-                    accept=".pdf,.doc,.docx,.odt,.zip"
+                    accept=".pdf,.doc,.docx,.odt,.zip,.png,.jpg,.jpeg,.gif,.webp"
                   />
                 </label>
                 {archivo && (
@@ -239,6 +250,8 @@ export default function EntregasPage() {
                     value={archivoUrl}
                     onChange={(e) => setArchivoUrl(e.target.value)}
                     placeholder="https://drive.google.com/…"
+                    pattern="https://.+"
+                    title="El enlace tiene que empezar con https://"
                   />
                 </label>
                 <label>
@@ -313,6 +326,13 @@ export default function EntregasPage() {
                       </span>
 
                       <div className="versiones__acciones">
+                        {/* Ver solo para lo que el backend verificó por sus bytes (imágenes
+                            y PDF): el profesor lee la tesis sin descargarla. */}
+                        {e.tieneArchivo && esPrevisualizable(e.archivoTipo) && (
+                          <button type="button" className="btn btn--primario" onClick={() => setViendo(e)}>
+                            Ver
+                          </button>
+                        )}
                         {e.tieneArchivo && (
                           <button
                             type="button"
@@ -323,12 +343,17 @@ export default function EntregasPage() {
                             {bajando === e.id ? 'Descargando…' : '↓ Descargar'}
                           </button>
                         )}
+                        {e.tieneArchivo && !esPrevisualizable(e.archivoTipo) && (
+                          <span className="tenue sin-vista">
+                            Sin vista previa: descargalo para abrirlo.
+                          </span>
+                        )}
                         {e.archivoUrl && (
                           <a
                             className="versiones__enlace"
                             href={e.archivoUrl}
                             target="_blank"
-                            rel="noreferrer"
+                            rel="noopener noreferrer"
                           >
                             Abrir enlace ↗
                           </a>
@@ -360,6 +385,16 @@ export default function EntregasPage() {
             )}
           </Card>
         </>
+      )}
+
+      {viendo && (
+        <VisorArchivo
+          titulo={`${viendo.archivoNombre ?? 'Entrega'} · v${viendo.version}`}
+          nombreArchivo={viendo.archivoNombre}
+          tipo={viendo.archivoTipo}
+          ruta={rutaArchivoEntrega(viendo.id)}
+          onCerrar={() => setViendo(null)}
+        />
       )}
     </>
   )

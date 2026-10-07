@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { Link, NavLink, Outlet } from 'react-router-dom'
 import BienvenidaPanel from '../components/BienvenidaPanel'
 import BrandLogo from '../components/BrandLogo'
 import { useAuth } from '../auth/AuthContext'
@@ -8,24 +8,40 @@ import '../styles/app.css'
 /**
  * El menú se arma según el rol. El coordinador solo ve lo que puede consultar:
  * su alcance es lectura global, sin escritura (Decisión 8).
+ *
+ * El profesor ve "Asesorías privadas" solo si dijo que las da (Decisión 24): es
+ * acompañamiento uno a uno, y quien trabaja solo con clases no tiene por qué ver una
+ * entrada que no usa.
  */
-function menuPara(rol) {
+function menuPara(rol, asesoriasPrivadas) {
+  if (rol === 'COORDINADOR') {
+    return [
+      { to: '/panel', label: 'Dashboard', icono: '▦', end: true },
+      { to: '/tesis', label: 'Tesis', icono: '◈' },
+      { to: '/hitos', label: 'Hitos', icono: '◎' },
+    ]
+  }
+
   const comun = [
     { to: '/panel', label: 'Dashboard', icono: '▦', end: true },
-    // Solo el asesor tiene asesorados; para los demás la entrada no existe.
-    ...(rol === 'ASESOR' ? [{ to: '/asesorados', label: 'Mis asesorados', icono: '☺' }] : []),
-    { to: '/proyectos', label: rol === 'ESTUDIANTE' ? 'Mi proyecto' : 'Proyectos', icono: '◈' },
-    // El espacio del asesor al que pertenece la tesis: sesiones y materiales.
-    ...(rol === 'ESTUDIANTE' ? [{ to: '/espacio', label: 'Mi espacio', icono: '⌂' }] : []),
+    ...(rol === 'ASESOR'
+      ? [
+          { to: '/clases', label: 'Mis clases', icono: '◈' },
+          ...(asesoriasPrivadas === true
+            ? [{ to: '/asesorias-privadas', label: 'Asesorías privadas', icono: '☺' }]
+            : []),
+        ]
+      : [
+          { to: '/mi-tesis', label: 'Mi tesis', icono: '◈' },
+          // La clase del profesor al que pertenece la tesis: avisos, sesiones y materiales.
+          { to: '/clase', label: 'Mi clase', icono: '⌂' },
+        ]),
     { to: '/hitos', label: 'Hitos', icono: '◎' },
     { to: '/entregas', label: 'Entregas', icono: '↑' },
     { to: '/observaciones', label: 'Observaciones', icono: '!' },
     { to: '/asesorias', label: 'Asesorías', icono: '☷' },
     { to: '/tareas', label: 'Tareas', icono: '✓' },
   ]
-  if (rol === 'COORDINADOR') {
-    return comun.filter((i) => ['/panel', '/proyectos', '/hitos'].includes(i.to))
-  }
   return comun
 }
 
@@ -59,7 +75,7 @@ export default function AppLayout() {
 
         <p className="sidebar__seccion">Menú</p>
         <nav className="sidebar__nav">
-          {menuPara(user?.role).map((item) => (
+          {menuPara(user?.role, user?.asesoriasPrivadas).map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
@@ -92,13 +108,16 @@ export default function AppLayout() {
           </button>
 
           <div className="topbar__usuario">
-            <div className="topbar__datos">
-              <strong>{user?.name}</strong>
-              <span>{NOMBRE_ROL[user?.role] ?? user?.role}</span>
-            </div>
-            <div className="topbar__avatar" aria-hidden="true">
-              {iniciales}
-            </div>
+            {/* El nombre y el avatar llevan al perfil, donde viven las preferencias. */}
+            <Link to="/perfil" className="topbar__perfil" aria-label="Mi perfil">
+              <div className="topbar__datos">
+                <strong>{user?.name}</strong>
+                <span>{NOMBRE_ROL[user?.role] ?? user?.role}</span>
+              </div>
+              <div className="topbar__avatar" aria-hidden="true">
+                {iniciales}
+              </div>
+            </Link>
             <button type="button" className="btn btn--sutil" onClick={logout}>
               Salir
             </button>

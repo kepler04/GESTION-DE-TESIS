@@ -23,7 +23,7 @@ export default function TableroSemaforo({ tablero }) {
     return (
       <Vacio>
         Todavía no dejaste ninguna actividad. La primera que cargues les aparece a todos tus
-        asesorados, y también a los que se sumen después.
+        grupos, y también a los que se sumen después.
       </Vacio>
     )
   }
@@ -31,7 +31,7 @@ export default function TableroSemaforo({ tablero }) {
   if (filas.length === 0) {
     return (
       <Vacio>
-        Ya tenés actividades, pero nadie se sumó todavía. Pasales el código del espacio: al entrar
+        Ya tenés actividades, pero nadie se sumó todavía. Pasales el código de la clase: al entrar
         las reciben automáticamente.
       </Vacio>
     )
@@ -43,7 +43,7 @@ export default function TableroSemaforo({ tablero }) {
         <table className="tabla tablero">
           <thead>
             <tr>
-              <th className="tablero__alumno">Asesorado</th>
+              <th className="tablero__alumno">Grupo</th>
               {actividades.map((a) => (
                 <th key={a.id} className="tablero__col">
                   {a.nombre}

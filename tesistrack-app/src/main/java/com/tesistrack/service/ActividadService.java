@@ -67,7 +67,7 @@ public class ActividadService {
         Area area = areaPropia(areaId, authentication);
 
         if (actividadRepository.existsByAreaIdAndNombreIgnoreCase(areaId, request.nombre())) {
-            throw new IllegalArgumentException("Ya dejaste una actividad con ese nombre en este espacio");
+            throw new IllegalArgumentException("Ya dejaste una actividad con ese nombre en esta clase");
         }
 
         Actividad actividad = new Actividad();
@@ -82,9 +82,14 @@ public class ActividadService {
         return ActividadDto.from(actividad);
     }
 
+    /**
+     * Las actividades de la clase. Las leen todos los miembros —el estudiante las ve
+     * en Trabajo de clase— pero solo el dueño las crea y las quita.
+     */
     @Transactional(readOnly = true)
     public List<ActividadDto> listar(Long areaId, Authentication authentication) {
-        areaPropia(areaId, authentication);
+        User usuario = acceso.usuarioActual(authentication);
+        areaService.buscarComoMiembro(areaId, usuario);
         return actividadRepository.findByAreaIdOrderByOrdenAsc(areaId).stream()
             .map(ActividadDto::from)
             .toList();
@@ -224,7 +229,7 @@ public class ActividadService {
     private Area areaPropia(Long areaId, Authentication authentication) {
         User usuario = acceso.usuarioActual(authentication);
         if (usuario.getRole() != Role.ASESOR) {
-            throw new ForbiddenException("Solo un asesor gestiona las actividades de un espacio");
+            throw new ForbiddenException("Solo un asesor gestiona las actividades de una clase");
         }
         return areaService.buscarPropia(areaId, usuario);
     }

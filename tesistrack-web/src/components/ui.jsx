@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useAuth } from '../auth/AuthContext'
 
 export function Card({ titulo, accion, children, className = '' }) {
   return (
@@ -47,15 +48,24 @@ export function PageHead({ titulo, descripcion, children }) {
   )
 }
 
+/**
+ * Elige sobre qué tesis trabaja la pantalla. Al estudiante le dice "Tesis"; al
+ * profesor, que elige entre los grupos de sus clases, "Grupo" (y cada opción lleva
+ * quiénes son, porque dos grupos pueden tener el mismo tema).
+ */
 export function SelectorProyecto({ proyectos, activoId, onChange }) {
+  const { user } = useAuth()
   if (proyectos.length <= 1) return null
+  const esAsesor = user?.role === 'ASESOR'
   return (
     <label className="selector-proyecto">
-      <span>Proyecto</span>
+      <span>{esAsesor ? 'Grupo' : 'Tesis'}</span>
       <select value={activoId ?? ''} onChange={(e) => onChange(Number(e.target.value))}>
         {proyectos.map((p) => (
           <option key={p.id} value={p.id}>
-            {p.titulo}
+            {esAsesor
+              ? `${nombres(p.estudiantes)} — ${p.titulo || 'Tema por definir'}`
+              : p.titulo || 'Tema por definir'}
           </option>
         ))}
       </select>
@@ -80,8 +90,8 @@ export function SinProyecto({ rol }) {
           </Link>
         }
       >
-        Todavía no tenés un proyecto de tesis. Al crearlo podés pegar el código que te pasó tu
-        asesor y sumarte a su carpeta.
+        Todavía no tenés una tesis. Al crearla podés pegar el código que te pasó tu profesor y
+        sumarte a su clase.
       </Vacio>
     )
   }
@@ -90,18 +100,18 @@ export function SinProyecto({ rol }) {
     return (
       <Vacio
         cta={
-          <Link className="btn btn--primario" to="/proyectos">
-            Ir a mis espacios
+          <Link className="btn btn--primario" to="/clases">
+            Ir a mis clases
           </Link>
         }
       >
-        Todavía no tenés asesorados. Tu código de invitación está en Mis espacios: pasáselo a tus
-        estudiantes y sus tesis aparecen acá.
+        Todavía no tenés grupos. El código de invitación de tu clase está en Mis clases:
+        pasáselo a tus alumnos y sus tesis aparecen acá.
       </Vacio>
     )
   }
 
-  return <Vacio>Todavía no hay proyectos para consultar.</Vacio>
+  return <Vacio>Todavía no hay tesis para consultar.</Vacio>
 }
 
 /**

@@ -15,4 +15,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByEmail(String email);
 
     List<User> findByRole(Role role);
+
+    /** Los asesores que dieron el sí a las asesorías privadas (uno a uno, fuera de una clase). */
+    List<User> findByRoleAndAsesoriasPrivadasTrue(Role role);
 }

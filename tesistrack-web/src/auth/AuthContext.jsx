@@ -28,6 +28,13 @@ export function AuthProvider({ children }) {
     setSession(null)
   }, [])
 
+  // El usuario puede cambiar sin volver a iniciar sesión (una preferencia del
+  // perfil): se actualiza en memoria y en lo guardado, con el mismo token.
+  const actualizarUsuario = useCallback((user) => {
+    localStorage.setItem('user', JSON.stringify(user))
+    setSession((actual) => (actual ? { ...actual, user } : actual))
+  }, [])
+
   const login = useCallback(({ token, user }) => {
     localStorage.setItem('token', token)
     localStorage.setItem('user', JSON.stringify(user))
@@ -67,8 +74,8 @@ export function AuthProvider({ children }) {
   }, [])
 
   const value = useMemo(
-    () => ({ session, user: session?.user ?? null, verificando, login, logout }),
-    [session, verificando, login, logout],
+    () => ({ session, user: session?.user ?? null, verificando, login, logout, actualizarUsuario }),
+    [session, verificando, login, logout, actualizarUsuario],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

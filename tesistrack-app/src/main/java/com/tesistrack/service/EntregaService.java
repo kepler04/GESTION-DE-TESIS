@@ -63,7 +63,8 @@ public class EntregaService {
         entrega.setHito(hito);
         entrega.setVersion(siguienteVersion);
         entrega.setArchivoNombre(request.archivoNombre());
-        entrega.setArchivoUrl(request.archivoUrl());
+        // Un enlace que se muestra como botón a otros usuarios tiene que ser https (Enlaces).
+        entrega.setArchivoUrl(Enlaces.https(request.archivoUrl()));
         entrega.setComentario(request.comentario());
         entrega.setEntregadaPor(usuario);
 
@@ -116,15 +117,19 @@ public class EntregaService {
                 return nuevo;
             });
 
+        byte[] bytes;
         try {
-            guardado.setContenido(archivo.getBytes());
+            bytes = archivo.getBytes();
         } catch (IOException e) {
             throw new IllegalArgumentException("No se pudo leer el archivo subido", e);
         }
+        guardado.setContenido(bytes);
         archivoRepository.save(guardado);
 
         entrega.setArchivoNombre(archivo.getOriginalFilename());
-        entrega.setArchivoTipo(archivo.getContentType());
+        // El tipo sale de los bytes, no de lo que declare quien sube: ver ArchivoTipos.
+        // Un PDF o una imagen real se pueden previsualizar; todo lo demás, solo descargar.
+        entrega.setArchivoTipo(ArchivoTipos.verificar(bytes));
         entrega.setArchivoTamano(archivo.getSize());
 
         return EntregaDto.from(entrega);

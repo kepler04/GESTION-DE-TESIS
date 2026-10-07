@@ -80,6 +80,30 @@ export async function apiSubirArchivo(path, archivo, { method = 'PUT', campos = 
 }
 
 /**
+ * Trae un archivo protegido como `Blob`, para previsualizarlo sin descargarlo.
+ *
+ * Va por `fetch` por la misma razón que la descarga: el endpoint está protegido y
+ * ni un `<img src>` ni un `<iframe src>` pueden mandar el token en la cabecera.
+ * Quien lo use es dueño del `URL.createObjectURL` que arme con el resultado y tiene
+ * que revocarlo al cerrar, o el archivo queda en memoria hasta recargar la página.
+ */
+export async function apiBlob(path) {
+  const res = await fetch(`${API_URL}${path}`, {
+    headers: { ...(token() ? { Authorization: `Bearer ${token()}` } : {}) },
+  })
+
+  if (res.status === 401) {
+    onUnauthorized()
+    throw new Error('Tu sesión expiró. Volvé a iniciar sesión.')
+  }
+  if (!res.ok) {
+    const data = await res.json().catch(() => null)
+    throw new Error(mensajeDeError(res, data, 'No se pudo abrir el archivo'))
+  }
+  return res.blob()
+}
+
+/**
  * Descarga un archivo protegido y dispara el "guardar como".
  *
  * Va por `fetch` y no por un enlace directo porque la descarga necesita el token

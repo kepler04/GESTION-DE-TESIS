@@ -1,5 +1,7 @@
 import { api, apiDescargarArchivo, apiSubirArchivo } from './client'
 
+export { apiBlob, apiDescargarArchivo } from './client'
+
 // --- proyectos ---
 export const listarProyectos = () => api('/api/proyectos')
 export const obtenerProyecto = (id) => api(`/api/proyectos/${id}`)
@@ -82,8 +84,29 @@ export const eliminarSesion = (id) => api(`/api/sesiones/${id}`, { method: 'DELE
 /** Sesiones del espacio y asesorías programadas del usuario, la más próxima primero. */
 export const proximasReuniones = () => api('/api/reuniones/proximas')
 
-// --- panel de asesorados ---
+/** El profesor y los alumnos agrupados por grupo; qué se ve depende de quién mira. */
+export const verPersonas = (areaId) => api(`/api/areas/${areaId}/personas`)
+
+// --- avisos del Tablón ---
+export const listarAvisos = (areaId) => api(`/api/areas/${areaId}/avisos`)
+export const crearAviso = (areaId, texto) =>
+  api(`/api/areas/${areaId}/avisos`, { method: 'POST', body: { texto } })
+export const eliminarAviso = (id) => api(`/api/avisos/${id}`, { method: 'DELETE' })
+
+// --- Dashboard del profesor: agregado sobre todas sus clases ---
+export const obtenerDashboardAsesor = () => api('/api/dashboard/asesor')
+
+// --- asesorías privadas (uno a uno, fuera de una clase) ---
 export const listarAsesorados = () => api('/api/asesorados')
+/** "¿Das asesorías privadas?" Devuelve el perfil ya actualizado. */
+export const cambiarAsesoriasPrivadas = (valor) =>
+  api('/api/auth/me/asesorias-privadas', { method: 'PUT', body: { valor } })
+
+// --- vista previa de archivos (solo imágenes y PDF verificados por el backend) ---
+export const rutaArchivoMaterial = (materialId) => `/api/materiales/${materialId}/archivo`
+export const rutaArchivoEntrega = (entregaId) => `/api/entregas/${entregaId}/archivo`
+
+// --- panel de asesorados (ver listarAsesorados arriba) ---
 
 // --- hitos ---
 export const listarHitos = (proyectoId) => api(`/api/proyectos/${proyectoId}/hitos`)

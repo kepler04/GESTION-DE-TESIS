@@ -5,22 +5,23 @@ import java.util.Map;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.tesistrack.model.User;
 import com.tesistrack.service.LimitadorConsultas;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+import com.tesistrack.dto.AsesoriasPrivadasRequest;
 import com.tesistrack.dto.AuthResponse;
 import com.tesistrack.dto.LoginRequest;
 import com.tesistrack.dto.RegisterRequest;
-import com.tesistrack.dto.UserDto;
-import com.tesistrack.repository.UserRepository;
+import com.tesistrack.dto.PerfilDto;
 import com.tesistrack.service.AuthService;
+import com.tesistrack.service.PerfilService;
 
 import jakarta.validation.Valid;
 
@@ -29,15 +30,15 @@ import jakarta.validation.Valid;
 public class AuthController {
 
     private final AuthService authService;
-    private final UserRepository userRepository;
+    private final PerfilService perfilService;
     private final LimitadorConsultas limitador;
 
     public AuthController(
             AuthService authService,
-            UserRepository userRepository,
+            PerfilService perfilService,
             LimitadorConsultas limitador) {
         this.authService = authService;
-        this.userRepository = userRepository;
+        this.perfilService = perfilService;
         this.limitador = limitador;
     }
 
@@ -66,10 +67,14 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    public UserDto me(Authentication authentication) {
-        String email = User.normalizarEmail(authentication.getName());
-        return userRepository.findByEmail(email)
-            .map(UserDto::from)
-            .orElseThrow();
+    public PerfilDto me(Authentication authentication) {
+        return perfilService.perfil(authentication);
+    }
+
+    /** "¿Das asesorías privadas, fuera de una clase?" Solo el asesor. */
+    @PutMapping("/me/asesorias-privadas")
+    public PerfilDto asesoriasPrivadas(
+            @Valid @RequestBody AsesoriasPrivadasRequest request, Authentication authentication) {
+        return perfilService.cambiarAsesoriasPrivadas(request.valor(), authentication);
     }
 }

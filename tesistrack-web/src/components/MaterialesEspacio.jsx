@@ -8,15 +8,18 @@ import {
   eliminarMaterial,
   listarCarpetas,
   renombrarCarpeta,
+  rutaArchivoMaterial,
   subirMaterialArchivo,
 } from '../api/tesistrack'
 import ConfirmarAccion from './ConfirmarAccion'
+import VisorArchivo from './VisorArchivo'
 import {
   Card,
   Cargando,
   ErrorMsg,
   Vacio,
 } from './ui'
+import { esPrevisualizable } from '../utils/archivos'
 import { dominio, plural, tamano } from '../utils/formato'
 
 /** Tiene que coincidir con el tope del backend (`EntregaService.TAMANO_MAXIMO`). */
@@ -75,7 +78,7 @@ export default function MaterialesEspacio({ areaId, editable, destacar }) {
       {visibles.length === 0 ? (
         <Vacio>
           {editable
-            ? 'Todavía no tenés carpetas. Creá una y subí enlaces o archivos para tus estudiantes.'
+            ? 'Todavía no tenés carpetas. Creá una y subí enlaces o archivos para tus alumnos.'
             : 'Tu asesor todavía no subió material.'}
         </Vacio>
       ) : (
@@ -248,6 +251,7 @@ function Material({ material, editable, onCambio, onError }) {
   const [url, setUrl] = useState(material.url ?? '')
   const [aQuitar, setAQuitar] = useState(false)
   const [descargando, setDescargando] = useState(false)
+  const [viendo, setViendo] = useState(false)
 
   async function handleGuardar(e) {
     e.preventDefault()
@@ -324,14 +328,25 @@ function Material({ material, editable, onCambio, onError }) {
       </div>
       <div className="acciones-fila">
         {material.esArchivo ? (
-          <button
-            type="button"
-            className="btn btn--sutil"
-            onClick={handleDescargar}
-            disabled={descargando}
-          >
-            {descargando ? 'Descargando…' : 'Descargar'}
-          </button>
+          <>
+            {/* Solo se previsualiza lo que el backend verificó por sus bytes (imágenes y
+                PDF). Word, PowerPoint y el resto solo se descargan, y se dice por qué. */}
+            {esPrevisualizable(material.archivoTipo) ? (
+              <button type="button" className="btn btn--sutil" onClick={() => setViendo(true)}>
+                Ver
+              </button>
+            ) : (
+              <span className="tenue sin-vista">Sin vista previa: descargalo para abrirlo.</span>
+            )}
+            <button
+              type="button"
+              className="btn btn--sutil"
+              onClick={handleDescargar}
+              disabled={descargando}
+            >
+              {descargando ? 'Descargando…' : 'Descargar'}
+            </button>
+          </>
         ) : (
           <a className="btn btn--sutil" href={material.url} target="_blank" rel="noopener noreferrer">
             Abrir ↗
@@ -348,6 +363,16 @@ function Material({ material, editable, onCambio, onError }) {
           </>
         )}
       </div>
+
+      {viendo && (
+        <VisorArchivo
+          titulo={material.titulo}
+          nombreArchivo={material.archivoNombre}
+          tipo={material.archivoTipo}
+          ruta={rutaArchivoMaterial(material.id)}
+          onCerrar={() => setViendo(false)}
+        />
+      )}
 
       {aQuitar && (
         <ConfirmarAccion

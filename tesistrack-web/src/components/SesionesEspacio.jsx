@@ -141,7 +141,7 @@ export default function SesionesEspacio({ areaId, editable }) {
             />
           </label>
           <p className="tenue">
-            Creá la reunión en Zoom o Meet y pegá acá el enlace. Los miembros del espacio van a
+            Creá la reunión en Zoom o Meet y pegá acá el enlace. Los miembros de la clase van a
             ver un botón para unirse.
           </p>
           <div className="form__acciones">

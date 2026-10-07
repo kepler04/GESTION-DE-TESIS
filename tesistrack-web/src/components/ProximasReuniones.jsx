@@ -41,7 +41,7 @@ export default function ProximasReuniones({ rol }) {
           No hay reuniones programadas.{' '}
           {rol === 'ESTUDIANTE'
             ? 'Podés proponerle una a tu asesor desde Asesorías.'
-            : 'Programá una desde Asesorías o creá una sesión en tu espacio.'}
+            : 'Programá una desde Asesorías o creá una sesión en tu clase.'}
         </Vacio>
       ) : (
         <>
@@ -80,7 +80,7 @@ export default function ProximasReuniones({ rol }) {
 
 function Etiqueta({ reunion }) {
   return (
-    <span className="tag">{reunion.tipo === 'SESION' ? 'Clase del espacio' : 'Asesoría'}</span>
+    <span className="tag">{reunion.tipo === 'SESION' ? 'Sesión de clase' : 'Asesoría'}</span>
   )
 }
 

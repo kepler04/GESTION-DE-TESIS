@@ -4,38 +4,38 @@ import { listarProyectos } from '../api/tesistrack'
 import { Card, Cargando, ErrorMsg, PageHead, Vacio } from '../components/ui'
 
 /**
- * Entrada del estudiante a su espacio.
+ * Entrada del estudiante a su clase.
  *
- * Un estudiante suele tener una sola tesis y, con ella, un solo espacio: en ese
- * caso entra directo. Si no tiene espacio todavía le explica cómo conseguirlo
- * (el código de su asesor); si tuviera varios, elige.
+ * Un estudiante suele tener una sola tesis y, con ella, una sola clase: en ese caso
+ * entra directo. Si no tiene clase todavía le explica cómo conseguirla (el código de
+ * su profesor); si tuviera varias, elige.
  */
-export default function MiEspacioPage() {
-  const [espacios, setEspacios] = useState(null)
+export default function MiClasePage() {
+  const [clases, setClases] = useState(null)
   const [error, setError] = useState(null)
 
   useEffect(() => {
     listarProyectos()
       .then((proyectos) => {
-        // Distintos espacios de las tesis que tiene, sin repetir.
+        // Las distintas clases de sus tesis, sin repetir.
         const porId = new Map()
         proyectos.forEach((p) => p.area && porId.set(p.area.id, { ...p.area, asesor: p.asesor }))
-        setEspacios([...porId.values()])
+        setClases([...porId.values()])
       })
       .catch((e) => setError(e.message))
   }, [])
 
   if (error) return <ErrorMsg>{error}</ErrorMsg>
-  if (espacios === null) return <Cargando />
-  if (espacios.length === 1) return <Navigate to={`/espacios/${espacios[0].id}`} replace />
+  if (clases === null) return <Cargando />
+  if (clases.length === 1) return <Navigate to={`/clases/${clases[0].id}`} replace />
 
   return (
     <>
       <PageHead
-        titulo="Mi espacio"
-        descripcion="Las sesiones y los materiales que tu asesor deja para su grupo."
+        titulo="Mi clase"
+        descripcion="Los avisos, las sesiones y los materiales que tu profesor deja para la clase."
       />
-      {espacios.length === 0 ? (
+      {clases.length === 0 ? (
         <Card>
           <Vacio
             cta={
@@ -44,20 +44,20 @@ export default function MiEspacioPage() {
               </Link>
             }
           >
-            Todavía no estás en ningún espacio. Cuando tu asesor te pase el código de su espacio y
-            lo uses, acá vas a ver sus sesiones y sus materiales.
+            Todavía no estás en ninguna clase. Cuando tu profesor te pase el código de su clase y
+            lo uses, acá vas a ver sus avisos, sesiones y materiales.
           </Vacio>
         </Card>
       ) : (
-        <Card titulo="Elegí un espacio">
+        <Card titulo="Elegí una clase">
           <ul className="lista">
-            {espacios.map((e) => (
+            {clases.map((e) => (
               <li key={e.id}>
                 <div>
                   <strong>{e.nombre}</strong>
                   {e.asesor && <span className="lista__meta">de {e.asesor.name}</span>}
                 </div>
-                <Link className="btn btn--primario" to={`/espacios/${e.id}`}>
+                <Link className="btn btn--primario" to={`/clases/${e.id}`}>
                   Entrar
                 </Link>
               </li>

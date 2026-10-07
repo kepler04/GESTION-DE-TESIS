@@ -55,10 +55,11 @@ export default function PrimerosPasosAsesor({ areas, onCreada }) {
       <Card className="card--bienvenida">
         <div className="primeros">
           <p className="primeros__hola">¿Es tu primera vez acá?</p>
-          <h2 className="primeros__titulo">Creá tu espacio de trabajo</h2>
+          <h2 className="primeros__titulo">Creá tu primera clase</h2>
           <p className="primeros__texto">
-            Es tu carpeta: le ponés el nombre que quieras y te da un código para invitar a tus
-            asesorados. Cuando lo usen, sus tesis aparecen acá y podés seguirlas todas juntas.
+            Una clase es el salón de tu curso o de tu grupo: le ponés el nombre que quieras y te da
+            un código para invitar a tus alumnos. Cuando lo usen, sus tesis aparecen acá y podés
+            seguirlas todas juntas.
           </p>
 
           {error && (
@@ -69,7 +70,7 @@ export default function PrimerosPasosAsesor({ areas, onCreada }) {
 
           <form className="form primeros__form" onSubmit={handleCrear}>
             <label>
-              Nombre del espacio
+              Nombre de la clase
               <input
                 value={nombre}
                 onChange={(e) => setNombre(e.target.value)}
@@ -80,8 +81,8 @@ export default function PrimerosPasosAsesor({ areas, onCreada }) {
               />
             </label>
             <p className="tenue">
-              Podés usar el nombre de tu curso, tu universidad o tu consultoría. Después lo podés
-              cambiar, y podés tener más de uno.
+              Podés usar el nombre de tu curso o de tu universidad. Después lo podés cambiar, y
+              podés tener más de una clase.
             </p>
             <div className="form__acciones">
               <button
@@ -89,7 +90,7 @@ export default function PrimerosPasosAsesor({ areas, onCreada }) {
                 className="btn btn--primario"
                 disabled={guardando || !nombre.trim()}
               >
-                {guardando ? 'Creando…' : 'Crear espacio'}
+                {guardando ? 'Creando…' : 'Crear clase'}
               </button>
             </div>
           </form>
@@ -100,7 +101,7 @@ export default function PrimerosPasosAsesor({ areas, onCreada }) {
 
   // --- ya tiene espacio pero nadie se sumó ---
   const invitacion =
-    `Te invito a mi espacio en TesisTrack. ` +
+    `Te invito a mi clase en TesisTrack. ` +
     `Entrá a ${window.location.origin} , creá tu cuenta como estudiante ` +
     `y usá el código ${mostrar.codigo} para sumar tu tesis.`
 
@@ -109,18 +110,18 @@ export default function PrimerosPasosAsesor({ areas, onCreada }) {
       <div className="primeros">
         {nuevo ? (
           <>
-            <p className="primeros__hola">✓ Espacio creado</p>
+            <p className="primeros__hola">✓ Clase creada</p>
             <h2 className="primeros__titulo">{nuevo.nombre}</h2>
           </>
         ) : (
           <>
             <p className="primeros__hola">Falta lo más importante</p>
-            <h2 className="primeros__titulo">Invitá a tus asesorados</h2>
+            <h2 className="primeros__titulo">Invitá a tus alumnos</h2>
           </>
         )}
         <p className="primeros__texto">
-          Este es el código de <strong>{mostrar.nombre}</strong>. Pasáselo a tus estudiantes: lo
-          pegan al crear su tesis y quedan bajo tu seguimiento.
+          Este es el código de <strong>{mostrar.nombre}</strong>. Pasáselo a tus alumnos: lo
+          pegan al crear su tesis y entran a la clase.
         </p>
 
         <div className="primeros__codigo">
@@ -142,7 +143,7 @@ export default function PrimerosPasosAsesor({ areas, onCreada }) {
           >
             {copiado === 'mensaje' ? '✓ Mensaje copiado' : 'Copiar invitación para enviar'}
           </button>
-          <Link className="btn btn--sutil" to={`/espacios/${mostrar.id}`}>
+          <Link className="btn btn--sutil" to={`/clases/${mostrar.id}?pestana=trabajo`}>
             Dejar la primera actividad
           </Link>
         </div>

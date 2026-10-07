@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { listarProyectos } from '../api/tesistrack'
 
 const CLAVE = 'proyectoActivo'
@@ -9,8 +10,13 @@ const CLAVE = 'proyectoActivo'
  * así que la elección se recuerda entre pantallas.
  */
 export default function useProyectoActivo() {
+  // Un enlace directo puede traer la tesis (`?proyecto=`), por ejemplo desde el
+  // Dashboard del profesor; manda sobre la última elección guardada.
+  const [params] = useSearchParams()
+  const pedido = Number(params.get('proyecto')) || null
   const [proyectos, setProyectos] = useState([])
   const [activoId, setActivoId] = useState(() => {
+    if (pedido) return pedido
     const guardado = localStorage.getItem(CLAVE)
     return guardado ? Number(guardado) : null
   })

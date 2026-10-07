@@ -37,7 +37,7 @@
   border-color: #cfe0f8;
 }
 .badge--proceso .badge__icono {
-  color: #2a78d6;
+  color: #2267ba;
 }
 
 .badge--entregado {
@@ -53,7 +53,7 @@
   border-color: #f5d3d3;
 }
 .badge--observado .badge__icono {
-  color: #d03b3b;
+  color: #bb3030;
 }
 
 .badge--completado {
@@ -63,4 +63,14 @@
 .badge--completado .badge__icono {
   /* Era #0ca30c (3,00:1 sobre el fondo del badge); este llega a 4,9:1. */
   color: #0a7f0a;
+}
+
+/* "Por atender": hay algo esperando revisión o con observaciones. Ámbar con texto
+   oscuro: el color solo nunca alcanza, y este tono sobre blanco no llega a 4,5:1. */
+.badge--aviso {
+  background: #fdf3df;
+  border-color: #f3dfb0;
+}
+.badge--aviso .badge__icono {
+  color: #8a5300;
 }

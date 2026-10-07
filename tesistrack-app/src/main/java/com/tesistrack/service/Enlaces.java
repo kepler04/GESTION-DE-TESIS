@@ -32,7 +32,7 @@ final class Enlaces {
             throw new IllegalArgumentException("El enlace es demasiado largo");
         }
         if (url.chars().anyMatch(Character::isWhitespace)) {
-            throw new IllegalArgumentException("El enlace no puede tener espacios");
+            throw new IllegalArgumentException("El enlace no puede tener blancos en el medio");
         }
         if (!url.regionMatches(true, 0, ESQUEMA, 0, ESQUEMA.length()) || url.length() == ESQUEMA.length()) {
             throw new IllegalArgumentException("El enlace tiene que empezar con https://");

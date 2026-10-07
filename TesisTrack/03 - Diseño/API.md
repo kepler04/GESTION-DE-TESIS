@@ -9,13 +9,13 @@ tags:
 > [!success] Estado — implementada y probada el 2026-08-16
 > Cubre el [[Entregables y evaluación|Entregable 2 — Backend (20%)]]: API conectada a la base de datos + documentación de endpoints.
 >
-> Verificada end-to-end con 31 comprobaciones contra PostgreSQL real: el flujo completo de [[Reglas de negocio#Ejemplo de flujo completo]] más las reglas de permiso de cada rol.
+> Revalidada el 2026-10-07 con **371 comprobaciones HTTP** sobre PostgreSQL descartable (smoke, smoke2, Fases 0, 1 y 1.5). Las pruebas locales siguen fuera del repo; ver [[Desarrollo#Fase 1.5 - Clases y vistas (2026-10-07)]].
 
 Base: `http://localhost:8080/api` en desarrollo (`VITE_API_URL` en el frontend).
 
 ## Convenciones
 
-- **Autenticación**: JWT en `Authorization: Bearer <token>`. Todo requiere token salvo `/api/auth/**` y `/api/health`.
+- **Autenticación**: JWT en `Authorization: Bearer <token>`. Las operaciones de registro/login y consulta de existencia de correo, además de `/api/health`, son públicas; `/auth/me` y la preferencia requieren un usuario autenticado.
 - **Errores**: siempre JSON `{"error": "mensaje"}`.
 
 | Código | Cuándo |
@@ -52,24 +52,24 @@ Base: `http://localhost:8080/api` en desarrollo (`VITE_API_URL` en el frontend).
 
 | Método | Ruta | Quién | Qué hace |
 |---|---|---|---|
-| `GET` | `/usuarios/asesores` | autenticado | Lista de asesores, para que el estudiante elija al crear su proyecto |
-| `GET` | `/asesorados` | asesor | Una ficha por estudiante asesorado: avance en hitos, entregas por revisar, observaciones pendientes y tareas vencidas |
+| `GET` | `/usuarios/asesores` | autenticado | Solo profesores con asesorías privadas activadas, para elegirlos por nombre al crear una tesis sin clase |
+| `GET` | `/asesorados` | asesor | Una ficha por tesis privada del profesor (sin clase), con integrantes, avance, revisiones, observaciones y tareas vencidas |
 
 > [!important] `UserDto` no incluye los datos de perfil
 > `telefono`, `ubicacion`, `carrera` y `organizacion` se guardan pero **no se difunden**: `UserDto` viaja embebido en cada entrega, observación, tarea y asesoría, y agregarlos ahí los publicaría en decenas de respuestas que no los necesitan.
 
-## Áreas (carpetas del asesor)
+## Clases (rutas técnicas /areas)
 
 Agrupan las tesis de un asesor y le dan un **código de invitación**. Ver [[Decisiones pendientes#Decisión 10 - Áreas del asesor|D10]] y [[Decisiones pendientes#Decisión 11 - Cómo entran los asesorados de un asesor privado|D11]].
 
 | Método | Ruta | Quién | Qué hace |
 |---|---|---|---|
-| `POST` | `/areas` | asesor | Crea una carpeta y le genera un código. 400 si el nombre se repite (sin distinguir mayúsculas) |
-| `GET` | `/areas` | asesor | Sus carpetas, **con** el código |
+| `POST` | `/areas` | asesor | Crea una clase y le genera un código. 400 si el nombre se repite (sin distinguir mayúsculas) |
+| `GET` | `/areas` | asesor | Sus clases, **con** el código |
 | `PUT` | `/areas/{id}` | dueño | Renombra |
-| `DELETE` | `/areas/{id}` | dueño | Borra el espacio: **se van sus actividades, materiales (con sus archivos) y sesiones**, y el código; las tesis quedan **desetiquetadas** y **todos sus hitos se quedan** (con `actividad_id = NULL`). `204`. Ver [[Decisiones pendientes#Decisión 18 - Qué se lleva un espacio al borrarse\|D18]] |
+| `DELETE` | `/areas/{id}` | dueño | Borra el espacio: **se van sus actividades, materiales (con sus archivos), sesiones y avisos**, y el código; las tesis quedan **desetiquetadas** y **todos sus hitos se quedan** (con `actividad_id = NULL`). `204`. Ver [[Decisiones pendientes#Decisión 18 - Qué se lleva un espacio al borrarse\|D18]] |
 | `GET` | `/areas/{id}/espacio` | **miembro**: dueño, estudiante con tesis en él, coordinador | `{ area, asesor, propietario }`. El código solo viaja si `propietario` es `true` |
-| `GET` | `/areas/{id}/resumen` | dueño | Qué se lleva el borrado, en números: `{ actividades, tesis, carpetas, materiales, archivos, sesiones }` |
+| `GET` | `/areas/{id}/resumen` | dueño | Qué se lleva el borrado, en números: `{ actividades, tesis, carpetas, materiales, archivos, sesiones, avisos }` |
 | `POST` | `/areas/{id}/codigo` | dueño | Genera un código nuevo e invalida el anterior |
 | `GET` | `/areas/invitacion/{codigo}` | autenticado, **10/min por IP** | Previsualiza a quién pertenece: `{ area, asesor, asesorEmail }` |
 
@@ -85,7 +85,7 @@ La consigna que el asesor deja a todos sus asesorados de una vez. Ver [[Decision
 | Método | Ruta | Quién | Qué hace |
 |---|---|---|---|
 | `POST` | `/areas/{id}/actividades` | dueño del área | Crea la actividad y **genera un hito en cada proyecto del área** |
-| `GET` | `/areas/{id}/actividades` | dueño | Lista, por `orden` |
+| `GET` | `/areas/{id}/actividades` | miembro | Lista, por `orden`; el estudiante solo consulta |
 | `DELETE` | `/areas/{id}/actividades/{aid}` | dueño | Quita la actividad. Los hitos **con entregas se desenganchan**; los intactos se borran |
 | `GET` | `/areas/{id}/tablero` | dueño | Grilla asesorados × actividades con el semáforo |
 
@@ -158,7 +158,7 @@ Cada elemento trae `tipo` (`SESION` o `ASESORIA`), `titulo`, `fechaHora`, `enlac
 | `POST` | `/proyectos` | estudiante | Crea su proyecto. `asesorId` y `codigoInvitacion` son opcionales; **si vienen los dos, manda el código** |
 | `GET` | `/proyectos` | autenticado | Estudiante: los suyos. Asesor: los asignados. Coordinador: todos |
 | `GET` | `/proyectos/{id}` | con acceso | Detalle |
-| `PATCH` | `/proyectos/{id}/asesor` | estudiante del proyecto | Asigna o cambia el asesor. 400 si el usuario indicado no tiene rol `ASESOR` |
+| `PATCH` | `/proyectos/{id}/asesor` | estudiante del proyecto | Asigna o cambia el asesor. 400 si no tiene rol `ASESOR` o no ofrece asesorías privadas |
 | `PATCH` | `/proyectos/{id}/unirse` | estudiante del proyecto | Se suma a una carpeta con el código: asigna asesor **y** área de una sola vez |
 | `PATCH` | `/proyectos/{id}/area` | asesor del proyecto | Etiqueta la tesis en una de **sus** carpetas. `areaId: null` la quita |
 | `POST` | `/proyectos/{id}/estudiantes` | estudiante del proyecto | Suma un compañero **por su correo** (tesis grupal) |
@@ -297,6 +297,34 @@ sequenceDiagram
 - **Sin paginación**: los listados devuelven todo. Con el volumen de un proyecto de tesis alcanza; si crece, agregar `Pageable`.
 - **Sin login con Google ni recuperación de contraseña** — ver [[Arquitectura#Por definir]].
 - **El coordinador no tiene endpoints propios**: usa los mismos y ve todo por la regla de lectura global.
+
+## Perfil y asesorías privadas
+
+| Método | Ruta | Quién | Qué hace |
+|---|---|---|---|
+| GET | /auth/me | autenticado | Perfil propio; incluye asesoriasPrivadas (null/true/false) |
+| PUT | /auth/me/asesorias-privadas | profesor | Cuerpo `{ "valor": true }` o false. Persiste la preferencia; 400 si falta valor o se intenta desactivar teniendo tesis privadas; 403 para otros roles |
+
+El login/registro también entrega la preferencia. `/usuarios/asesores` filtra quienes ofrecen privadas; `/asesorados` lista solo tesis sin clase. La asignación directa mediante asesorId requiere preferencia TRUE; el código de clase conserva precedencia si se envían ambos. Ver [[Decisiones pendientes#Decisión 24 - Hacer opcionales las asesorías privadas]].
+
+## Clases - Personas y avisos
+
+| Método | Ruta | Quién | Qué hace |
+|---|---|---|---|
+| GET | /areas/{id}/personas | miembro | Profesor y grupos, con campos filtrados según pertenencia |
+| GET | /areas/{id}/avisos | miembro | Avisos, más recientes primero |
+| POST | /areas/{id}/avisos | dueño | Publica texto simple `{ "texto": "..." }` |
+| DELETE | /avisos/{id} | dueño | Quita un aviso; 204 |
+
+Personas: dueño/coordinador reciben detalles; el estudiante recibe correos/tema/fecha/id de tesis de su propio grupo y **solo nombres e ids de alumnos** para otros grupos, sin semáforo. Quitar de la clase reutiliza `DELETE /proyectos/{id}/asesor`: desvincula grupo, clase y profesor, preservando la tesis. Los cambios de Configuración siguen usando PUT/DELETE /areas y POST /areas/{id}/codigo.
+
+## Dashboard del profesor
+
+`GET /dashboard/asesor`, solo ASESOR: `{ clases, paraRevisar, necesitanAtencion }`. Clases incluye alumnos/grupos y contadores verde/amarillo/rojo/sinActividad; Para revisar incluye entregaId, hitoId, proyectoId, desde, versión, alumnos y clase, agrupado por hito tomando la versión EN_REVISION de mayor número y ordenado por fecha ascendente. Necesitan atención reúne rojos o sin tema. Solo agrega recursos del profesor autenticado. Próximas reuniones conserva su endpoint propio. Ver [[Decisiones pendientes#Decisión 23 - Mostrar un Dashboard agregado del profesor]].
+
+## Archivos verificados y vista previa
+
+Se conserva la API de subida/descarga y el tope de 15 MB. `archivoTipo` ahora representa la firma verificada, no el MIME declarado: PNG/JPEG/GIF/WebP/PDF o application/octet-stream. V3 corrige metadatos legacy. La descarga sigue siendo attachment; el frontend pide el blob con token y solo previsualiza los cinco formatos permitidos. El enlace externo de entrega debe ser https. Ver [[Decisiones pendientes#Decisión 25 - Previsualizar solo archivos con tipo verificado]].
 
 ## Ver también
 - [[Base de datos]]

@@ -2,16 +2,22 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listarAsesorados } from '../api/tesistrack'
 import EstadoBadge from '../components/EstadoBadge'
+import { useAuth } from '../auth/AuthContext'
 import { Card, Cargando, ErrorMsg, PageHead, Vacio, nombres } from '../components/ui'
 
 /**
- * Panel del asesor: todos sus asesorados y qué necesita atención de cada uno.
+ * Asesorías privadas: el acompañamiento personal, uno a uno, fuera de una clase.
+ *
+ * Lista las tesis que el asesor lleva por su cuenta —las de estudiantes que lo
+ * eligieron por su nombre— y qué necesita atención de cada una. El seguimiento de los
+ * grupos de una clase no está acá sino en la propia clase (Decisión 24).
  *
  * Responde la pregunta con la que abre la app —¿a quién le presto atención hoy?—
  * sin tener que entrar tesis por tesis. Por eso el backend ordena primero a los
  * que tienen pendientes, y las cifras son de cosas por hacer, no de logros.
  */
 export default function AsesoradosPage() {
+  const { user } = useAuth()
   const [asesorados, setAsesorados] = useState([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState(null)
@@ -29,13 +35,35 @@ export default function AsesoradosPage() {
 
   if (cargando) return <Cargando />
 
+  // El menú no ofrece esta pantalla a quien no da asesorías privadas, pero se puede
+  // llegar por un enlace: se explica en vez de mostrar una lista vacía sin sentido.
+  if (user?.asesoriasPrivadas !== true && asesorados.length === 0) {
+    return (
+      <>
+        <PageHead titulo="Asesorías privadas" descripcion="Acompañamiento personal, uno a uno." />
+        <Card>
+          <Vacio
+            cta={
+              <Link className="btn btn--primario" to="/perfil">
+                Ir a mi perfil
+              </Link>
+            }
+          >
+            No estás dando asesorías privadas. Si querés acompañar a alguien uno a uno, fuera de
+            una clase, activalo en tu perfil. Si trabajás con grupos, usá Mis clases.
+          </Vacio>
+        </Card>
+      </>
+    )
+  }
+
   return (
     <>
       <PageHead
-        titulo="Mis asesorados"
+        titulo="Asesorías privadas"
         descripcion={
           asesorados.length === 0
-            ? 'Los estudiantes que estás acompañando.'
+            ? 'Los estudiantes que acompañás uno a uno, fuera de una clase.'
             : conPendientes === 0
               ? 'Todo al día: ningún asesorado espera algo tuyo.'
               : `${conPendientes} de ${asesorados.length} necesitan tu atención.`
@@ -46,15 +74,9 @@ export default function AsesoradosPage() {
 
       {asesorados.length === 0 ? (
         <Card>
-          <Vacio
-            cta={
-              <Link className="btn btn--primario" to="/proyectos">
-                Crear un área e invitar
-              </Link>
-            }
-          >
-            Todavía no tenés asesorados. Creá un área en Proyectos y pasales el código de invitación
-            a tus estudiantes: al crear su tesis lo pegan y aparecen acá.
+          <Vacio>
+            Todavía no tenés asesorados privados. Los estudiantes que te elijan por tu nombre al
+            crear su tesis aparecen acá. Para tus clases y grupos, usá Mis clases.
           </Vacio>
         </Card>
       ) : (
@@ -75,7 +97,6 @@ export default function AsesoradosPage() {
                     <h2>{nombres(a.estudiantes)}</h2>
                     <p className="asesorado__tesis">{a.titulo}</p>
                   </div>
-                  {a.area && <span className="asesorado__area">{a.area.nombre}</span>}
                 </header>
 
                 <div className="asesorado__avance">

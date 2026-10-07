@@ -74,7 +74,7 @@ export default function HitosPage() {
     <>
       <PageHead
         titulo="Hitos"
-        descripcion="Las etapas de esta tesis. Cada proyecto define las suyas."
+        descripcion="Las etapas de esta tesis. Cada tesis define las suyas."
       >
         <SelectorProyecto proyectos={proyectos} activoId={activoId} onChange={seleccionar} />
         {puedeEditar && (
@@ -119,8 +119,8 @@ export default function HitosPage() {
         ) : hitos.length === 0 ? (
           <Vacio>
             {puedeEditar
-              ? 'Este proyecto todavía no tiene hitos. Creá el primero.'
-              : 'El asesor todavía no definió los hitos de este proyecto.'}
+              ? 'Esta tesis todavía no tiene hitos. Creá el primero.'
+              : 'El asesor todavía no definió los hitos de esta tesis.'}
           </Vacio>
         ) : (
           <div className="tabla-scroll">

@@ -59,10 +59,10 @@ export default function UnirseConCodigo({ proyectoId, onUnido, onCerrar }) {
 
       {invitacion ? (
         <div className="invitacion">
-          <p className="invitacion__intro">Vas a sumar tu tesis a:</p>
+          <p className="invitacion__intro">Vas a sumar tu tesis a esta clase:</p>
           <p className="invitacion__area">{invitacion.area}</p>
           <p className="invitacion__asesor">
-            Asesor: <strong>{invitacion.asesor}</strong>
+            Profesor: <strong>{invitacion.asesor}</strong>
             <span className="lista__meta">{invitacion.asesorEmail}</span>
           </p>
           <div className="form__acciones">

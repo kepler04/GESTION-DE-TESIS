@@ -18,8 +18,10 @@ import com.tesistrack.dto.AreaDto;
 import com.tesistrack.dto.AreaRequest;
 import com.tesistrack.dto.EspacioDto;
 import com.tesistrack.dto.InvitacionDto;
+import com.tesistrack.dto.PersonasDto;
 import com.tesistrack.dto.ResumenEspacioDto;
 import com.tesistrack.service.AreaService;
+import com.tesistrack.service.PersonasService;
 import com.tesistrack.service.LimitadorConsultas;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,10 +32,12 @@ import jakarta.validation.Valid;
 public class AreaController {
 
     private final AreaService areaService;
+    private final PersonasService personasService;
     private final LimitadorConsultas limitador;
 
-    public AreaController(AreaService areaService, LimitadorConsultas limitador) {
+    public AreaController(AreaService areaService, PersonasService personasService, LimitadorConsultas limitador) {
         this.areaService = areaService;
+        this.personasService = personasService;
         this.limitador = limitador;
     }
 
@@ -70,6 +74,15 @@ public class AreaController {
     @GetMapping("/{id}/espacio")
     public EspacioDto espacio(@PathVariable Long id, Authentication authentication) {
         return areaService.espacio(id, authentication);
+    }
+
+    /**
+     * El profesor y los alumnos agrupados por grupo. Lo que se ve depende de quién
+     * mira: el profesor, todo; un estudiante, los nombres de los demás grupos.
+     */
+    @GetMapping("/{id}/personas")
+    public PersonasDto personas(@PathVariable Long id, Authentication authentication) {
+        return personasService.personas(id, authentication);
     }
 
     /** Qué se lleva y qué deja borrar el espacio, en números. Solo el dueño. */

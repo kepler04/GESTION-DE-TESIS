@@ -7,6 +7,7 @@ public record ResumenEspacioDto(
     long carpetas,
     long materiales,
     long archivos,
-    long sesiones
+    long sesiones,
+    long avisos
 ) {
 }
