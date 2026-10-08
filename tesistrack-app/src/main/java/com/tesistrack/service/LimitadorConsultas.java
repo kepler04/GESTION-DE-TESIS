@@ -10,7 +10,8 @@ import org.springframework.stereotype.Service;
 import com.tesistrack.config.TooManyRequestsException;
 
 /**
- * Límite de consultas por ventana de tiempo, para endpoints públicos.
+ * Límite de consultas por ventana de tiempo. Nació para un endpoint público y
+ * también frena el envío masivo de mensajes privados (Decisión 28).
  *
  * Existe por un endpoint concreto: el que dice si un correo ya está registrado.
  * Ese dato ya se filtraba al enviar el registro ("El email ya está registrado"),
@@ -42,6 +43,16 @@ public class LimitadorConsultas {
      * @throws TooManyRequestsException si ya se agotó la cuota de la ventana actual
      */
     public void registrarUso(String clave) {
+        registrarUso(clave, MAXIMO_POR_VENTANA, "Demasiadas consultas. Esperá un momento y probá de nuevo.");
+    }
+
+    /**
+     * Igual que {@link #registrarUso(String)}, con otro tope y otro mensaje. Las
+     * claves de cada uso llevan su prefijo ("mensaje:12"), así no se pisan.
+     *
+     * @throws TooManyRequestsException si ya se agotó la cuota de la ventana actual
+     */
+    public void registrarUso(String clave, int maximo, String mensaje) {
         Instant ahora = Instant.now();
 
         if (contadores.size() > MAXIMO_CLAVES) {
@@ -55,8 +66,8 @@ public class LimitadorConsultas {
             return new Contador(actual.usos() + 1, actual.expiraEn());
         });
 
-        if (actualizado.usos() > MAXIMO_POR_VENTANA) {
-            throw new TooManyRequestsException("Demasiadas consultas. Esperá un momento y probá de nuevo.");
+        if (actualizado.usos() > maximo) {
+            throw new TooManyRequestsException(mensaje);
         }
     }
 }

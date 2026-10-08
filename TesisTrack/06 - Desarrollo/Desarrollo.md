@@ -481,6 +481,27 @@ Rama `feat/fase-1-6-rediseno`, con PR sobre `feat/fase-1-5-clases-y-vistas`: dep
 
 **Para confirmar con Oscar:** el umbral de riesgo de **3 días**. Qué quedó afuera por falta de datos: ciclo lectivo, descripción de la clase, notas ancladas a una página del PDF y adjuntos en avisos.
 
+### Mensajes privados (2026-10-07)
+
+Rama `feat/mensajes-privados`, con PR sobre `feat/fase-1-6-rediseno`: depende del **#10** (y en cadena del #9, el #8 y el #6). Lo pidió Oscar mirando la demo. Ver [[Decisiones pendientes#Decisión 28 - Mensajes privados entre quienes comparten una tesis|D28]].
+
+- **Backend:** migración V4, `Mensaje`, `MensajeService` con la regla de contactos y `MensajeController`. `LimitadorConsultas` ahora acepta tope y mensaje propios (el registro sigue con 10/min; los mensajes usan 20/min).
+- **Frontend:**
+  - `MensajesPage`: bandeja y conversación lado a lado; en celular, una cosa por vez con botón para volver. Enter envía y Shift+Enter hace un salto de línea; "Visto" en el último mensaje propio.
+  - "Mensajes" en el menú, con contador de no leídos.
+  - Accesos: "Mensaje" junto a cada persona en Personas (solo donde se puede escribir) y "Escribirle" junto al profesor en el Dashboard del estudiante.
+- **Política de privacidad:** nombra los mensajes, quién los ve y que el coordinador no tiene acceso.
+
+> [!warning] Otro choque de nombres con la landing
+> La conversación se iba a llamar `.hilo`, pero la landing ya usa `.hilo` en su línea de tiempo, con `opacity: 0` hasta que aparece en pantalla, y las burbujas quedaban invisibles. Se llama `.chat`. El test chequea ahora que la burbuja tenga opacidad 1, porque "existe en el DOM" no alcanzaba para detectarlo.
+
+> [!success] Verificado el 2026-10-07 en infraestructura descartable
+> - **API de mensajes: 44 comprobaciones.** Matriz de contactos (grupo, individual, privada, otra clase, coordinador); envíos permitidos y prohibidos (a sí mismo, a un id inexistente, a otra clase); vacío y 2000/2001 caracteres; HTML literal; `CHECK` de la base; no leídos y "visto"; nadie lee conversaciones ajenas; relación cortada (historial sí, escribir no); límite de 20/min por persona.
+> - **Navegador (Edge): 30 comprobaciones.** Dos sesiones conversando: Enter y Shift+Enter, la respuesta llega sola, el contador sube y baja, accesos desde Personas y el Dashboard, "Nuevo mensaje" sin repetidos. URL forzada a una conversación ajena: error sin datos. Coordinador sin menú. Celular sin scroll horizontal. Contraste AA (burbujas incluidas). Sin errores de consola.
+> - **Regresión:** API 70 + 35 + 21 + 135 + 106; navegador 62 + 101 + 76. Maven 8/8. Login, registro y landing idénticos píxel a píxel; solo cambia la página de privacidad, por el párrafo nuevo.
+
+**Para confirmar con Oscar:** el criterio de contactos (¿los alumnos de una misma clase entre grupos distintos?) y si hace falta una conversación grupal por tesis.
+
 **Entregable 4 — CI/CD y despliegue** 🔨 (empezado el 2026-10-03 por Alonso, PRs #2 a #5)
 - [x] Dockerfile del backend (multi-stage, Java 17, usuario sin privilegios) y del frontend (Node 22 → nginx con proxy `/api`)
 - [x] `docker-compose.yml` con el stack completo — verificado el 2026-10-07: los 3 contenedores levantan, Flyway aplica `V1` y el login y el registro andan en el navegador

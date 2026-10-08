@@ -191,7 +191,14 @@ function PortadaTesis({ data, user }) {
       <dl className="tesis-portada__datos">
         <div>
           <dt>Profesor</dt>
-          <dd>{proyecto.asesor?.name ?? 'Todavía sin profesor'}</dd>
+          <dd>
+            {proyecto.asesor?.name ?? 'Todavía sin profesor'}
+            {proyecto.asesor && user?.role === 'ESTUDIANTE' && (
+              <Link className="tesis-portada__escribir" to={`/mensajes?con=${proyecto.asesor.id}`}>
+                Escribirle
+              </Link>
+            )}
+          </dd>
         </div>
         <div>
           <dt>{grupal ? (otros.length === 1 ? 'Compañero de grupo' : 'Compañeros de grupo') : 'Integrantes'}</dt>

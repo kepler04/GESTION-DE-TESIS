@@ -98,6 +98,19 @@ El estudiante no recibe por API los correos, tema, semáforo, fecha de ingreso n
 
 La política se actualiza a **2026-10-07** para describir la visibilidad de Personas y privadas. Los consentimientos anteriores conservan su versión.
 
+## Mensajes privados
+
+Uno a uno, solo entre quienes comparten una tesis vigente ([[Decisiones pendientes#Decisión 28 - Mensajes privados entre quienes comparten una tesis|D28]]).
+
+| Acción | Estudiante | Profesor | Coordinador |
+|---|---|---|---|
+| Escribirle a su profesor | Sí | — | No |
+| Escribirle a un compañero de su grupo | Sí | — | No |
+| Escribirle a alguien de otro grupo de la clase | No | — | No |
+| Escribirles a sus alumnos (de clase o asesoría privada) | — | Sí | No |
+| Leer conversaciones de otras personas | No | No | No |
+| Releer una conversación cuando la relación se cortó | Sí, sin poder escribir | Sí, sin poder escribir | No |
+
 ## Ver también
 - [[Funcionalidades]]
 - [[Reglas de negocio]]

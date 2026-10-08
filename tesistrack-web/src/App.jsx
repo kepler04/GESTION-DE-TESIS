@@ -11,6 +11,7 @@ import HitosPage from './pages/HitosPage'
 import LandingPage from './pages/LandingPage'
 import MiClasePage from './pages/MiClasePage'
 import MiTesisPage from './pages/MiTesisPage'
+import MensajesPage from './pages/MensajesPage'
 import MisClasesPage from './pages/MisClasesPage'
 import ObservacionesPage from './pages/ObservacionesPage'
 import PrivacidadPage from './pages/PrivacidadPage'
@@ -85,6 +86,7 @@ export default function App() {
               <Route path="/tesis" element={<TesisPage />} />
               <Route path="/asesorias-privadas" element={<AsesoradosPage />} />
               <Route path="/perfil" element={<PerfilPage />} />
+              <Route path="/mensajes" element={<MensajesPage />} />
               {/* Los nombres de antes: ver RedirigirProyectos. */}
               <Route path="/proyectos" element={<RedirigirProyectos />} />
               <Route path="/asesorados" element={<Navigate to="/asesorias-privadas" replace />} />

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
-import { obtenerDashboardAsesor } from '../api/tesistrack'
+import { contarMensajesNoLeidos, obtenerDashboardAsesor } from '../api/tesistrack'
 import BienvenidaPanel from '../components/BienvenidaPanel'
 import BrandLogo from '../components/BrandLogo'
 import Icono from '../components/Icono'
@@ -19,7 +19,9 @@ import '../styles/app.css'
  * entrada que no usa.
  *
  * `cuenta` es un número al lado de la entrada (cuántas clases, cuántas entregas
- * esperan revisión). Es un dato, no un aviso: no se pinta de rojo.
+ * esperan revisión, cuántos mensajes sin leer). Es un dato, no un aviso: no se pinta
+ * de rojo. El coordinador no tiene Mensajes: son entre profesores y estudiantes
+ * (Decisión 28).
  */
 function menuPara(rol, asesoriasPrivadas, cuentas) {
   if (rol === 'COORDINADOR') {
@@ -43,12 +45,14 @@ function menuPara(rol, asesoriasPrivadas, cuentas) {
           ...(asesoriasPrivadas === true
             ? [{ to: '/asesorias-privadas', label: 'Asesorías privadas', icono: 'persona' }]
             : []),
+          { to: '/mensajes', label: 'Mensajes', icono: 'mensaje', cuenta: cuentas.mensajes },
         ]
       : [
           { to: '/panel', label: 'Dashboard', icono: 'dashboard', end: true },
           { to: '/mi-tesis', label: 'Mi tesis', icono: 'tesis' },
           // La clase del profesor al que pertenece la tesis: avisos, sesiones y materiales.
           { to: '/clase', label: 'Mi clase', icono: 'clases' },
+          { to: '/mensajes', label: 'Mensajes', icono: 'mensaje', cuenta: cuentas.mensajes },
         ]
 
   return [
@@ -87,6 +91,7 @@ const MIGAS_RUTA = [
   [/^\/asesorias$/, 'Asesorías'],
   [/^\/tareas$/, 'Tareas'],
   [/^\/perfil$/, 'Mi perfil'],
+  [/^\/mensajes$/, 'Mensajes'],
 ]
 
 function migasDeRuta(ruta) {
@@ -104,6 +109,7 @@ export default function AppLayout() {
   const [cuentas, setCuentas] = useState({})
 
   const esAsesor = user?.role === 'ASESOR'
+  const conMensajes = user?.role === 'ASESOR' || user?.role === 'ESTUDIANTE'
 
   // Los números del menú del profesor se refrescan al cambiar de pantalla: después
   // de revisar una entrega, el contador baja sin recargar la página.
@@ -112,7 +118,9 @@ export default function AppLayout() {
     let cancelado = false
     obtenerDashboardAsesor()
       .then((d) => {
-        if (!cancelado) setCuentas({ clases: d.clases.length, paraRevisar: d.paraRevisar.length })
+        if (!cancelado) {
+          setCuentas((c) => ({ ...c, clases: d.clases.length, paraRevisar: d.paraRevisar.length }))
+        }
       })
       // Un contador que no carga no tiene por qué tumbar el menú.
       .catch(() => {})
@@ -120,6 +128,25 @@ export default function AppLayout() {
       cancelado = true
     }
   }, [esAsesor, pathname])
+
+  // Los mensajes sin leer: al cambiar de pantalla, cada 30 segundos y cuando la
+  // pantalla de Mensajes avisa que leyó algo (evento `mensajes:leidos`).
+  useEffect(() => {
+    if (!conMensajes) return undefined
+    let cancelado = false
+    const contar = () =>
+      contarMensajesNoLeidos()
+        .then((r) => !cancelado && setCuentas((c) => ({ ...c, mensajes: r.total })))
+        .catch(() => {})
+    contar()
+    const reloj = setInterval(contar, 30000)
+    window.addEventListener('mensajes:leidos', contar)
+    return () => {
+      cancelado = true
+      clearInterval(reloj)
+      window.removeEventListener('mensajes:leidos', contar)
+    }
+  }, [conMensajes, pathname])
 
   const migas = migasPantalla ?? migasDeRuta(pathname)
 

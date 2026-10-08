@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { desvincularAsesor, verPersonas } from '../api/tesistrack'
+import { useAuth } from '../auth/AuthContext'
 import ConfirmarAccion from './ConfirmarAccion'
 import EstadoBadge from './EstadoBadge'
 import { Card, Cargando, ErrorMsg, Vacio, fecha } from './ui'
@@ -17,8 +19,12 @@ import { iniciales, plural } from '../utils/formato'
  * cosa de la tesis (entran juntos con el código y entregan juntos), así que sacar a
  * un alumno de un grupo de dos sería partir una tesis. Es la misma acción que
  * "Quitar de mi lista" de la Decisión 17: la tesis no se borra, solo se desvincula.
+ *
+ * El botón "Mensaje" aparece solo donde se puede escribir (Decisión 28): el profesor,
+ * a cada alumno; el estudiante, a su profesor y a sus compañeros de grupo.
  */
 export default function PersonasClase({ areaId, claseNombre, onCambio }) {
+  const { user } = useAuth()
   const [personas, setPersonas] = useState(null)
   const [error, setError] = useState(null)
   const [aQuitar, setAQuitar] = useState(null)
@@ -39,6 +45,8 @@ export default function PersonasClase({ areaId, claseNombre, onCambio }) {
   if (!personas) return <ErrorMsg>{error}</ErrorMsg>
 
   const { profesor, grupos, detalle } = personas
+  const esProfesor = detalle && user?.role === 'ASESOR'
+  const esEstudiante = user?.role === 'ESTUDIANTE'
   const totalAlumnos = grupos.reduce((suma, g) => suma + g.alumnos.length, 0)
 
   return (
@@ -54,6 +62,7 @@ export default function PersonasClase({ areaId, claseNombre, onCambio }) {
             <strong>{profesor.name}</strong>
             <span className="lista__meta">{profesor.email}</span>
           </div>
+          {esEstudiante && <BotonMensaje id={profesor.id} nombre={profesor.name} />}
         </div>
       </Card>
 
@@ -110,6 +119,9 @@ export default function PersonasClase({ areaId, claseNombre, onCambio }) {
                           <strong>{a.nombre}</strong>
                           {a.email && <span className="lista__meta">{a.email}</span>}
                         </div>
+                        {(esProfesor || (esEstudiante && g.propio && a.id !== user?.id)) && (
+                          <BotonMensaje id={a.id} nombre={a.nombre} />
+                        )}
                       </li>
                     ))}
                   </ul>
@@ -145,5 +157,17 @@ export default function PersonasClase({ areaId, claseNombre, onCambio }) {
         </ConfirmarAccion>
       )}
     </>
+  )
+}
+
+function BotonMensaje({ id, nombre }) {
+  return (
+    <Link
+      className="btn btn--fantasma btn--chico persona__mensaje"
+      to={`/mensajes?con=${id}`}
+      aria-label={`Mandarle un mensaje a ${nombre}`}
+    >
+      Mensaje
+    </Link>
   )
 }

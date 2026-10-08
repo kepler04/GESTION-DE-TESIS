@@ -336,6 +336,21 @@ Las reglas del semáforo están en [[Decisiones pendientes#Decisión 26 - Semáf
 
 Se conserva la API de subida/descarga y el tope de 15 MB. `archivoTipo` ahora representa la firma verificada, no el MIME declarado: PNG/JPEG/GIF/WebP/PDF o application/octet-stream. V3 corrige metadatos legacy. La descarga sigue siendo attachment; el frontend pide el blob con token y solo previsualiza los cinco formatos permitidos. El enlace externo de entrega debe ser https. Ver [[Decisiones pendientes#Decisión 25 - Previsualizar solo archivos con tipo verificado]].
 
+## Mensajes privados
+
+Entre profesores y estudiantes que comparten una tesis ([[Decisiones pendientes#Decisión 28 - Mensajes privados entre quienes comparten una tesis|D28]]). El coordinador recibe **403** en todo, salvo en el contador, que le devuelve 0 para que el menú no falle.
+
+| Método | Ruta | Qué hace |
+|---|---|---|
+| `GET` | `/mensajes/contactos` | A quién le puede escribir: `{ id, nombre, rol, relacion }`, sin correo |
+| `GET` | `/mensajes/conversaciones` | Bandeja: una fila por persona, la más reciente primero, con `ultimoTexto`, `ultimoFecha`, `ultimoPropio`, `noLeidos` y `puedeEscribir` |
+| `GET` | `/mensajes/con/{usuarioId}` | El hilo, del más viejo al más nuevo. **No** marca leído. 403 si no es contacto ni hubo mensajes, también si el id no existe (no confirma quién está registrado) |
+| `POST` | `/mensajes/con/{usuarioId}` | `{ texto }` de 1 a 2000 caracteres → **201**. 403 si no es contacto. 429 a partir del mensaje 21 en un minuto |
+| `PUT` | `/mensajes/con/{usuarioId}/leidos` | Marca como leído lo que esa persona le mandó → **204** |
+| `GET` | `/mensajes/no-leidos` | `{ total }`, para el número del menú |
+
+El texto se guarda tal cual. Al mostrarlo, React lo escapa: un mensaje con HTML se ve como texto.
+
 ## Ver también
 - [[Base de datos]]
 - [[Usuarios y roles]]

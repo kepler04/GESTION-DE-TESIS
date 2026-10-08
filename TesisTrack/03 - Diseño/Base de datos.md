@@ -453,6 +453,23 @@ COMMIT;
 
 El nombre físico area/proyecto no cambia. *Tema por definir* es presentación de un título vacío; la columna titulo sigue NOT NULL y no se implementa todavía el asistente de Fase 2. Ver [[Decisiones pendientes#Decisión 21 - Unificar el vocabulario de la interfaz]] y [[Decisiones pendientes#Decisión 25 - Previsualizar solo archivos con tipo verificado]].
 
+## Migración V4 - mensajes privados
+
+`V4__mensajes_privados.sql` (2026-10-07). No se editan V1, V2 ni V3. Ver [[Decisiones pendientes#Decisión 28 - Mensajes privados entre quienes comparten una tesis]].
+
+| Columna de `mensaje` | Regla |
+|---|---|
+| `remitente_id`, `destinatario_id` | FK a `users` con `ON DELETE CASCADE`; `CHECK` que impide mandarse un mensaje a uno mismo |
+| `texto` | `TEXT NOT NULL`, `CHECK` de 1 a 2000 caracteres sin contar espacios de los bordes (la API valida lo mismo) |
+| `created_at` | fecha del envío |
+| `leido_at` | `NULL` hasta que el destinatario abre la conversación |
+
+Índices: `(remitente_id, destinatario_id, created_at)`, que sirve para leer una conversación en los dos sentidos, y uno **parcial** sobre `destinatario_id WHERE leido_at IS NULL`, para el contador de no leídos que se consulta en cada pantalla.
+
+**Qué no guarda la tabla:** quién puede escribirle a quién. Eso lo decide el backend con la relación vigente (la tesis compartida). Si la relación se corta, los mensajes siguen ahí y la conversación queda de solo lectura.
+
+Se aplicó sobre una base que ya tenía datos de las fases anteriores sin tocarlos; Hibernate valida el esquema con `ddl-auto=validate`.
+
 ## Ver también
 - [[Hitos]]
 - [[Reglas de negocio]]
