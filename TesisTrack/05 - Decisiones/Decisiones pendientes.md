@@ -593,6 +593,42 @@ Oscar aprobó las maquetas de un diseñador de producto (Dashboard del profesor,
 
 Ver [[Desarrollo#Fase 1.6 - Rediseño visual (2026-10-07)]].
 
+## Decisión 28 - Mensajes privados entre quienes comparten una tesis
+
+¿Quién le puede escribir a quién en privado, y qué alcance tiene la mensajería?
+
+**Estado:** ✅ cerrada (2026-10-07, pedido de Oscar; el criterio de contactos queda para que lo confirme) — **conversaciones uno a uno, solo entre personas que comparten una tesis vigente**.
+
+| Quién | Le puede escribir a |
+|---|---|
+| Estudiante | su profesor y sus compañeros de grupo |
+| Profesor | los integrantes de las tesis a su cargo, de sus clases o de asesorías privadas |
+| Coordinador | nadie: no participa ni lee mensajes |
+
+La regla sale de la misma relación que ordena el resto de los permisos (la tesis compartida). Así, un estudiante no puede escribirle a alguien de otro grupo de su clase, que es coherente con Personas, donde ni ve su correo ([[#Decisión 22 - Organizar la clase como salón con pestañas|D22]]). El coordinador lee el **avance** de las tesis ([[#Decisión 8 - Alcance del coordinador|D8]]), no las conversaciones de las personas.
+
+**Si la relación se corta** (el grupo sale de la clase, cambia el profesor), el historial queda para los dos, pero de solo lectura: nadie pierde lo que se dijo y nadie sigue escribiéndole a quien ya no corresponde.
+
+**Alcance, a propósito chico:**
+- Texto simple de hasta 2000 caracteres, sin adjuntos: para archivos están las entregas y los materiales.
+- "Visto" en el último mensaje propio.
+- Contador de no leídos en el menú.
+- Sin tiempo real: con la pantalla abierta se buscan mensajes nuevos cada 10 s y el contador se actualiza cada 30 s.
+- Límite de 20 mensajes por minuto por persona.
+- Leer es una acción aparte (`PUT …/leidos`), no un efecto de un GET.
+
+**Alternativas descartadas:**
+- **Cualquiera con cualquiera dentro de una clase:** abre un canal entre alumnos de grupos distintos que la D22 había cerrado, y obliga a pensar en moderación y bloqueo.
+- **Conversación grupal por tesis:** útil, pero duplica lo que ya hacen las asesorías y los acuerdos. Se puede sumar después sin cambiar la tabla de mensajes uno a uno.
+- **WebSocket o notificaciones push:** más infraestructura para desplegar (sesiones persistentes, otro puerto o proxy) por una ganancia de segundos. El sondeo alcanza para el uso de un curso.
+- **Notificar por correo:** no hay servidor de correo configurado (ver la recuperación de contraseña, también pendiente).
+- **Que el coordinador pueda leer** "por supervisión": convierte un canal privado en uno vigilado sin que nadie lo haya pedido.
+
+> [!note] Consecuencia
+> Migración **V4** (tabla `mensaje`). La política de privacidad nombra los mensajes y aclara que solo los ven las dos personas y que el coordinador no tiene acceso. La versión sigue siendo `2026-10-07`: es la que estrena la Fase 1.5, que todavía no está publicada.
+
+Ver [[API#Mensajes privados]], [[Base de datos#Migración V4 - mensajes privados]] y [[Usuarios y roles#Mensajes privados]].
+
 ## Ver también
 - [[Feedback profesor]]
 - [[TesisTrack]]

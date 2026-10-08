@@ -144,6 +144,19 @@ const TRAZOS = {
     </>
   ),
   menu: <path d="M3 12h18M3 6h18M3 18h18" />,
+  mensaje: (
+    <>
+      <path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />
+      <path d="M22 6l-10 7L2 6" />
+    </>
+  ),
+  enviar: (
+    <>
+      <path d="M22 2L11 13" />
+      <path d="M22 2l-7 20-4-9-9-4 20-7z" />
+    </>
+  ),
+  volver: <path d="M19 12H5M12 19l-7-7 7-7" />,
 }
 
 export default function Icono({ nombre, className = 'icono' }) {

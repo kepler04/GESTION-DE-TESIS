@@ -97,8 +97,8 @@ export default function PoliticaContenido() {
 
         <p>
           Además guardamos el contenido que generás usando la plataforma: tesis, hitos, entregas,
-          observaciones, asesorías, acuerdos, tareas, y —si das clases— avisos, materiales y
-          sesiones.
+          observaciones, asesorías, acuerdos, tareas, mensajes privados y —si das clases— avisos,
+          materiales y sesiones.
         </p>
       </section>
 
@@ -117,8 +117,13 @@ export default function PoliticaContenido() {
             usuarios.
           </li>
           <li>
+            Tus <strong>mensajes privados</strong> solo los ven vos y la persona con la que
+            conversás. Solo podés escribirle a quien comparte una tesis con vos: tu profesor, tus
+            compañeros de grupo o, si sos profesor, tus alumnos.
+          </li>
+          <li>
             El <strong>coordinador académico</strong> puede consultar las tesis y su avance, en
-            modo lectura.
+            modo lectura. No tiene acceso a los mensajes privados.
           </li>
           <li>No vendemos, cedemos ni compartimos tus datos con terceros con fines comerciales.</li>
         </ul>

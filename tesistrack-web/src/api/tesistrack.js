@@ -159,3 +159,13 @@ export const completarTarea = (id) => api(`/api/tareas/${id}/completar`, { metho
 
 // --- usuarios ---
 export const listarAsesores = () => api('/api/usuarios/asesores')
+
+// --- mensajes privados uno a uno (Decisión 28) ---
+export const listarContactos = () => api('/api/mensajes/contactos')
+export const listarConversaciones = () => api('/api/mensajes/conversaciones')
+export const verConversacion = (usuarioId) => api(`/api/mensajes/con/${usuarioId}`)
+export const enviarMensaje = (usuarioId, texto) =>
+  api(`/api/mensajes/con/${usuarioId}`, { method: 'POST', body: { texto } })
+export const marcarMensajesLeidos = (usuarioId) =>
+  api(`/api/mensajes/con/${usuarioId}/leidos`, { method: 'PUT' })
+export const contarMensajesNoLeidos = () => api('/api/mensajes/no-leidos')
