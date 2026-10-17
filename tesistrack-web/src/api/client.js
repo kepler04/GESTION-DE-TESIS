@@ -11,6 +11,20 @@ function token() {
   return localStorage.getItem('token')
 }
 
+/**
+ * Texto para mostrar cuando el backend responde con error.
+ *
+ * Un 5xx es un fallo que nadie previó, y Spring lo devuelve como
+ * `{"error": "Internal Server Error"}`: mostrarlo tal cual no le dice nada a quien
+ * lo ve. Los errores que sí se previeron (4xx) traen su propio mensaje en español.
+ */
+function mensajeDeError(res, data, porDefecto) {
+  if (res.status >= 500) {
+    return 'Algo falló de nuestro lado. Probá de nuevo en un momento; si sigue pasando, avisanos.'
+  }
+  return data?.error ?? porDefecto
+}
+
 export async function api(path, { method = 'GET', body } = {}) {
   const res = await fetch(`${API_URL}${path}`, {
     method,
@@ -29,7 +43,7 @@ export async function api(path, { method = 'GET', body } = {}) {
   if (res.status === 204) return null
 
   const data = await res.json().catch(() => null)
-  if (!res.ok) throw new Error(data?.error ?? 'Error inesperado')
+  if (!res.ok) throw new Error(mensajeDeError(res, data, 'Error inesperado'))
   return data
 }
 
@@ -54,7 +68,7 @@ export async function apiSubirArchivo(path, archivo) {
   }
 
   const data = await res.json().catch(() => null)
-  if (!res.ok) throw new Error(data?.error ?? 'No se pudo subir el archivo')
+  if (!res.ok) throw new Error(mensajeDeError(res, data, 'No se pudo subir el archivo'))
   return data
 }
 
@@ -75,7 +89,7 @@ export async function apiDescargarArchivo(path, nombreSugerido) {
   }
   if (!res.ok) {
     const data = await res.json().catch(() => null)
-    throw new Error(data?.error ?? 'No se pudo descargar el archivo')
+    throw new Error(mensajeDeError(res, data, 'No se pudo descargar el archivo'))
   }
 
   const blob = await res.blob()

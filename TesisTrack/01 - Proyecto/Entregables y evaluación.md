@@ -36,12 +36,12 @@ Total de alumnos del curso: 21 (organizados en grupos).
 | 0 | Conceptualización | Documento inicial: nombre, contexto, objetivos, justificación y funcionalidades clave | No calificado (solo feedback) | ✅ [[Entregable 0 - Conceptualización\|redactado]] el 2026-08-16 |
 | 1 | Modelo de Datos | Diagrama Entidad-Relación (ER) y esquema SQL implementado | 15% | ✅ [[#Entregable 1 — Modelo de Datos (15%)\|terminado]] |
 | 2 | Backend | API backend conectada a la base de datos, con documentación básica de endpoints | 20% | ✅ [[#Entregable 2 — Backend (20%)\|terminado]] |
-| 3 | Aplicación Web Full-Stack | Integración de frontend y backend utilizando Java Spring Boot | 20% | 🔨 en curso — ver [[Desarrollo#Avance]] |
-| 4 | CI/CD y Despliegue | Pipeline de CI/CD y despliegue funcional en AWS (u otro proveedor cloud) | 15% | ⬜ sin empezar |
+| 3 | Aplicación Web Full-Stack | Integración de frontend y backend utilizando Java Spring Boot | 20% | 🔨 funcionalidades completas; en tanda de cierre — ver [[Desarrollo#Avance]] |
+| 4 | CI/CD y Despliegue | Pipeline de CI/CD y despliegue funcional en AWS (u otro proveedor cloud) | 15% | 🔨 Docker + pipeline de imágenes hechos (2026-10-03); faltan CI con tests y el despliegue — ver [[Desarrollo#Avance]] |
 | Final | Competencia Final de Desarrollo Web | Presentación final, demostración funcional, evaluación técnica y pitch del producto | 30% | ⬜ sin empezar |
 
 > [!warning] Ver [[Auditoría de requisitos]] antes de decidir qué construir
-> La tabla de arriba dice el estado; la auditoría del 2026-08-16 dice **qué falta exactamente contra [[Funcionalidades]]**, qué se construyó de más y en qué orden conviene seguir. Resumen: 35% asegurado, 20% en curso, **45% sin empezar**.
+> La tabla de arriba dice el estado; la auditoría del 2026-08-16 dice **qué falta exactamente contra [[Funcionalidades]]**, qué se construyó de más y en qué orden conviene seguir. Su resumen de entonces ("35% asegurado, 20% en curso, 45% sin empezar") **quedó desfasado**: el Entregable 4 ya empezó y las funcionalidades del 3 están completas.
 
 > [!important] Evaluación
 > - Cada entregable (excepto el 0) se califica de 0 a 20.
@@ -75,7 +75,7 @@ Qué se entrega y dónde está:
 |---|---|
 | Diagrama ER | [[Base de datos#Diagrama Entidad-Relación]] — 8 entidades en Mermaid, con atributos y cardinalidades |
 | Esquema SQL | [[Base de datos#Esquema SQL]] — DDL de PostgreSQL con claves foráneas, `CHECK` de estados e índices |
-| Implementado en base de datos | Entidades JPA en `tesistrack-app/src/main/java/com/tesistrack/model/`; Hibernate crea el esquema |
+| Implementado en base de datos | Migración Flyway `V1__create_initial_schema.sql` en `tesistrack-app/src/main/resources/db/migration/`; las entidades JPA (`.../model/`) se validan contra ella |
 
 > [!success] Estado — terminado el 2026-08-16
 > Verificado contra PostgreSQL real, no solo compilando: se crean las **8 tablas**, las **13 claves foráneas** y el `UNIQUE (hito_id, version)`. Se cargó el flujo completo de [[Reglas de negocio#Ejemplo de flujo completo]] y se comprobó que el unique rechaza una versión duplicada.

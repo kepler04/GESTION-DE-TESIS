@@ -2,6 +2,9 @@ package com.tesistrack.config;
 
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -12,6 +15,24 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(ApiExceptionHandler.class);
+
+    /**
+     * Una restricción de la base impidió la operación (clave foránea, UNIQUE,
+     * NOT NULL). Sin este handler Spring devuelve un 500 pelado y la pantalla
+     * muestra "Internal Server Error", que no le dice nada a quien lo ve.
+     *
+     * <p>El detalle técnico (nombre de la restricción, SQL) va solo al log: es
+     * útil para quien depura y no tiene por qué viajar al navegador.
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, String>> handleDataIntegrity(DataIntegrityViolationException ex) {
+        log.warn("Operación rechazada por la base de datos: {}", ex.getMostSpecificCause().getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error",
+            "No se pudo completar la operación porque todavía hay información que depende de este registro. "
+                + "Revisá lo que tiene asociado y volvé a intentar."));
+    }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, String>> handleIllegalArgument(IllegalArgumentException ex) {

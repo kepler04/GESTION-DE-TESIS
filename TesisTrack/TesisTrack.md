@@ -48,20 +48,30 @@ aliases:
 ### 06 - Desarrollo
 - [[Desarrollo]] — estado por entregable, cómo levantar el proyecto, usuarios de prueba
 
+### 07 - Talleres
+- [[Taller 1 - Enunciado]] — ejercicio de sesión, no calificado como entregable. Diseño hecho desde cero el 2026-08-19; las notas anteriores del taller (v1 de 8 tablas, exposición, diálogo de sustentación, v2 con catálogos) ya no están en el vault
+- [[Taller 1 - Bloque 1 (Diseño)]] — caso, usuarios, entidades, relaciones y ERD
+- [[Taller 1 - Bloque 2 (Esquema)]] — `CREATE TABLE`, constraints, acciones referenciales e índices
+- [[Taller 1 - Bloque 3 (Carga y manipulación)]] — datos de prueba, `UPDATE`, `DELETE` y verificación de restricciones
+- [[Taller 1 - Bloque 4 (Consultas)]] — preguntas de negocio, `JOIN`, `LEFT JOIN`, agregación y validación
+- [[Taller 1 - Bloque 5 (Cierre y exposición)]] — guion de presentación, decisiones a defender y preguntas probables
+
 ## Estado actual
 
-> [!success] Al 2026-08-16 — Entregables 1 y 2 hechos, el 3 en curso
-> - **Las 8 decisiones de alcance están cerradas**, más la 9, 10 y 11 que salieron durante el desarrollo. Las 4 preguntas que había dejado el profesor quedaron respondidas: hitos configurables por proyecto y creados por el asesor, plataforma general.
-> - **Entregable 1 (Modelo de datos)** — ER y esquema en [[Base de datos]], verificado contra PostgreSQL.
-> - **Entregable 2 (Backend)** — API REST documentada en [[API]], 31 pruebas end-to-end pasando.
-> - **Entregable 3 (Full-stack)** 🔨 — andan landing, registro en dos pasos con política de privacidad, Dashboard, Proyectos, Hitos, Entregas, Observaciones, carpetas con código de invitación y Mis asesorados.
+> [!success] Al 2026-10-07 — Entregables 1, 2 y 3 hechos en funcionalidad; el 4 empezado
+> - **Decisiones 1 a 17 cerradas**, y la **18** (qué se lleva un espacio al borrarse) desde hoy. Las 4 preguntas del profesor quedaron respondidas: hitos configurables creados por el asesor, plataforma general.
+> - **Entregable 1 (Modelo de datos)** — esquema versionado con **Flyway** (`V1`) y validado por Hibernate; verificado contra un PostgreSQL vacío el 2026-10-07. Ver [[Base de datos]].
+> - **Entregable 2 (Backend)** — API REST en [[API]]. Se re-verificó el 2026-10-07 con 105 comprobaciones HTTP (permisos, ciclo completo, coordinador de solo lectura, tesis grupal, borrado). **Esas pruebas todavía no están en el repo**: el único test es `contextLoads`.
+> - **Entregable 3 (Full-stack)** — todo lo de [[Funcionalidades]] anda; queda el menú del coordinador (contradice la Decisión 8). **Taller 2** (Flyway, MapStruct, Lombok) entregado el 2026-09-20.
+> - **Entregable 4 (CI/CD)** 🔨 — Dockerfiles, `docker-compose.yml` del stack completo y dos workflows que publican las imágenes en ghcr.io (en verde el 2026-10-03). Falta el CI con tests, el despliegue en AWS/Vercel y un `JWT_SECRET` real.
 
-> [!warning] Auditoría del 2026-08-16 — el 45% de la nota está sin empezar
-> Se contrastó lo construido contra el enunciado: los Entregables 1 y 2 están sólidos, pero el **4 (15%)** y la **Competencia Final (30%)** no tienen nada, y al 3 le faltan **Asesorías** y **Tareas**, que son funcionalidades listadas en [[Funcionalidades]].
->
-> Además, varias cosas construidas últimamente **no las pide el enunciado**. El detalle, el veredicto de cada una y el orden sugerido están en [[Auditoría de requisitos]].
+> [!info] En curso — tanda de cierre (2026-10-07)
+> **Fase 0** (errores): borrar espacio con actividades, títulos invisibles en modo oscuro y puerto de desarrollo — ver [[Desarrollo#Fase 0 - Errores corregidos (2026-10-07)]]. Después: el espacio del asesor como aula (materiales en carpetas, reuniones con enlace) y el primer ingreso del estudiante (solo o en grupo).
 
-**Lo que sigue**, por nota por hora invertida: commitear lo que ya anda → **Asesorías + Tareas** (cierra el Entregable 3) → **Entregable 4** (CI/CD y despliegue) → preparar la **Competencia Final**.
+> [!warning] La [[Auditoría de requisitos]] es del 2026-08-16 y quedó desfasada
+> Su "45% de la nota sin empezar" ya no vale: el Entregable 4 tiene la parte de Docker y el pipeline de imágenes. Sigue vigente su regla de trabajo: **antes de construir, verificar si está en [[Funcionalidades]]**, y si no está, decidirlo a conciencia y anotarlo.
+
+**Lo que sigue**, por nota por hora invertida: terminar la tanda de cierre → **CI con tests y despliegue** (Entregable 4) → preparar la **Competencia Final** (datos de demo limpios, guion y pitch).
 
 ## Enfoque de trabajo
 

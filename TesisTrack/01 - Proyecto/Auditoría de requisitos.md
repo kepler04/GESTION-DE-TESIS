@@ -10,6 +10,9 @@ aliases:
 
 # Auditoría de requisitos — 2026-08-16
 
+> [!warning] Nota histórica: quedó desfasada el 2026-10-07
+> Lo de **A1, A2, A3 y A6 ya estaba resuelto** el mismo día de la auditoría, y desde entonces el **Entregable 4 empezó** (Docker y pipeline de imágenes, 2026-10-03) y entró el **Taller 2**. El recuento "45% sin empezar" y la sección *E. Orden sugerido* ya no describen el estado actual: para eso, ver el bloque **Estado actual** de [[TesisTrack]] y [[Desarrollo#Avance]]. Lo que sigue vigente es la regla de la sección B: **antes de construir, verificar si está en [[Funcionalidades]]**.
+
 > [!info] Por qué existe esta nota
 > Después de varias sesiones construyendo a pedido, se paró a contrastar **lo construido contra lo que el curso exige**. Esta nota es esa comparación, hecha leyendo [[Entregables y evaluación]], [[Funcionalidades]], [[Alcance]] y [[Feedback profesor]] contra el código real.
 

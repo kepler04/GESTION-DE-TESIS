@@ -143,7 +143,7 @@ Un asesor con muchas tesis a la vez necesita agruparlas. Se le permite crear sus
 **Modelo:** entidad `Area` con `nombre` y `propietario` (el asesor), `UNIQUE (propietario_id, nombre)`. `Proyecto.area` es opcional y nullable.
 
 > [!note] Consecuencias
-> - **Borrar un área no borra proyectos**: solo les despega la etiqueta. Se descartó bloquear el borrado cuando el área está en uso — es organizativa, no parte del proceso de tesis, y obligar a desetiquetar una por una sería un trámite sin valor.
+> - **Borrar un área no borra proyectos**: solo les despega la etiqueta. Se descartó bloquear el borrado cuando el área está en uso — es organizativa, no parte del proceso de tesis, y obligar a desetiquetar una por una sería un trámite sin valor. Desde que el área es un espacio con actividades, borrarla también se lleva esas actividades: ver la [[#Decisión 18 - Qué se lleva un espacio al borrarse|Decisión 18]].
 > - **Cambiar el asesor de un proyecto le limpia el área**: era la etiqueta del asesor anterior y apuntaría a un área que el nuevo no puede ver.
 > - **El área se ve en el DTO del proyecto**, así que el estudiante la vería si se la mostrara. Hoy la columna solo se renderiza para el asesor. Si se decidiera que debe ser invisible para el estudiante, hay que filtrarla en `ProyectoDto`.
 > - Solo el rol `ASESOR` puede gestionar áreas; el estudiante recibe 403.
@@ -335,7 +335,38 @@ Hacía falta poder sacar proyectos de la lista —empezando por los de prueba—
 >
 > Verificado después de borrar: **0 hitos, entregas, observaciones, archivos y vínculos huérfanos**.
 
+> [!warning] Actualizado el 2026-10-07 — con Flyway las cascadas ya existen en una base nueva
+> Desde la migración `V1` (Taller 2) una base nueva sí lleva `ON DELETE CASCADE` en 7 claves (`proyecto_estudiante`, `hito`, `entrega`, `observacion`, `asesoria`, `acuerdo` y `tarea`). El borrado **sigue yendo explícito** en el service: una base vieja creada con `ddl-auto=update` no las tiene, y el orden a la vista se razona mejor que una cascada. Ojo con lo que **no** lleva cascada: `actividad.area_id` y `hito.actividad_id`. Por eso borrar un espacio tuvo su propia decisión: la [[#Decisión 18 - Qué se lleva un espacio al borrarse|18]].
+
 Se evaluó dejar el borrado solo al estudiante —la tesis es suya— pero el asesor también necesita limpiar lo que él mismo generó probando. La confirmación escrita es la que hace segura esa apertura.
+
+## Decisión 18 - Qué se lleva un espacio al borrarse
+
+Un asesor borra un espacio que ya tiene actividades y tesis. ¿Qué desaparece y qué queda?
+
+**Estado:** ✅ cerrada (2026-10-07) — **se van las actividades y el código de invitación; las tesis y todos sus hitos se quedan**
+
+Hasta acá `AreaService#eliminar` solo desvinculaba los proyectos del área ([[#Decisión 10 - Áreas del asesor|D10]]). Pero `actividad.area_id` es `NOT NULL REFERENCES area(id)` y `hito.actividad_id` apunta a la actividad: con una sola actividad creada —por ejemplo *"PRIMERA REUNION PARA CONOCERNOS"*— el `DELETE` violaba la clave foránea y el asesor veía **"Internal Server Error"**. Se reprodujo con el código anterior (500) y quedó corregido (204); un espacio vacío o sin actividades siempre se había podido borrar, que es lo que confirmó la causa.
+
+El borrado va en este orden, dentro de una transacción: **se sueltan los hitos de las actividades (`actividad_id = NULL`) → se borran las actividades → se desvinculan los proyectos → se borra el área.**
+
+> [!important] Ningún hito se borra, ni siquiera los que nadie tocó
+> Es distinto de quitar **una** actividad ([[#Decisión 12 - Cómo se reparte una actividad a todo un espacio|D12]]), que sí borra los hitos sin entregas para no dejar basura. Acá el asesor se va del espacio, no está limpiando una consigna: los hitos son trabajo del estudiante, y quitarle hitos a veinte tesis porque el asesor cerró su carpeta castigaría a quien no hizo nada.
+
+| Alternativa | Por qué no |
+|---|---|
+| Bloquear el borrado si el espacio tiene actividades o tesis | Ya se descartó en la [[#Decisión 10 - Áreas del asesor\|D10]]: obligar a vaciar el espacio a mano es un trámite sin valor |
+| Borrar también los hitos sin entregas | Ver el cuadro de arriba: no es limpiar una consigna, es irse del espacio |
+| `ON DELETE SET NULL` / `CASCADE` en las claves foráneas | Exigía una migración Flyway para algo que cabe en el service, y el orden explícito se razona mejor. Mismo criterio que la [[#Decisión 17 - Quién puede borrar una tesis, y cómo\|D17]] |
+
+**Confirmación escrita**, como en la D17: la interfaz pide escribir el nombre del espacio y separa dos listas. *Se pierde*: las actividades con su tablero y el código de invitación. *No se pierde*: las tesis, con sus entregas y observaciones, y los hitos que nacieron de las actividades, que quedan como hitos comunes. El diálogo cuenta las actividades y las tesis reales en vez de decir "algunas cosas".
+
+> [!note] Consecuencia — un 500 pelado no vuelve a llegar a la pantalla
+> - `ApiExceptionHandler` traduce `DataIntegrityViolationException` a **409** con un mensaje legible; el detalle técnico (restricción, SQL) va solo al log.
+> - `client.js` reemplaza cualquier 5xx por *"Algo falló de nuestro lado…"* en vez de mostrar el `Internal Server Error` que devuelve Spring.
+> - Cuando existan materiales y sesiones dentro del espacio, borrarlo también se los lleva y el diálogo tiene que listarlos.
+
+Ver [[Desarrollo#Fase 0 - Errores corregidos (2026-10-07)]].
 
 ## Ver también
 - [[Feedback profesor]]
