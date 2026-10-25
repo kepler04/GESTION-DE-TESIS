@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   crearCarpeta,
   crearMaterialEnlace,
@@ -117,6 +117,12 @@ export default function MaterialesEspacio({ areaId, editable, destacar }) {
 }
 
 function Carpeta({ carpeta, editable, destacada, onCambio, onError }) {
+  const ref = useRef(null)
+  // La carpeta pedida por enlace (Temas de tesis al terminar el primer ingreso) se
+  // trae a la vista.
+  useEffect(() => {
+    if (destacada) ref.current?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  }, [destacada])
   const [agregando, setAgregando] = useState(false)
   const [renombrando, setRenombrando] = useState(false)
   const [nombre, setNombre] = useState(carpeta.nombre)
@@ -137,7 +143,7 @@ function Carpeta({ carpeta, editable, destacada, onCambio, onError }) {
   const archivos = carpeta.materiales.filter((m) => m.esArchivo).length
 
   return (
-    <section className={`carpeta-mat ${destacada ? 'carpeta-mat--destacada' : ''}`}>
+    <section ref={ref} className={`carpeta-mat ${destacada ? 'carpeta-mat--destacada' : ''}`} aria-current={destacada ? 'true' : undefined}>
       <header className="carpeta-mat__cabecera">
         {renombrando ? (
           <form className="areas__alta" onSubmit={handleRenombrar}>

@@ -20,6 +20,7 @@ import com.tesistrack.dto.EspacioDto;
 import com.tesistrack.dto.InvitacionDto;
 import com.tesistrack.dto.PersonasDto;
 import com.tesistrack.dto.ResumenEspacioDto;
+import com.tesistrack.dto.TopeRequest;
 import com.tesistrack.service.AreaService;
 import com.tesistrack.service.PersonasService;
 import com.tesistrack.service.LimitadorConsultas;
@@ -59,6 +60,14 @@ public class AreaController {
             @Valid @RequestBody AreaRequest request,
             Authentication authentication) {
         return areaService.renombrar(id, request, authentication);
+    }
+
+    @PutMapping("/{id}/tope")
+    public AreaDto cambiarTope(
+            @PathVariable Long id,
+            @Valid @RequestBody TopeRequest request,
+            Authentication authentication) {
+        return areaService.cambiarTope(id, request.tope(), authentication);
     }
 
     @DeleteMapping("/{id}")

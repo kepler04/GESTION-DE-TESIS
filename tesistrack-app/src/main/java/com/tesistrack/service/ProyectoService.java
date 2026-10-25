@@ -13,6 +13,7 @@ import com.tesistrack.dto.AsignarAsesorRequest;
 import com.tesistrack.dto.CrearProyectoRequest;
 import com.tesistrack.dto.EmailRequest;
 import com.tesistrack.dto.ProyectoDto;
+import com.tesistrack.dto.TemaRequest;
 import com.tesistrack.dto.UnirseRequest;
 import com.tesistrack.model.Area;
 import com.tesistrack.model.Entrega;
@@ -46,6 +47,7 @@ public class ProyectoService {
     private final AsesoriaRepository asesoriaRepository;
     private final AcuerdoRepository acuerdoRepository;
     private final TareaRepository tareaRepository;
+    private final ReglasGrupo reglas;
 
     public ProyectoService(
             ProyectoRepository proyectoRepository,
@@ -59,7 +61,8 @@ public class ProyectoService {
             ObservacionRepository observacionRepository,
             AsesoriaRepository asesoriaRepository,
             AcuerdoRepository acuerdoRepository,
-            TareaRepository tareaRepository) {
+            TareaRepository tareaRepository,
+            ReglasGrupo reglas) {
         this.proyectoRepository = proyectoRepository;
         this.userRepository = userRepository;
         this.acceso = acceso;
@@ -72,6 +75,7 @@ public class ProyectoService {
         this.asesoriaRepository = asesoriaRepository;
         this.acuerdoRepository = acuerdoRepository;
         this.tareaRepository = tareaRepository;
+        this.reglas = reglas;
     }
 
     /** Solo el estudiante crea su proyecto (ver Flujo del sistema). */
@@ -82,8 +86,10 @@ public class ProyectoService {
         }
 
         Proyecto proyecto = new Proyecto();
-        proyecto.setTitulo(request.titulo());
-        proyecto.setDescripcion(request.descripcion());
+        // Sin tema = tema por definir (Decisión 29): null, no un texto vacío.
+        proyecto.setTitulo(tieneTexto(request.titulo()) ? request.titulo().trim() : null);
+        proyecto.setDescripcion(tieneTexto(request.descripcion()) ? request.descripcion().trim() : null);
+        proyecto.setGrupal(Boolean.TRUE.equals(request.grupal()));
         // Quien la crea es el primer integrante; después puede sumar compañeros.
         proyecto.agregarEstudiante(usuario);
         if (request.fechaInicio() != null) {
@@ -93,7 +99,9 @@ public class ProyectoService {
         // El código manda sobre el selector: si el estudiante pegó uno, quiso
         // entrar al espacio de ese asesor, no al que hubiera quedado en la lista.
         if (tieneTexto(request.codigoInvitacion())) {
-            sumarAlEspacio(proyecto, request.codigoInvitacion());
+            Area area = areaService.buscarPorCodigo(request.codigoInvitacion());
+            reglas.verificarSinGrupoEnClase(usuario, area, null, true);
+            sumarAlEspacio(proyecto, area);
         } else if (request.asesorId() != null) {
             proyecto.setAsesor(buscarAsesor(request.asesorId()));
         }
@@ -113,7 +121,31 @@ public class ProyectoService {
         Proyecto proyecto = buscar(id);
         acceso.verificarEstudianteDelProyecto(proyecto, usuario);
 
-        sumarAlEspacio(proyecto, request.codigo());
+        Area area = areaService.buscarPorCodigo(request.codigo());
+        // Un grupo que ya existía entra entero a la clase: cada integrante tiene que
+        // estar libre en ella, y el grupo no puede superar el tope (Decisión 30).
+        for (User integrante : proyecto.getEstudiantes()) {
+            reglas.verificarSinGrupoEnClase(integrante, area, proyecto.getId(), integrante.getId().equals(usuario.getId()));
+        }
+        if (proyecto.getEstudiantes().size() > area.getTopeGrupo()) {
+            throw new IllegalArgumentException("Tu grupo tiene " + proyecto.getEstudiantes().size()
+                + " integrantes y esta clase admite hasta " + area.getTopeGrupo());
+        }
+        sumarAlEspacio(proyecto, area);
+        return ProyectoDto.from(proyecto);
+    }
+
+    /**
+     * Registra (o cambia) el tema de la tesis. Lo hace cualquier integrante: el tema es
+     * del grupo. No se puede volver a "por definir" desde acá: borrar un tema no es
+     * algo que se haga sin querer.
+     */
+    public ProyectoDto registrarTema(Long id, TemaRequest request, Authentication authentication) {
+        User usuario = acceso.usuarioActual(authentication);
+        Proyecto proyecto = buscar(id);
+        acceso.verificarEstudianteDelProyecto(proyecto, usuario);
+        proyecto.setTitulo(request.titulo());
+        proyecto.setDescripcion(tieneTexto(request.descripcion()) ? request.descripcion().trim() : null);
         return ProyectoDto.from(proyecto);
     }
 
@@ -127,8 +159,7 @@ public class ProyectoService {
      * con actividades y no vería ninguna, y el asesor tendría que acordarse de
      * cargárselas a mano.
      */
-    private void sumarAlEspacio(Proyecto proyecto, String codigo) {
-        Area area = areaService.buscarPorCodigo(codigo);
+    private void sumarAlEspacio(Proyecto proyecto, Area area) {
         proyecto.setAsesor(area.getPropietario());
         proyecto.setArea(area);
 
@@ -159,8 +190,16 @@ public class ProyectoService {
         if (proyecto.tieneEstudiante(companero.getId())) {
             throw new IllegalArgumentException("Esa persona ya está en la tesis");
         }
+        // En una clase rigen el cupo y "un grupo por clase" (Decisión 30). En la
+        // interfaz, dentro de una clase se invita desde la lista de la clase
+        // (Decisión 31); el correo queda para las tesis sin clase.
+        if (proyecto.getArea() != null) {
+            reglas.verificarSinGrupoEnClase(companero, proyecto.getArea(), proyecto.getId(), false);
+            reglas.verificarCupo(proyecto);
+        }
 
         proyecto.agregarEstudiante(companero);
+        proyecto.setGrupal(true);
         return ProyectoDto.from(proyecto);
     }
 
@@ -224,6 +263,12 @@ public class ProyectoService {
         if (!acceso.esEstudianteDe(proyecto, usuario) && !acceso.esAsesorDe(proyecto, usuario)) {
             throw new ForbiddenException("Solo el grupo de la tesis o su asesor pueden borrarla");
         }
+        borrarTodo(proyecto);
+    }
+
+    /** El borrado en cascada, sin verificar permisos: lo usan {@link #eliminar} y quien ya verificó. */
+    void borrarTodo(Proyecto proyecto) {
+        Long id = proyecto.getId();
 
         // Cadena hito -> entrega -> observación, de la hoja hacia arriba.
         observacionRepository.deleteAll(observacionRepository.findByEntregaHitoProyectoId(id));

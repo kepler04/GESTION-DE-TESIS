@@ -8,13 +8,13 @@ import com.tesistrack.model.Area;
  * ve— se usa {@link #sinCodigo}: el código es la llave para sumarse al espacio del
  * asesor, y no tiene por qué circular en cada respuesta.
  */
-public record AreaDto(Long id, String nombre, String codigo) {
+public record AreaDto(Long id, String nombre, String codigo, int topeGrupo) {
 
     public static AreaDto from(Area area) {
-        return area == null ? null : new AreaDto(area.getId(), area.getNombre(), area.getCodigo());
+        return area == null ? null : new AreaDto(area.getId(), area.getNombre(), area.getCodigo(), area.getTopeGrupo());
     }
 
     public static AreaDto sinCodigo(Area area) {
-        return area == null ? null : new AreaDto(area.getId(), area.getNombre(), null);
+        return area == null ? null : new AreaDto(area.getId(), area.getNombre(), null, area.getTopeGrupo());
     }
 }

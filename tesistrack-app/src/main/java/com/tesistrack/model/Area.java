@@ -61,4 +61,14 @@ public class Area {
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt = Instant.now();
+
+    /**
+     * Cuántos integrantes admite un grupo de esta clase (Decisión 30). Lo elige el
+     * profesor; bajarlo no saca a nadie, solo impide sumar más.
+     */
+    @Column(name = "tope_grupo", nullable = false)
+    private int topeGrupo = TOPE_POR_DEFECTO;
+
+    public static final int TOPE_POR_DEFECTO = 3;
+    public static final int TOPE_MAXIMO = 10;
 }

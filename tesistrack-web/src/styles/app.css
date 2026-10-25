@@ -4182,3 +4182,527 @@
     max-width: 88%;
   }
 }
+
+/* ==================================================================
+   Fase 2: la experiencia del estudiante (Decisiones 29 a 33)
+   ================================================================== */
+
+/* ---------------- asistente de primer ingreso (maqueta 06) ---------------- */
+.asistente {
+  max-width: 680px;
+  margin: 8px auto 0;
+  padding: 28px 32px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-xl);
+  background: var(--superficie);
+  box-shadow: var(--sombra-2);
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 28px;
+  padding: 0;
+  list-style: none;
+}
+
+.stepper__paso {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.stepper__paso:not(:last-child)::after {
+  content: '';
+  flex: 1;
+  height: 2px;
+  min-width: 12px;
+  background: var(--borde);
+}
+
+.stepper__paso.is-completado:not(:last-child)::after {
+  background: var(--ok);
+}
+
+.stepper__numero {
+  display: grid;
+  place-items: center;
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--borde);
+  border-radius: var(--radio-pill);
+  background: var(--superficie);
+  color: var(--tinta-2);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.stepper__titulo {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--tinta-2);
+  white-space: nowrap;
+}
+
+.stepper__paso.is-activo .stepper__numero {
+  border-color: var(--acento-tinta);
+  background: var(--acento-tinta);
+  color: #fff;
+}
+
+.stepper__paso.is-activo .stepper__titulo {
+  color: var(--tinta);
+  font-weight: 600;
+}
+
+.stepper__paso.is-completado .stepper__numero {
+  border-color: var(--ok-tinta);
+  background: var(--ok-tinta);
+  color: #fff;
+}
+
+.asistente__paso {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.asistente__titulo {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--tinta);
+}
+
+.asistente__texto {
+  margin: 0;
+  color: var(--tinta-2);
+  line-height: 1.6;
+}
+
+.asistente__codigo {
+  display: flex;
+  gap: 10px;
+}
+
+.asistente__codigo input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 16px;
+  border: 1px solid var(--borde-hover);
+  border-radius: var(--radio-md);
+  font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-align: center;
+  color: var(--tinta);
+}
+
+.asistente__codigo input:focus {
+  outline: none;
+  border-color: var(--acento);
+  box-shadow: 0 0 0 3px var(--acento-foco);
+}
+
+.asistente__encontrada {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 16px;
+  border: 1px solid var(--ok-borde);
+  border-radius: var(--radio-md);
+  background: var(--ok-suave);
+  color: var(--tinta);
+}
+
+.asistente__ok {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ok-tinta);
+}
+
+.asistente__opciones {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.tarjeta-opcion {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  width: 100%;
+  padding: 16px 18px;
+  border: 2px solid var(--borde);
+  border-radius: var(--radio-lg);
+  background: var(--superficie);
+  font: inherit;
+  text-align: left;
+  color: var(--tinta);
+  cursor: pointer;
+  transition: border-color var(--transicion), background var(--transicion);
+}
+
+.tarjeta-opcion > span:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.tarjeta-opcion strong {
+  font-size: 16px;
+}
+
+.tarjeta-opcion > span:last-child > span {
+  font-size: 14px;
+  color: var(--tinta-2);
+}
+
+.tarjeta-opcion:hover:not(:disabled) {
+  border-color: var(--acento-borde);
+  background: var(--superficie-hover);
+}
+
+.tarjeta-opcion.is-elegida,
+.tarjeta-opcion--principal {
+  border-color: var(--acento);
+  background: var(--acento-suave);
+}
+
+.tarjeta-opcion:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.tarjeta-opcion__icono {
+  display: grid;
+  place-items: center;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radio-pill);
+  background: var(--superficie);
+  color: var(--acento-tinta);
+  border: 1px solid var(--acento-borde);
+}
+
+.asistente__secundario {
+  align-self: center;
+  padding: 6px 10px;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  color: var(--tinta-2);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.asistente__secundario:hover {
+  color: var(--tinta);
+}
+
+.asistente__form {
+  max-width: none;
+}
+
+.asistente__calma {
+  padding: 14px 16px;
+  border: 1px solid var(--acento-borde);
+  border-left: 4px solid var(--acento);
+  border-radius: var(--radio-md);
+  background: var(--acento-suave);
+  color: var(--tinta);
+  line-height: 1.6;
+}
+
+.asistente__resumen {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 14px 18px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-md);
+  background: var(--plano);
+}
+
+.asistente__resumen div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.asistente__resumen dt {
+  color: var(--tinta-2);
+}
+
+.asistente__resumen dd {
+  margin: 0;
+  font-weight: 600;
+  color: var(--tinta);
+  text-align: right;
+}
+
+.asistente__acciones {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--borde);
+}
+
+.grupos-abiertos {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.grupo-abierto {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-md);
+}
+
+.grupo-abierto.is-lleno {
+  background: var(--gris-suave);
+}
+
+.grupo-abierto strong {
+  display: block;
+  color: var(--tinta);
+}
+
+/* ---------------- Mi tesis ---------------- */
+.tesis-cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.tesis-cabecera h1 {
+  margin: 2px 0 0;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  color: var(--tinta);
+}
+
+.tesis-cabecera__meta {
+  margin: 6px 0 0;
+  color: var(--tinta-2);
+}
+
+.tesis-cabecera__acciones {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* Las acciones de una pantalla que se muestra como pestaña (sin su título). */
+.pestana-acciones {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.grupo__nota {
+  margin: 12px 0 0;
+  font-size: 13.5px;
+}
+
+.grupo__enviadas {
+  margin: 18px 0 4px;
+}
+
+/* ---------------- Inicio del estudiante ---------------- */
+.accion-principal {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 20px;
+  padding: 20px 24px;
+  border: 1px solid var(--acento-borde);
+  border-left: 5px solid var(--acento);
+  border-radius: var(--radio-lg);
+  background: var(--superficie);
+  box-shadow: var(--sombra-2);
+}
+
+.accion-principal--alerta {
+  border-color: var(--alerta-borde);
+  border-left-color: var(--alerta);
+}
+
+.accion-principal--aviso {
+  border-color: var(--aviso-borde);
+  border-left-color: var(--aviso);
+}
+
+.accion-principal--ok {
+  border-color: var(--ok-borde);
+  border-left-color: var(--ok);
+}
+
+.accion-principal__icono {
+  display: grid;
+  place-items: center;
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radio-pill);
+  background: var(--acento-suave);
+  color: var(--acento-tinta);
+}
+
+.accion-principal--alerta .accion-principal__icono {
+  background: var(--alerta-suave);
+  color: var(--alerta-tinta);
+}
+
+.accion-principal--aviso .accion-principal__icono {
+  background: var(--aviso-suave);
+  color: var(--aviso-tinta);
+}
+
+.accion-principal--ok .accion-principal__icono {
+  background: var(--ok-suave);
+  color: var(--ok-tinta);
+}
+
+.accion-principal__icono .icono {
+  width: 24px;
+  height: 24px;
+}
+
+.accion-principal__cuerpo {
+  flex: 1;
+  min-width: 0;
+}
+
+.accion-principal__cuerpo .etiqueta-mayus {
+  margin-bottom: 4px;
+}
+
+.accion-principal__cuerpo h2 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--tinta);
+}
+
+.accion-principal__cuerpo p:last-child {
+  margin: 4px 0 0;
+  color: var(--tinta-2);
+}
+
+.accion-principal__boton {
+  flex: none;
+}
+
+.invitaciones {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.invitacion-grupo {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 14px 18px;
+  border: 1px solid var(--violeta-borde);
+  border-radius: var(--radio-lg);
+  background: var(--violeta-suave);
+}
+
+.invitacion-grupo .accion-principal__icono {
+  flex-basis: 40px;
+  width: 40px;
+  height: 40px;
+  background: var(--superficie);
+  color: var(--violeta);
+}
+
+.invitacion-grupo__cuerpo {
+  flex: 1;
+  min-width: 200px;
+}
+
+.invitacion-grupo__cuerpo strong {
+  display: block;
+  color: var(--tinta);
+}
+
+.recordatorio-tema {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  border: 1px dashed var(--acento-borde);
+  border-radius: var(--radio-md);
+  background: var(--superficie);
+}
+
+.recordatorio-tema p {
+  margin: 0;
+  color: var(--tinta-2);
+}
+
+.recordatorio-tema strong {
+  color: var(--tinta);
+}
+
+@media (max-width: 640px) {
+  .asistente {
+    padding: 20px 16px;
+  }
+
+  .stepper__titulo {
+    display: none;
+  }
+
+  .stepper__paso.is-activo .stepper__titulo {
+    display: inline;
+  }
+
+  .accion-principal {
+    flex-wrap: wrap;
+  }
+
+  .accion-principal__boton {
+    width: 100%;
+  }
+
+  .accion-principal__boton .btn {
+    width: 100%;
+    box-sizing: border-box;
+  }
+}

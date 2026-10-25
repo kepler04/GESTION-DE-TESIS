@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   cambiarEstadoObservacion,
   crearObservacion,
@@ -35,6 +36,8 @@ export default function ObservacionesPage() {
 
   // Solo el asesor del proyecto observa y resuelve (verificarAsesorDelProyecto).
   const puedeObservar = user?.role === 'ASESOR' && activo?.asesor?.id === user?.id
+  // Quien corrige: un integrante del grupo, sobre la última versión.
+  const esIntegrante = user?.role === 'ESTUDIANTE' && (activo?.estudiantes ?? []).some((e) => e.id === user?.id)
 
   const [hitos, setHitos] = useState([])
   const [hitoId, setHitoId] = useState(null)
@@ -275,6 +278,14 @@ export default function ObservacionesPage() {
                             </div>
                             <div className="observaciones__estado">
                               <EstadoBadge estado={o.estado} tipo="observacion" />
+                              {esIntegrante && o.estado === 'PENDIENTE' && i === 0 && (
+                                <Link
+                                  className="btn btn--primario btn--chico"
+                                  to={`/mi-tesis?pestana=entregas&hito=${hitoId}&corregir=1`}
+                                >
+                                  Subir versión corregida
+                                </Link>
+                              )}
                               {puedeObservar && (
                                 <button
                                   type="button"

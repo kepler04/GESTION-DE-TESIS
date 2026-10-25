@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { obtenerDashboard } from '../api/tesistrack'
+import { listarCarpetas, obtenerDashboard } from '../api/tesistrack'
 import useProyectoActivo from '../hooks/useProyectoActivo'
 import { useAuth } from '../auth/AuthContext'
+import AccionPrincipal from '../components/AccionPrincipal'
 import DashboardAsesor from '../components/DashboardAsesor'
 import EstadoBadge from '../components/EstadoBadge'
 import Icono from '../components/Icono'
 import PrimerosPasos from '../components/PrimerosPasos'
+import InvitacionesRecibidas from '../components/InvitacionesRecibidas'
 import ProximasReuniones from '../components/ProximasReuniones'
+import RegistrarTema from '../components/RegistrarTema'
 import UnirseConCodigo from '../components/UnirseConCodigo'
 import {
   Card,
@@ -47,6 +50,7 @@ function DashboardTesis() {
   const [cargando, setCargando] = useState(false)
   const [mostrarUnirse, setMostrarUnirse] = useState(false)
   const [recarga, setRecarga] = useState(0)
+  const [registrando, setRegistrando] = useState(false)
 
   useEffect(() => {
     if (!activoId) return
@@ -65,7 +69,12 @@ function DashboardTesis() {
   if (cargandoProyectos) return <Cargando />
   // El estudiante sin tesis no ve un panel vacío: ve cómo empezar.
   if (!activoId && user?.role === 'ESTUDIANTE') {
-    return <PrimerosPasos onListo={recargarProyectos} />
+    return (
+      <>
+        <InvitacionesRecibidas onCambio={recargarProyectos} />
+        <PrimerosPasos onListo={recargarProyectos} />
+      </>
+    )
   }
   if (!activoId) return <SinProyecto rol={user?.role} />
 
@@ -77,8 +86,8 @@ function DashboardTesis() {
   return (
     <>
       <PageHead
-        titulo="Dashboard"
-        descripcion={esEstudiante ? 'Cómo va tu tesis y qué te toca ahora.' : 'El estado de la tesis elegida.'}
+        titulo={esEstudiante ? 'Inicio' : 'Dashboard'}
+        descripcion={esEstudiante ? 'Qué te toca ahora y cómo va tu tesis.' : 'El estado de la tesis elegida.'}
       >
         <SelectorProyecto proyectos={proyectos} activoId={activoId} onChange={seleccionar} />
       </PageHead>
@@ -115,8 +124,21 @@ function DashboardTesis() {
           </Card>
         ))}
 
+      {esEstudiante && (
+        <InvitacionesRecibidas
+          onCambio={async () => {
+            await recargarProyectos()
+            setRecarga((n) => n + 1)
+          }}
+        />
+      )}
+
       {data && (
         <>
+          {esEstudiante && <AccionPrincipal data={data} onRegistrarTema={() => setRegistrando(true)} />}
+          {esEstudiante && !data.proyecto.titulo && (
+            <RecordatorioTema proyecto={data.proyecto} onRegistrar={() => setRegistrando(true)} />
+          )}
           <PortadaTesis data={data} user={user} />
           <ProximoHito data={data} esEstudiante={esEstudiante} />
 
@@ -127,7 +149,7 @@ function DashboardTesis() {
               <Card
                 titulo="Tareas pendientes"
                 accion={
-                  <Link className="btn btn--fantasma btn--chico" to="/tareas">
+                  <Link className="btn btn--fantasma btn--chico" to="/mi-tesis?pestana=tareas">
                     Ver todas
                   </Link>
                 }
@@ -158,7 +180,60 @@ function DashboardTesis() {
           </div>
         </>
       )}
+
+      {registrando && data && (
+        <RegistrarTema
+          proyecto={data.proyecto}
+          onCerrar={() => setRegistrando(false)}
+          onListo={async () => {
+            setRegistrando(false)
+            await recargarProyectos()
+            setRecarga((n) => n + 1)
+          }}
+        />
+      )}
     </>
+  )
+}
+
+/**
+ * El tema todavía por definir: un recordatorio, no una alarma (Decisión 29). Lleva a
+ * los temas que propone el profesor, si los cargó en la carpeta Temas de tesis.
+ */
+function RecordatorioTema({ proyecto, onRegistrar }) {
+  const [temas, setTemas] = useState(null)
+
+  useEffect(() => {
+    if (!proyecto.area) return
+    let cancelado = false
+    listarCarpetas(proyecto.area.id)
+      .then((cs) => {
+        const c = cs.find((x) => /tema/i.test(x.nombre) && x.materiales.length > 0)
+        if (!cancelado && c) setTemas(c)
+      })
+      .catch(() => {})
+    return () => {
+      cancelado = true
+    }
+  }, [proyecto.area])
+
+  return (
+    <section className="recordatorio-tema" aria-label="Tema por definir">
+      <p>
+        <strong>Tu tema está por definir.</strong> No hay apuro: cuando lo tengas, registralo y tu
+        profesor lo ve.
+      </p>
+      <div className="acciones-fila">
+        <button type="button" className="btn btn--sutil btn--chico" onClick={onRegistrar}>
+          Registrar mi tema
+        </button>
+        {temas && (
+          <Link className="btn btn--fantasma btn--chico" to={`/clases/${proyecto.area.id}?pestana=trabajo&carpeta=${temas.id}`}>
+            Ver los temas que propone tu profesor ({temas.materiales.length})
+          </Link>
+        )}
+      </div>
+    </section>
   )
 }
 
@@ -239,7 +314,7 @@ function ProximoHito({ data, esEstudiante }) {
   const hito = conFecha[0] ?? abiertos[0]
   const dias = hito.fechaLimite ? diasHasta(hito.fechaLimite) : null
   const urgente = dias !== null && dias <= 3
-  const enlaceEntregas = `/entregas?proyecto=${data.proyecto.id}&hito=${hito.id}`
+  const enlaceEntregas = `/mi-tesis?pestana=entregas&hito=${hito.id}`
 
   return (
     <section className="proximo-hito" aria-labelledby="proximo-hito-titulo">
@@ -324,9 +399,9 @@ function ObservacionesPorCorregir({ data, esEstudiante }) {
                 {esEstudiante && (
                   <Link
                     className="btn btn--sutil btn--chico"
-                    to={`/entregas?proyecto=${data.proyecto.id}&hito=${o.hitoId}`}
+                    to={`/mi-tesis?pestana=entregas&hito=${o.hitoId}&corregir=1`}
                   >
-                    Subir corrección
+                    Subir versión corregida
                   </Link>
                 )}
               </div>

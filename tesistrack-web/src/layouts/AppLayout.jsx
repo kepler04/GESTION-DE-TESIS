@@ -37,6 +37,22 @@ function menuPara(rol, asesoriasPrivadas, cuentas) {
     ]
   }
 
+  // El estudiante tiene cuatro entradas (Decisión 32): lo de su tesis vive en las
+  // pestañas de Mi tesis y lo de la clase en las de Mi clase.
+  if (rol === 'ESTUDIANTE') {
+    return [
+      {
+        seccion: 'Principal',
+        items: [
+          { to: '/panel', label: 'Inicio', icono: 'dashboard', end: true },
+          { to: '/mi-tesis', label: 'Mi tesis', icono: 'tesis' },
+          { to: '/clase', label: 'Mi clase', icono: 'clases' },
+          { to: '/mensajes', label: 'Mensajes', icono: 'mensaje', cuenta: cuentas.mensajes },
+        ],
+      },
+    ]
+  }
+
   const principal =
     rol === 'ASESOR'
       ? [
@@ -94,10 +110,11 @@ const MIGAS_RUTA = [
   [/^\/mensajes$/, 'Mensajes'],
 ]
 
-function migasDeRuta(ruta) {
+function migasDeRuta(ruta, rol) {
   const fila = MIGAS_RUTA.find(([re]) => re.test(ruta))
   if (!fila) return [{ texto: 'Tesis Track' }]
-  const [, actual, padre] = fila
+  const [, nombre, padre] = fila
+  const actual = nombre === 'Dashboard' && rol === 'ESTUDIANTE' ? 'Inicio' : nombre
   return [{ texto: 'Tesis Track', a: '/panel' }, ...(padre ? [padre] : []), { texto: actual }]
 }
 
@@ -148,7 +165,7 @@ export default function AppLayout() {
     }
   }, [conMensajes, pathname])
 
-  const migas = migasPantalla ?? migasDeRuta(pathname)
+  const migas = migasPantalla ?? migasDeRuta(pathname, user?.role)
 
   return (
     <MigasContext.Provider value={setMigasPantalla}>

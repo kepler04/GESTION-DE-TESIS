@@ -91,6 +91,7 @@ export default function ClasePage() {
   const activa = pestanas.some((p) => p.id === pedida) ? pedida : 'tablon'
 
   function elegir(id) {
+    // Cambiar de pestaña suelta la carpeta destacada que pudiera traer el enlace.
     setParams(id === 'tablon' ? {} : { pestana: id })
   }
 
@@ -152,7 +153,11 @@ export default function ClasePage() {
         {activa === 'trabajo' && (
           <>
             <ActividadesClase areaId={areaId} editable={propietario} onCambio={recargar} />
-            <MaterialesEspacio areaId={areaId} editable={propietario} />
+            <MaterialesEspacio
+              areaId={areaId}
+              editable={propietario}
+              destacar={Number(params.get('carpeta')) || null}
+            />
           </>
         )}
 

@@ -6,6 +6,7 @@ import {
   descargarArchivoEntrega,
   listarEntregas,
   listarHitos,
+  listarObservaciones,
   rutaArchivoEntrega,
   subirArchivoEntrega,
 } from '../api/tesistrack'
@@ -38,6 +39,9 @@ export default function EntregasPage() {
   const [params] = useSearchParams()
   // Un enlace directo (desde "Para revisar" del Dashboard) puede traer el hito.
   const hitoPedido = Number(params.get('hito')) || null
+  // "Subir versión corregida" desde una observación llega con ?corregir=1: el
+  // formulario de ese hito ya abierto.
+  const corregir = params.get('corregir') === '1'
   const { proyectos, activoId, activo, seleccionar, cargando: cargandoProyectos } = useProyectoActivo()
 
   // Solo los estudiantes del proyecto suben entregas (verificarEstudianteDelProyecto).
@@ -99,7 +103,14 @@ export default function EntregasPage() {
       return
     }
     setCargandoEntregas(true)
+    // Cada versión viene con sus observaciones: lo que se marcó sobre la v1 se lee
+    // al lado de la v1, no en otra pantalla.
     listarEntregas(id)
+      .then((lista) =>
+        Promise.all(
+          lista.map(async (e) => ({ ...e, observaciones: await listarObservaciones(e.id).catch(() => []) })),
+        ),
+      )
       .then(setEntregas)
       .catch((e) => setError(e.message))
       .finally(() => setCargandoEntregas(false))
@@ -107,7 +118,7 @@ export default function EntregasPage() {
 
   useEffect(() => {
     recargarEntregas(hitoId)
-    setMostrarForm(false)
+    setMostrarForm(corregir && hitoId != null && hitoId === hitoPedido)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hitoId])
 
@@ -319,6 +330,24 @@ export default function EntregasPage() {
                         <EstadoBadge estado={e.estado} tipo="entrega" />
                       </div>
                       {e.comentario && <p className="versiones__comentario">{e.comentario}</p>}
+                      {e.observaciones?.length > 0 && (
+                        <ul className="observaciones">
+                          {e.observaciones.map((o) => (
+                            <li
+                              key={o.id}
+                              className={`observaciones__item ${o.estado === 'RESUELTA' ? 'is-resuelta' : ''}`}
+                            >
+                              <div className="observaciones__texto">
+                                <p>{o.descripcion}</p>
+                                <span className="lista__meta">
+                                  {o.registradaPor?.name} · {fechaHora(o.createdAt)}
+                                </span>
+                              </div>
+                              <EstadoBadge estado={o.estado} tipo="observacion" />
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                       <span className="lista__meta">
                         {e.entregadaPor?.name} · {fechaHora(e.createdAt)}
                         {e.archivoTamano != null &&
@@ -357,6 +386,18 @@ export default function EntregasPage() {
                           >
                             Abrir enlace ↗
                           </a>
+                        )}
+                        {puedeEntregar && e.version === ultimaVersion && e.estado === 'OBSERVADA' && (
+                          <button
+                            type="button"
+                            className="btn btn--primario btn--chico"
+                            onClick={() => {
+                              setMostrarForm(true)
+                              window.scrollTo({ top: 0, behavior: 'smooth' })
+                            }}
+                          >
+                            Subir versión corregida
+                          </button>
                         )}
                         {/* El veredicto del asesor sobre esta versión concreta. */}
                         {esAsesor && e.estado !== 'APROBADA' && (

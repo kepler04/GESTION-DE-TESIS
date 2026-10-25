@@ -18,7 +18,9 @@ public record ProyectoDto(
     /** Etiqueta del asesor para agrupar sus tesis; null si no le puso ninguna. */
     AreaDto area,
     LocalDate fechaInicio,
-    Instant createdAt
+    Instant createdAt,
+    /** Si es un grupo abierto a compañeros (Decisión 30). */
+    boolean grupal
 ) {
 
     public static ProyectoDto from(Proyecto proyecto) {
@@ -32,6 +34,7 @@ public record ProyectoDto(
             // Sin código: este DTO también lo recibe el estudiante.
             AreaDto.sinCodigo(proyecto.getArea()),
             proyecto.getFechaInicio(),
-            proyecto.getCreatedAt());
+            proyecto.getCreatedAt(),
+            proyecto.isGrupal());
     }
 }

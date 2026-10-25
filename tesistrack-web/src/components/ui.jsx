@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useContext, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import Icono from './Icono'
+import { PestanaContext } from './pestanaContext'
 
 export function Card({ titulo, accion, children, className = '' }) {
   return (
@@ -88,6 +89,11 @@ export function ErrorMsg({ children }) {
 }
 
 export function PageHead({ titulo, descripcion, children }) {
+  // Como pestaña de Mi tesis, solo quedan las acciones (el título ya está arriba).
+  const enPestana = useContext(PestanaContext)
+  if (enPestana) {
+    return children ? <div className="pestana-acciones">{children}</div> : null
+  }
   return (
     <div className="page-head">
       <div>
@@ -106,7 +112,8 @@ export function PageHead({ titulo, descripcion, children }) {
  */
 export function SelectorProyecto({ proyectos, activoId, onChange }) {
   const { user } = useAuth()
-  if (proyectos.length <= 1) return null
+  const enPestana = useContext(PestanaContext)
+  if (enPestana || proyectos.length <= 1) return null
   const esAsesor = user?.role === 'ASESOR'
   return (
     <label className="selector-proyecto">

@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Outlet, Route, Routes, useParams } from 'react-router-dom'
+import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation, useParams } from 'react-router-dom'
 import { AuthProvider, useAuth } from './auth/AuthContext'
 import AppLayout from './layouts/AppLayout'
 import AsesoradosPage from './pages/AsesoradosPage'
@@ -47,6 +47,22 @@ function RedirigirProyectos() {
   return <Navigate to={destino} replace />
 }
 
+/**
+ * Hitos, Entregas, Observaciones, Tareas y Asesorías son pestañas de Mi tesis para el
+ * estudiante (Decisión 32). Sus rutas sueltas siguen andando: lo llevan a la pestaña,
+ * con los mismos parámetros (`/entregas?hito=4` → `/mi-tesis?pestana=entregas&hito=4`).
+ * El profesor y el coordinador las siguen viendo como pantallas.
+ */
+function SeguimientoDe({ pestana, children }) {
+  const { user } = useAuth()
+  const { search } = useLocation()
+  if (user?.role !== 'ESTUDIANTE') return children
+  const resto = new URLSearchParams(search)
+  resto.delete('pestana')
+  const extra = resto.toString()
+  return <Navigate to={`/mi-tesis?pestana=${pestana}${extra ? `&${extra}` : ''}`} replace />
+}
+
 function RedirigirEspacio() {
   const { areaId } = useParams()
   return <Navigate to={`/clases/${areaId}`} replace />
@@ -92,11 +108,14 @@ export default function App() {
               <Route path="/asesorados" element={<Navigate to="/asesorias-privadas" replace />} />
               <Route path="/espacio" element={<Navigate to="/clase" replace />} />
               <Route path="/espacios/:areaId" element={<RedirigirEspacio />} />
-              <Route path="/hitos" element={<HitosPage />} />
-              <Route path="/entregas" element={<EntregasPage />} />
-              <Route path="/observaciones" element={<ObservacionesPage />} />
-              <Route path="/asesorias" element={<AsesoriasPage />} />
-              <Route path="/tareas" element={<TareasPage />} />
+              <Route path="/hitos" element={<SeguimientoDe pestana="hitos"><HitosPage /></SeguimientoDe>} />
+              <Route path="/entregas" element={<SeguimientoDe pestana="entregas"><EntregasPage /></SeguimientoDe>} />
+              <Route
+                path="/observaciones"
+                element={<SeguimientoDe pestana="observaciones"><ObservacionesPage /></SeguimientoDe>}
+              />
+              <Route path="/asesorias" element={<SeguimientoDe pestana="asesorias"><AsesoriasPage /></SeguimientoDe>} />
+              <Route path="/tareas" element={<SeguimientoDe pestana="tareas"><TareasPage /></SeguimientoDe>} />
             </Route>
           </Route>
 

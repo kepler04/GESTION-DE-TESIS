@@ -169,6 +169,17 @@ public class AreaService {
             .toList();
     }
 
+    /**
+     * Cambia el tope de integrantes por grupo (Decisión 30). Bajarlo no saca a nadie
+     * de un grupo que ya lo supera: solo impide sumar más.
+     */
+    public AreaDto cambiarTope(Long id, int tope, Authentication authentication) {
+        User usuario = soloAsesor(authentication);
+        Area area = buscarPropia(id, usuario);
+        area.setTopeGrupo(tope);
+        return AreaDto.from(area);
+    }
+
     public AreaDto renombrar(Long id, AreaRequest request, Authentication authentication) {
         User usuario = soloAsesor(authentication);
         Area area = buscarPropia(id, usuario);

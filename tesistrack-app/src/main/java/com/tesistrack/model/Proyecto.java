@@ -36,8 +36,16 @@ public class Proyecto {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    /** El tema. {@code null} = todavía por definir (Decisión 29). */
+    @Column
     private String titulo;
+
+    /**
+     * Si acepta compañeros: un grupo abierto aparece para quien entra a la clase con
+     * el código y se puede invitar a otros; una tesis individual, no (Decisión 30).
+     */
+    @Column(nullable = false)
+    private boolean grupal;
 
     @Column(columnDefinition = "text")
     private String descripcion;
@@ -101,6 +109,19 @@ public class Proyecto {
 
     public String getTitulo() {
         return titulo;
+    }
+
+    public boolean isGrupal() {
+        return grupal;
+    }
+
+    public void setGrupal(boolean grupal) {
+        this.grupal = grupal;
+    }
+
+    /** Si ya tiene tema registrado. */
+    public boolean tieneTema() {
+        return titulo != null && !titulo.isBlank();
     }
 
     public void setTitulo(String titulo) {

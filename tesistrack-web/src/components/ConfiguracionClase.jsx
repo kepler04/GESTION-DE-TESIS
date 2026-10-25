@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { eliminarArea, regenerarCodigo, renombrarArea } from '../api/tesistrack'
+import { cambiarTopeGrupo, eliminarArea, regenerarCodigo, renombrarArea } from '../api/tesistrack'
 import BorrarEspacio from './BorrarEspacio'
 import ConfirmarAccion from './ConfirmarAccion'
 import { Card, ChipCodigo, ErrorMsg } from './ui'
@@ -21,6 +21,25 @@ export default function ConfiguracionClase({ area, onCambio }) {
   const [guardado, setGuardado] = useState(false)
   const [regenerar, setRegenerar] = useState(false)
   const [borrando, setBorrando] = useState(false)
+  const [tope, setTope] = useState(area.topeGrupo ?? 3)
+  const [guardandoTope, setGuardandoTope] = useState(false)
+  const [topeGuardado, setTopeGuardado] = useState(false)
+
+  async function handleTope(e) {
+    e.preventDefault()
+    setError(null)
+    setTopeGuardado(false)
+    setGuardandoTope(true)
+    try {
+      await cambiarTopeGrupo(area.id, Number(tope))
+      setTopeGuardado(true)
+      await onCambio()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setGuardandoTope(false)
+    }
+  }
 
   async function handleRenombrar(e) {
     e.preventDefault()
@@ -65,6 +84,39 @@ export default function ConfiguracionClase({ area, onCambio }) {
               {guardando ? 'Guardando…' : 'Guardar nombre'}
             </button>
             {guardado && <span className="tenue">✓ Guardado</span>}
+          </div>
+        </form>
+      </Card>
+
+      <Card titulo="Integrantes por grupo">
+        <form className="form" onSubmit={handleTope}>
+          <label>
+            Hasta cuántos alumnos puede tener un grupo
+            <input
+              type="number"
+              min={1}
+              max={10}
+              value={tope}
+              onChange={(e) => {
+                setTope(e.target.value)
+                setTopeGuardado(false)
+              }}
+              required
+            />
+          </label>
+          <p className="tenue">
+            Un grupo completo no acepta más integrantes. Bajarlo no saca a nadie de un grupo que ya
+            lo supera: solo impide sumar más.
+          </p>
+          <div className="form__acciones">
+            <button
+              type="submit"
+              className="btn btn--primario"
+              disabled={guardandoTope || Number(tope) === area.topeGrupo || !(Number(tope) >= 1 && Number(tope) <= 10)}
+            >
+              {guardandoTope ? 'Guardando…' : 'Guardar tope'}
+            </button>
+            {topeGuardado && <span className="tenue">✓ Guardado</span>}
           </div>
         </form>
       </Card>

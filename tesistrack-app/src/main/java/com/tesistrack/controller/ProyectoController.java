@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -20,6 +21,7 @@ import com.tesistrack.dto.CrearProyectoRequest;
 import com.tesistrack.dto.DashboardDto;
 import com.tesistrack.dto.EmailRequest;
 import com.tesistrack.dto.ProyectoDto;
+import com.tesistrack.dto.TemaRequest;
 import com.tesistrack.dto.UnirseRequest;
 import com.tesistrack.service.DashboardService;
 import com.tesistrack.service.ProyectoService;
@@ -108,6 +110,13 @@ public class ProyectoController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void eliminar(@PathVariable Long id, Authentication authentication) {
         proyectoService.eliminar(id, authentication);
+    }
+
+    /** Registrar el tema de una tesis que estaba "por definir" (Decisión 29). */
+    @PutMapping("/{id}/tema")
+    public ProyectoDto registrarTema(
+            @PathVariable Long id, @Valid @RequestBody TemaRequest request, Authentication authentication) {
+        return proyectoService.registrarTema(id, request, authentication);
     }
 
     @GetMapping("/{id}/dashboard")

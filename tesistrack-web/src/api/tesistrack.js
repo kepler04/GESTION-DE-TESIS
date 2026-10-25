@@ -169,3 +169,20 @@ export const enviarMensaje = (usuarioId, texto) =>
 export const marcarMensajesLeidos = (usuarioId) =>
   api(`/api/mensajes/con/${usuarioId}/leidos`, { method: 'PUT' })
 export const contarMensajesNoLeidos = () => api('/api/mensajes/no-leidos')
+
+// --- Fase 2: primer ingreso, tema y grupos de la clase (Decisiones 29 a 31) ---
+export const gruposDeLaClase = (codigo) =>
+  api(`/api/areas/invitacion/${encodeURIComponent(codigo)}/grupos`)
+export const unirmeAGrupo = (proyectoId, codigo) =>
+  api(`/api/proyectos/${proyectoId}/unirme`, { method: 'POST', body: { codigo } })
+export const registrarTema = (proyectoId, titulo, descripcion) =>
+  api(`/api/proyectos/${proyectoId}/tema`, { method: 'PUT', body: { titulo, descripcion } })
+export const cambiarTopeGrupo = (areaId, tope) =>
+  api(`/api/areas/${areaId}/tope`, { method: 'PUT', body: { tope } })
+export const listarCandidatos = (proyectoId) => api(`/api/proyectos/${proyectoId}/candidatos`)
+export const invitarAlGrupo = (proyectoId, estudianteId) =>
+  api(`/api/proyectos/${proyectoId}/invitaciones`, { method: 'POST', body: { estudianteId } })
+export const invitacionesEnviadas = (proyectoId) => api(`/api/proyectos/${proyectoId}/invitaciones`)
+export const invitacionesRecibidas = () => api('/api/invitaciones')
+export const aceptarInvitacion = (id) => api(`/api/invitaciones/${id}/aceptar`, { method: 'POST' })
+export const descartarInvitacion = (id) => api(`/api/invitaciones/${id}`, { method: 'DELETE' })
